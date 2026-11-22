@@ -144,6 +144,13 @@ def accounts_db_path(env: dict[str, str] | None = None) -> Path:
     return Path(env.get("FPGASIM_ACCOUNTS") or server.get("accounts_db") or default_accounts_db(data_dir_path(env)))
 
 
+def assistant_key_path(env: dict[str, str] | None = None) -> Path:
+    """The assistant key file without the other settings: setting assistant.key_file or the default."""
+    env = dict(os.environ) if env is None else env
+    _, doc = read_config(env)
+    return Path(doc.get("assistant", {}).get("key_file", AssistantSettings.key_file))
+
+
 def data_dir_path(env: dict[str, str] | None = None) -> Path:
     """The data folder without the other settings: variable FPGASIM_DATA_DIR, setting server.data_dir."""
     env = dict(os.environ) if env is None else env

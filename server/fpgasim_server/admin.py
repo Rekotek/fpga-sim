@@ -12,6 +12,7 @@
 
     fpgasim-admin db restore <backup file>   replaces the database with the backup and writes a new generation
 
+    fpgasim-admin assistant key                reads the Anthropic key from standard input into the key file
     fpgasim-admin assistant usage [--days N]  assistant tokens and approximate cost per UTC day and owner
                                               (decision 175); N days including today, 7 by default
 
@@ -31,7 +32,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .accounts import AccountsError, AccountStore, SchemaTooNew, hash_password, new_password, restore
-from .config import accounts_db_path, data_dir_path
+from .config import accounts_db_path, assistant_key_path, data_dir_path
 from .keys import NAME_RE, KeyRecord, hash_key, new_key, read_keys, write_keys
 from .usage import Usage, UsageStore, cost
 
@@ -104,8 +105,28 @@ def money(value: float | None) -> str:
     return "—" if value is None else f"${value:.4f}"
 
 
+def assistant_key() -> int:
+    """The key goes through standard input, never through the command line or the screen (decision 175)."""
+    key = sys.stdin.read().strip()
+    if not key.startswith("sk-ant-") or any(c.isspace() for c in key):
+        print("на входе не ключ Anthropic (ожидается одна строка, начинается с sk-ant-)", file=sys.stderr)
+        return 1
+    path = assistant_key_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(".tmp")
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(key + "\n")
+    os.chmod(temp, 0o600)
+    os.replace(temp, path)
+    print(f"ключ записан в {path}; перезапустите сервис, чтобы он его прочитал")
+    return 0
+
+
 def assistant_command(args: argparse.Namespace) -> int:
     """Spend report: one line per day, owner and model, then the day's total (decision 175)."""
+    if args.cmd == "key":
+        return assistant_key()
     path = data_dir_path() / "assistant" / "usage.db"
     if not path.exists():
         print(f"учёта помощника нет: {path}", file=sys.stderr)
@@ -146,6 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     db.add_parser("restore").add_argument("file", type=Path)
     assistant = sub.add_parser("assistant").add_subparsers(dest="cmd", required=True)
     assistant.add_parser("usage").add_argument("--days", type=int, default=7)
+    assistant.add_parser("key")
     args = ap.parse_args(argv)
     if args.db is None:
         args.db = accounts_db_path()

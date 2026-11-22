@@ -271,3 +271,26 @@ def test_отчёт_о_расходе(tmp_path: Path, monkeypatch: pytest.Monkey
     assert f"{today}\tkey:judges\tmystery\t10\t20\t30\t40\t—" in lines
     assert f"{today}\tsession:ann\tclaude-sonnet-5-5\t1000000\t0\t0\t0\t$2.0000" in lines
     assert lines[-1] == f"{today}\tитого\t\t1000010\t20\t30\t40\t$2.0000"
+
+
+def test_ключ_помощника_из_ввода(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import io
+
+    from fpgasim_server.admin import main
+
+    key_file = tmp_path / "etc" / "anthropic.key"
+    config = tmp_path / "config.toml"
+    config.write_text(f'[assistant]\nkey_file = "{key_file}"\n')
+    monkeypatch.setenv("FPGASIM_CONFIG", str(config))
+    monkeypatch.setattr("sys.stdin", io.StringIO("not-a-key\n"))
+    assert main(["assistant", "key"]) == 1
+    assert not key_file.exists()
+    monkeypatch.setattr("sys.stdin", io.StringIO("  sk-ant-api03-secret\n"))
+    assert main(["assistant", "key"]) == 0
+    assert key_file.read_text() == "sk-ant-api03-secret\n"
+    assert key_file.stat().st_mode & 0o777 == 0o600
+    out = capsys.readouterr()
+    assert "secret" not in out.out + out.err
+    assert str(key_file) in out.out
