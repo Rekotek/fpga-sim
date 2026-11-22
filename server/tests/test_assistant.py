@@ -248,3 +248,26 @@ def test_журнал_без_текста(make_env: Any) -> None:  # noqa: ANN40
 def test_без_входа_нельзя(make_env: Any) -> None:  # noqa: ANN401
     env = assistant_env(make_env)
     assert ask(env, QUESTION, {"Authorization": "Bearer wrong"}).status_code == 401
+
+
+# --- The spend report -----------------------------------------------------------------
+
+
+def test_отчёт_о_расходе(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    from fpgasim_server.accounts import now_ms
+    from fpgasim_server.admin import main
+    from fpgasim_server.usage import cost
+
+    monkeypatch.setenv("FPGASIM_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("FPGASIM_CONFIG", str(tmp_path / "none.toml"))
+    store = UsageStore(tmp_path / "assistant" / "usage.db", now_ms)
+    store.add("session:ann", "claude-sonnet-5-5", Usage(1_000_000, 0, 0, 0))
+    store.add("key:judges", "mystery", Usage(10, 20, 30, 40))
+    assert cost("claude-sonnet-5-5", Usage(1_000_000, 0, 0, 0)) == 2.0
+    assert cost("mystery", Usage(1, 1, 1, 1)) is None
+    assert main(["assistant", "usage", "--days", "1"]) == 0
+    lines = capsys.readouterr().out.strip().splitlines()
+    today = store.day()
+    assert f"{today}\tkey:judges\tmystery\t10\t20\t30\t40\t—" in lines
+    assert f"{today}\tsession:ann\tclaude-sonnet-5-5\t1000000\t0\t0\t0\t$2.0000" in lines
+    assert lines[-1] == f"{today}\tитого\t\t1000010\t20\t30\t40\t$2.0000"

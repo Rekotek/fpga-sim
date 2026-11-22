@@ -12,9 +12,13 @@
 
     fpgasim-admin db restore <backup file>   replaces the database with the backup and writes a new generation
 
+    fpgasim-admin assistant usage [--days N]  assistant tokens and approximate cost per UTC day and owner
+                                              (decision 175); N days including today, 7 by default
+
 The key file: variable FPGASIM_KEYS, by default /etc/fpgasim/keys.toml.
 The account database: variable FPGASIM_ACCOUNTS, setting server.accounts_db,
 by default /var/lib/fpgasim/accounts/accounts.db. The utility writes to the same database as the service.
+The assistant counts: <data folder>/assistant/usage.db (variable FPGASIM_DATA_DIR, setting server.data_dir).
 """
 
 from __future__ import annotations
@@ -27,8 +31,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .accounts import AccountsError, AccountStore, SchemaTooNew, hash_password, new_password, restore
-from .config import accounts_db_path
+from .config import accounts_db_path, data_dir_path
 from .keys import NAME_RE, KeyRecord, hash_key, new_key, read_keys, write_keys
+from .usage import Usage, UsageStore, cost
 
 
 def keys_command(args: argparse.Namespace) -> int:
@@ -95,6 +100,31 @@ def db_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def money(value: float | None) -> str:
+    return "—" if value is None else f"${value:.4f}"
+
+
+def assistant_command(args: argparse.Namespace) -> int:
+    """Spend report: one line per day, owner and model, then the day's total (decision 175)."""
+    path = data_dir_path() / "assistant" / "usage.db"
+    if not path.exists():
+        print(f"учёта помощника нет: {path}", file=sys.stderr)
+        return 1
+    store = UsageStore(path, lambda: int(datetime.now(UTC).timestamp() * 1000))
+    rows = store.report(args.days)
+    for day in sorted({r["day"] for r in rows}):
+        total = [0, 0, 0, 0]
+        spent = 0.0
+        for r in (r for r in rows if r["day"] == day):
+            usage = Usage(r["input"], r["output"], r["cacheRead"], r["cacheWrite"])
+            total = [a + b for a, b in zip(total, usage, strict=True)]
+            price = cost(r["model"], usage)
+            spent += price or 0.0
+            print("\t".join([day, r["owner"], r["model"], *map(str, usage), money(price)]))
+        print("\t".join([day, "итого", "", *map(str, total), money(spent)]))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="fpgasim-admin")
     ap.add_argument("--keys", type=Path, default=Path(os.environ.get("FPGASIM_KEYS", "/etc/fpgasim/keys.toml")))
@@ -114,6 +144,8 @@ def main(argv: list[str] | None = None) -> int:
     user.add_parser("list")
     db = sub.add_parser("db").add_subparsers(dest="cmd", required=True)
     db.add_parser("restore").add_argument("file", type=Path)
+    assistant = sub.add_parser("assistant").add_subparsers(dest="cmd", required=True)
+    assistant.add_parser("usage").add_argument("--days", type=int, default=7)
     args = ap.parse_args(argv)
     if args.db is None:
         args.db = accounts_db_path()
@@ -123,6 +155,8 @@ def main(argv: list[str] | None = None) -> int:
             return keys_command(args)
         if args.group == "user":
             return user_command(args)
+        if args.group == "assistant":
+            return assistant_command(args)
         return db_command(args)
     except AccountsError as e:
         print(e.text, file=sys.stderr)

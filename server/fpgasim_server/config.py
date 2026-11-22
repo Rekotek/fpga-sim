@@ -141,8 +141,14 @@ def accounts_db_path(env: dict[str, str] | None = None) -> Path:
     env = dict(os.environ) if env is None else env
     _, doc = read_config(env)
     server = doc.get("server", {})
-    data_dir = Path(env.get("FPGASIM_DATA_DIR") or server.get("data_dir", "/var/lib/fpgasim"))
-    return Path(env.get("FPGASIM_ACCOUNTS") or server.get("accounts_db") or default_accounts_db(data_dir))
+    return Path(env.get("FPGASIM_ACCOUNTS") or server.get("accounts_db") or default_accounts_db(data_dir_path(env)))
+
+
+def data_dir_path(env: dict[str, str] | None = None) -> Path:
+    """The data folder without the other settings: variable FPGASIM_DATA_DIR, setting server.data_dir."""
+    env = dict(os.environ) if env is None else env
+    _, doc = read_config(env)
+    return Path(env.get("FPGASIM_DATA_DIR") or doc.get("server", {}).get("data_dir", "/var/lib/fpgasim"))
 
 
 def cors_origins(env: dict[str, str], server: dict) -> tuple[str, ...]:
