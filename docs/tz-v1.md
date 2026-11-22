@@ -1116,7 +1116,7 @@ All requests and responses are JSON. Except for `/v1/health` and `/v1/auth/login
 
 **`GET /v1/health`** → `{ "status": "ok" }`. No key.
 
-**`GET /v1/info`** → versions (`toolchain`, `runtime`, `verilator`, `emscripten`, `protocol`), the limits in effect, `owner` (the login for a session, the owner name for a key), `auth` (`session` or `key`) and `user` (the account for a session, `null` for a key).
+**`GET /v1/info`** → versions (`toolchain`, `runtime`, `verilator`, `emscripten`, `protocol`), the limits in effect, `owner` (the login for a session, the owner name for a key), `auth` (`session` or `key`), `user` (the account for a session, `null` for a key) and `assistant` (`{ "enabled": bool, "model": string | null }`, decision 175).
 
 The operations for login, accounts and projects on the server (`/v1/auth/…`, `/v1/projects…`, `/v1/admin/…`) are described in section 3 of `docs/tz-accounts.md`. A key gets 403 `FORBIDDEN` on them.
 
@@ -1195,7 +1195,9 @@ Details (decisions 89–91):
 - The waveform file is the file named by `$dumpfile("…")` in the testbench text, or `dump.vcd`, lying inside the run folder. It is served by the `artifacts` operation with the type `text/plain` and the header `Cache-Control: private, max-age=3600`; after an hour the response is 404.
 - The 20 s time includes compilation. The response arrives within 25 s at most. The operation has no cache. A testbench takes a place in the job queue, like a build.
 
-Request errors: 400 `BAD_REQUEST`, 401 `UNAUTHORIZED`, 401 `BAD_CREDENTIALS`, 403 `FORBIDDEN`, 404 `NOT_FOUND`, 405 `METHOD_NOT_ALLOWED`, 409 `EXISTS`, 413 `PROJECT_TOO_LARGE`, 429 `RATE_LIMITED`, 429 `LOGIN_LOCKED`, 500 `INTERNAL`, 503 `BUSY`. Body: `{ "error": { "code": "…", "text": "…" } }`. The codes `BAD_CREDENTIALS`, `FORBIDDEN`, `EXISTS` and `LOGIN_LOCKED` come only from the operations of section 3 of `docs/tz-accounts.md`.
+**`POST /v1/assistant`** is one model call of the assistant (decision 175). A session or a key. Request: `{ "messages": [...], "language": "ru" | "en" }`: the whole conversation in the Anthropic Messages format, as the server returned it, with the user turns of text and `tool_result` blocks; at most 1 MB and 60 messages; roles alternate, the first and the last turn are the user's. The server adds the system prompt, the five tool definitions (`list_files`, `read_file`, `get_messages`, `get_board`, `get_waveform`), the model and the effort from `[assistant]` of `/etc/fpgasim/config.toml`, and makes one call. Response: `{ "content": [...], "stop_reason": "...", "usage": { "input", "output", "cacheRead", "cacheWrite" } }`. The browser runs the tools on the live project state and posts the conversation again while `stop_reason` is `tool_use`, at most 10 calls per question. Errors: 503 `ASSISTANT_OFF` (no key or `enabled = false`), 429 `ASSISTANT_LIMIT` (a daily token limit), 502 `ASSISTANT_FAILED` (the model service failed), 413 `ASSISTANT_TOO_LONG`. The tokens are counted per UTC day in `<data folder>/assistant/usage.db` (decision 176).
+
+Request errors: 400 `BAD_REQUEST`, 401 `UNAUTHORIZED`, 401 `BAD_CREDENTIALS`, 403 `FORBIDDEN`, 404 `NOT_FOUND`, 405 `METHOD_NOT_ALLOWED`, 409 `EXISTS`, 413 `PROJECT_TOO_LARGE`, 429 `RATE_LIMITED`, 429 `LOGIN_LOCKED`, 500 `INTERNAL`, 503 `BUSY`, and the assistant codes above. Body: `{ "error": { "code": "…", "text": "…" } }`. The codes `BAD_CREDENTIALS`, `FORBIDDEN`, `EXISTS` and `LOGIN_LOCKED` come only from the operations of section 3 of `docs/tz-accounts.md`.
 
 ### 8.4. Build steps
 
@@ -1230,6 +1232,9 @@ Failed builds are cached too (messages without files), except for failures that 
 | Check requests from one key | 240 per minute |
 | Messages in a response | 100 `.cst` notices, 500 Verilator warnings |
 | Build cache | 2 GB, least recently used entries are evicted |
+| Assistant requests from one key | 20 per minute |
+| Assistant tokens of one key per UTC day | 400,000 (all four kinds: input, output, cache read, cache write) |
+| Assistant tokens of the server per UTC day | 4,000,000 |
 
 The "from one key" limits also apply to an account: the count is kept separately for each key and each account (decision 121). The limits for login, session, projects on the server and account operations are in section 3.6 of `docs/tz-accounts.md` and decisions 121 and 127.
 
@@ -1246,7 +1251,7 @@ The values are in `/etc/fpgasim/config.toml` and are returned in `/v1/info`.
 
 ### 8.7. Log
 
-One JSON line per request: time, the key owner or login (`owner`), the sign-in kind (`auth`: `session`, `key` or `null`), operation, `buildId`, cache hit, duration, outcome, project size. Sources are not written to the log. The log goes to the container's standard output. The operations of accounts and projects on the server and their fields are in section 3.7 of `docs/tz-accounts.md` and decision 129; the lines of the maintenance task (`trash-purge`, `backup`) are in decision 128. Passwords, session tokens and file contents do not go to the log.
+One JSON line per request: time, the key owner or login (`owner`), the sign-in kind (`auth`: `session`, `key` or `null`), operation, `buildId`, cache hit, duration, outcome, project size. Sources are not written to the log. An `assistant` line has `model`, `tokensIn`, `tokensOut`, `cacheRead`, `cacheWrite` and `stopReason`; questions, answers and tool results are not written. The log goes to the container's standard output. The operations of accounts and projects on the server and their fields are in section 3.7 of `docs/tz-accounts.md` and decision 129; the lines of the maintenance task (`trash-purge`, `backup`) are in decision 128. Passwords, session tokens and file contents do not go to the log.
 
 ## 9. Interface
 
@@ -1290,7 +1295,7 @@ Core frames do not pass through React state. The host puts the last frame into a
 │  tb_top.v     │  with message marks              │  [breadboard field]       │
 │               │                                  │  pin legend               │
 ├───────────────┴──────────────────────────────────┴───────────────────────────┤
-│ Messages │ Nets │ Signals │ Waveforms │ Testbench │ UART terminal            │
+│ Messages │ Nets │ Signals │ Waveforms │ Testbench │ Assistant │ UART terminal│
 │  contents of the selected tab                                                │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Built in 6.8 s · t = 2.104 s · clock 56,808,000 · Logic simulation, no timing ⓘ │
@@ -1313,6 +1318,7 @@ The mark "changed since build" is set when the project files or the design setti
 | Waveforms | The panel from section 9.6 |
 | UART terminal | One tab for each UART part |
 | Testbench | File choice, "Run", text output, the "Show waveform" button |
+| Assistant | Shown when `/v1/info` says the assistant is on (decision 175). A line that the question and the project files go to Anthropic; the conversation with answers in Markdown and the tokens of each answer; the step in progress ("Reading a file…"); "Stop", "New conversation". The conversation lives in memory and belongs to the open project: closing or opening a project and reloading the page clear it |
 | Status bar | The simulation state, simulation time, clock cycle number, build result, a permanent note about the limitations with a link to the explanation |
 
 **Screen 3. Users.** For the administrator only, opened from the account menu: a table of accounts and actions on them (section 5.6 of `docs/tz-accounts.md`, decision 133).
@@ -1394,6 +1400,7 @@ In the development build and with the parameter `?debug=1`, the object `window._
 | `folder()` | A project in a folder: access, the rebuild switch, the number of scans and scans with changes |
 | `transfer()` | The report of the last file transfer: what was not taken and why, a refusal as a whole |
 | `bottomTab()` | The selected tab of the bottom panel |
+| `assistant()` | The assistant's conversation: question, answer, tools used, tokens, error |
 | `pins()` | Pins of the board drawing: number, status, level, point on the drawing |
 | `parts()` | Project parts: name, type, pins, origin (board or breadboard), whether enabled |
 | `binding()` | The binding in effect: source, `.cst` file, table rows and pins |

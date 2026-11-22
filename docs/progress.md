@@ -244,6 +244,15 @@ version 2 is spec section 15.2: do not start it without the author's command.
   `20261122-1828-840a063` deployed; CORS comes from the site settings; `make e2e-prod` 38 of 38; a manual
   run of the R2 copy matched.
 
+- **2026-11-22. Assistant** (decisions 175–177, branch `feat/assistant`). The "Assistant" tab asks Claude
+  Sonnet 5.5 (effort `medium`) about the open project through `POST /v1/assistant`; the browser runs the
+  tools (files, messages, board with active levels and live pins, the recorded waveform). Limits per key or
+  account and for the server per UTC day; `fpgasim-admin assistant key` and `assistant usage`. Tests: server
+  with a fake model, Vitest for the tools, the loop and Markdown, one end-to-end scenario on the fake model;
+  the real model is checked by hand (`e2e/manual/assistant-live.spec.ts`). Not done: storing conversations,
+  a spend screen in the interface. Needs `make deploy-server`, `make deploy-web`, the key file and
+  `enabled = true` on the VPS.
+
 ## Deployments
 
 Now (2026-11-22): build server `20261122-1407-1b51331` (English interface language, decision 168),

@@ -226,6 +226,9 @@ starts with a pointer to a later decision.
 - 172. Repository language is English
 - 173. Host names in site settings, not in the code
 - 174. Open source: MIT, a new public repository
+- 175. The assistant: own panel, the author's key on the server
+- 176. Assistant token counts in their own SQLite file
+- 177. A scripted model for the assistant tests
 
 ## 2026-11-18. Stage 0: measuring speed and build time
 
@@ -3106,3 +3109,37 @@ variables (forks would talk to the author's server by default).
 - Checked before publishing: gitleaks over the whole history and the final tree (two false positives:
   the password alphabet and a dictionary key), the real keys and passwords from the keychain against
   all history objects (no match), the shapes of issued keys and passwords (none).
+
+### 175. The assistant: own panel, the author's key on the server
+
+2026-11-22. The author asked for an assistant that reads the code, the messages and the board state and
+gives advice. Design: `docs/superpowers/specs/2026-11-22-assistant-design.md`; spike: branch
+`spike/assistant`.
+
+- Approach: an own "Assistant" tab, not the agentic-web runtime of the hackathon (the assistant is wanted
+  regardless of it), and the author's Anthropic key on the server, not a key of each user (students should
+  not need one).
+- The browser runs the tool loop: the simulation state exists only there. The server operation
+  `POST /v1/assistant` is a stateless relay: key, system prompt, tool definitions, model, effort, limits.
+- Model `claude-sonnet-5-5`, effort `medium` by default, both in `[assistant]` of `config.toml`. The spike
+  answered four cases (inverted LED, button without pull, wrong blink period from the waveform, missing
+  `;`) correctly at 1–2 cents per first question. Refusals go to the fallback model (`fallbacks: "default"`).
+- Limits are the same for everyone, keys included: 20 requests a minute, 400,000 tokens a day per key or
+  account, 4,000,000 a day for the server (about $10 at Sonnet prices).
+- The assistant only advises: it does not edit, build, run or press buttons.
+- The key file is written by `fpgasim-admin assistant key` from standard input; the spend report is
+  `fpgasim-admin assistant usage`.
+
+### 176. Assistant token counts in their own SQLite file
+
+2026-11-22. The design put the daily counts into the account database. They live in
+`<data folder>/assistant/usage.db` instead: the account database has a strict schema check and backup
+restore, and a new table would need a schema migration and make the old backups unrestorable, for data
+that is only a spend counter. The file is not in the database backups; losing it resets the counts.
+
+### 177. A scripted model for the assistant tests
+
+2026-11-22. `model = "fake"` in `[assistant]` gives a model without a key or network: it asks for
+`list_files` and `get_board`, then answers "Тестовый ответ. Инструменты: list_files, get_board.";
+`#сбой` in the question makes it fail. `tools/dev/server.sh with` (the end-to-end bench) turns it on, so
+`make check` makes no paid calls. The real model is checked by hand with `e2e/manual/assistant-live.spec.ts`.

@@ -414,6 +414,10 @@ These are added to the `key …` commands:
   sign in again. The service is stopped before the command (the procedure is in
   `docs/deploy-server.md`).
 
+- `assistant key` — reads the Anthropic key from standard input into the assistant key file (decision 175);
+- `assistant usage [--days N]` — assistant tokens and approximate cost per UTC day, owner and model, and a total
+  per day (decision 175).
+
 The utility writes to the same database as the service. The author uses it once to create his
 administrator account. Everything else is done from the "Users" page.
 
