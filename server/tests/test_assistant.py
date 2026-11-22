@@ -71,3 +71,71 @@ def test_счётчик_нового_дня(tmp_path: Path) -> None:
     ]
     assert set(rows[0]) == {"day", "owner", "model", "input", "output", "cacheRead", "cacheWrite"}
     assert [r["day"] for r in store.report(1)] == ["2026-11-29"]
+
+
+# --- History checks and the fake model ---------------------------------------------
+
+from fpgasim_server.assistant import FakeModel, ModelFailed, check_messages, make_model  # noqa: E402
+
+TOOL_TURN = [
+    {"role": "user", "content": "Почему горит LED0?"},
+    {
+        "role": "assistant",
+        "content": [
+            {"type": "thinking", "thinking": "", "signature": "x"},
+            {"type": "tool_use", "id": "t1", "name": "list_files", "input": {}},
+        ],
+    },
+    {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1", "content": "{}"}]},
+]
+
+
+def test_проверка_разговора() -> None:
+    assert check_messages(TOOL_TURN) == TOOL_TURN
+    assert check_messages([{"role": "user", "content": [{"type": "text", "text": "a"}]}])
+    bad = [
+        [],
+        "текст",
+        TOOL_TURN[:2],  # ends with assistant
+        [TOOL_TURN[0], TOOL_TURN[0]],  # two user turns in a row
+        [{"role": "user", "content": [{"type": "image", "source": {}}]}],
+        [{"role": "user", "content": ""}],
+        [{"role": "system", "content": "x"}],
+        [{"role": "user", "content": "a"}, {"role": "assistant", "content": "b"}, {"role": "user", "content": "c"}],
+    ]
+    for messages in bad:
+        with pytest.raises(ValueError):
+            check_messages(messages)
+    long = [{"role": "user", "content": "a"}, {"role": "assistant", "content": []}] * 30 + [
+        {"role": "user", "content": "a"}
+    ]
+    with pytest.raises(ValueError, match="длин"):
+        check_messages(long)
+
+
+def test_тестовая_модель() -> None:
+    model = FakeModel()
+    first = model.call([{"role": "user", "content": "Почему?"}], "ru")
+    assert first.stop_reason == "tool_use"
+    assert [(b["type"], b["name"], b["id"]) for b in first.content] == [
+        ("tool_use", "list_files", "fake_1"),
+        ("tool_use", "get_board", "fake_2"),
+    ]
+    assert first.usage == Usage(100, 20, 0, 0)
+    second = model.call(TOOL_TURN, "ru")
+    assert second.stop_reason == "end_turn"
+    assert second.content == [{"type": "text", "text": "Тестовый ответ. Инструменты: list_files, get_board."}]
+    with pytest.raises(ModelFailed):
+        model.call([{"role": "user", "content": "проверка #сбой"}], "ru")
+
+
+def test_нет_ключа_нет_модели(tmp_path: Path) -> None:
+    key = tmp_path / "anthropic.key"
+    assert make_model(AssistantSettings(enabled=True, key_file=key)) is None
+    key.write_text("  \n")
+    assert make_model(AssistantSettings(enabled=True, key_file=key)) is None
+    key.write_text("sk-ant-test\n")
+    assert make_model(AssistantSettings(enabled=False, key_file=key)) is None
+    assert make_model(AssistantSettings(enabled=True, key_file=key)) is not None
+    assert isinstance(make_model(AssistantSettings(enabled=True, model="fake")), FakeModel)
+    assert make_model(AssistantSettings(enabled=False, model="fake")) is None
