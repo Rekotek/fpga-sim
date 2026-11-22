@@ -1,5 +1,6 @@
 // Interface actions: key, projects, files, build and run (spec sections 9.2 and 9.5).
 // Objects outside React live here: the store, the editor, the server client and the current simulation.
+import { resetConversation } from "../assistant/conversation";
 import { BuildClient, ServerError, login, serverHealthy } from "../build/client";
 import { forgetKey, forgetSession, loadKey, loadSession, saveKey, saveSession, takeKeyFromUrl } from "../build/key";
 import { BoardScene } from "../board/scene";
@@ -1098,6 +1099,7 @@ export async function deleteProject(id: string): Promise<void> {
 
 // ask — opening on a user click: the browser may ask for folder permission at once.
 export async function openProject(id: string, ask = false): Promise<void> {
+  resetConversation(); // the conversation belongs to one project (decision 175)
   const seq = ++openSeq;
   await flushDrafts();
   const database = await db();
@@ -1209,6 +1211,7 @@ export function setLayout(layout: Layout): void {
 
 export async function closeProject(): Promise<void> {
   openSeq += 1;
+  resetConversation();
   stopFolder();
   await flushDrafts();
   dropProjectHold();

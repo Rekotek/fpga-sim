@@ -28,6 +28,7 @@ import { useTheme } from "../app/theme";
 import { currentLanguage, setLanguage } from "../i18n";
 import { listExamples } from "../project/assets";
 import type { DebugApi } from "./api";
+import { useConversation } from "../assistant/conversation";
 
 declare global {
   interface Window {
@@ -263,6 +264,14 @@ export const api: DebugApi = {
   setLanguage,
   vcd: exportVcd,
   command,
+  assistant: () =>
+    useConversation.getState().turns.map((turn) => ({
+      question: turn.question,
+      answer: turn.answer,
+      tools: [...turn.tools],
+      tokens: turn.tokens,
+      error: turn.error,
+    })),
   editor() {
     const dirty = useApp
       .getState()
