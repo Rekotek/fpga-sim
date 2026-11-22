@@ -10,6 +10,12 @@ FPGASIM_CONFIG); what the file lacks comes from the defaults below. Example file
     [server]
     cors_origins = ["https://sim.example.org", "http://localhost:5173"]
 
+    [assistant]
+    enabled = true
+    model = "claude-sonnet-5-5"
+    effort = "medium"
+    key_file = "/etc/fpgasim/anthropic.key"
+
 The environment variables FPGASIM_IMAGE, FPGASIM_DATA_DIR, FPGASIM_KEYS, FPGASIM_SHARE, FPGASIM_ACCOUNTS
 override the file: Compose and the tests set them. FPGASIM_CORS_ORIGINS (a comma-separated list)
 overrides cors_origins: the deployment passes the interface address of its site this way (decision 173).
@@ -66,6 +72,20 @@ class Limits:
     max_file_rows: int = 1000  # file records of a project, including records of deleted ones
     max_trashed_projects: int = 100  # projects of an account in the trash; past the limit the oldest are erased
     max_project_rows: int = 10_000  # projects of an account over all time, including erased ones
+    # The assistant (decision 175): the same for every account and key, each counted separately.
+    assistant_requests_per_minute: int = 20
+    assistant_tokens_per_day: int = 400_000  # one key or account per UTC day, all token kinds
+    assistant_tokens_per_day_total: int = 4_000_000  # the whole server per UTC day
+
+
+@dataclass(frozen=True)
+class AssistantSettings:
+    """The assistant (decision 175). model "fake" is the scripted model of the tests (decision 177)."""
+
+    enabled: bool = False
+    model: str = "claude-sonnet-5-5"
+    effort: str = "medium"
+    key_file: Path = Path("/etc/fpgasim/anthropic.key")
 
 
 @dataclass(frozen=True)
@@ -77,6 +97,7 @@ class Settings:
     share_dir: Path = REPO_ROOT  # folder with boards/ and spec/
     cors_origins: tuple[str, ...] = ("http://localhost:5173",)  # the site address comes from the deployment
     accounts_db: Path | None = None  # None: <data_dir>/accounts/accounts.db
+    assistant: AssistantSettings = field(default_factory=AssistantSettings)
 
     @property
     def accounts_file(self) -> Path:
@@ -139,6 +160,11 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     if unknown := sorted(set(given) - known):
         raise ValueError(f"{path}: неизвестные ограничения: {unknown}")
     server = doc.get("server", {})
+    assistant = doc.get("assistant", {})
+    if unknown := sorted(set(assistant) - {f.name for f in dataclasses.fields(AssistantSettings)}):
+        raise ValueError(f"{path}: неизвестные настройки помощника: {unknown}")
+    if "key_file" in assistant:
+        assistant = {**assistant, "key_file": Path(assistant["key_file"])}
     image = env.get("FPGASIM_IMAGE") or server.get("image")
     if not image:
         raise ValueError("не задан образ сборки: переменная FPGASIM_IMAGE или server.image в файле настроек")
@@ -150,4 +176,5 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         share_dir=Path(env.get("FPGASIM_SHARE") or server.get("share_dir", REPO_ROOT)),
         cors_origins=cors_origins(env, server),
         accounts_db=accounts_db_path(env),
+        assistant=AssistantSettings(**assistant),
     )
