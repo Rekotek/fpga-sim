@@ -35,7 +35,8 @@ declare global {
   }
 }
 
-const api: DebugApi = {
+// Also read by the assistant's tools (web/src/assistant/live.ts).
+export const api: DebugApi = {
   state() {
     const { sim, build, stepping, stale, checks, builds } = useApp.getState();
     const live = currentSimulation()?.live;

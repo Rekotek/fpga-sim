@@ -80,6 +80,19 @@ export interface InfoResponse {
   owner: string;
   auth?: "session" | "key"; // accounts spec section 3.1 (docs/tz-accounts.md); no field means a server from before accounts
   user?: Account | null;
+  assistant?: { enabled: boolean; model: string | null }; // decision 175; no field means an older server
+}
+
+// The assistant (decision 175): a conversation in the Messages API format, passed through the server unchanged.
+export type AssistantBlock = { type: string; [key: string]: unknown };
+export interface AssistantMessage {
+  role: "user" | "assistant";
+  content: string | AssistantBlock[];
+}
+export interface AssistantReply {
+  content: AssistantBlock[];
+  stop_reason: string;
+  usage: { input: number; output: number; cacheRead: number; cacheWrite: number };
 }
 
 // Kind of an account in server responses (accounts spec section 3 (docs/tz-accounts.md)).
