@@ -115,8 +115,17 @@ for (const c of CASES) {
       })
       .toBe(1);
     await expect(page.getByTestId("assistant-step")).toHaveCount(0);
-    const [turn] = await state<unknown[]>(page, "window.__fpgasim.assistant()");
-    results.push({ case: c.id, ...(turn as object) });
+    // A second question in the same conversation: the server must accept the returned thinking blocks.
+    await page.getByTestId("assistant-input").fill("Спасибо. Что ещё в этом проекте стоит проверить?");
+    await page.getByTestId("assistant-ask").click();
+    await expect
+      .poll(() => state<number>(page, "window.__fpgasim.assistant().filter((t) => t.answer || t.error).length"), {
+        timeout: 4 * 60_000,
+      })
+      .toBe(2);
+    await expect(page.getByTestId("assistant-step")).toHaveCount(0);
+    const turns = await state<unknown[]>(page, "window.__fpgasim.assistant()");
+    results.push({ case: c.id, turns });
     writeFileSync(new URL("results.json", OUT), JSON.stringify(results, null, 2));
     await page.screenshot({ path: new URL(`${c.id}.png`, OUT).pathname });
   });
