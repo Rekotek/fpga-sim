@@ -1,0 +1,13 @@
+// Кнопки: нажата = 1
+IO_LOC  "btn_s1" 88;
+IO_PORT "btn_s1" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_LOC  "btn_s2" 87;
+IO_PORT "btn_s2" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+// Входы 3 и 4: без провода подтяжка вниз даёт 0, провод на 3V3 через 1 кОм даёт 1
+IO_LOC  "in3" 73;
+IO_PORT "in3" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_LOC  "in4" 74;
+IO_PORT "in4" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+// Светодиод: горит при 0
+IO_LOC  "led0" 15;
+IO_PORT "led0" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;

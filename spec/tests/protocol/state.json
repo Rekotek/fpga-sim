@@ -1,0 +1,92 @@
+{
+  "schema": "protocol/state.schema.json",
+  "valid": [
+    {
+      "name": "пауза",
+      "data": {
+        "t": "state",
+        "run": "paused",
+        "time": "2104000000000",
+        "cycle": 56808000,
+        "speed": 1
+      }
+    },
+    {
+      "name": "до configure",
+      "data": {
+        "t": "state",
+        "run": "idle",
+        "time": "0",
+        "cycle": 0,
+        "speed": 1
+      }
+    },
+    {
+      "name": "скорость max",
+      "data": {
+        "t": "state",
+        "run": "running",
+        "time": "2104000000000",
+        "cycle": 56808000,
+        "speed": "max"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет cycle",
+      "at": "/cycle",
+      "data": {
+        "t": "state",
+        "run": "paused",
+        "time": "2104000000000",
+        "speed": 1
+      }
+    },
+    {
+      "name": "неизвестное состояние",
+      "at": "/run",
+      "data": {
+        "t": "state",
+        "run": "stopped",
+        "time": "2104000000000",
+        "cycle": 56808000,
+        "speed": 1
+      }
+    },
+    {
+      "name": "время числом",
+      "at": "/time",
+      "data": {
+        "t": "state",
+        "run": "paused",
+        "time": 2104000000000,
+        "cycle": 56808000,
+        "speed": 1
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "stateX",
+        "run": "paused",
+        "time": "2104000000000",
+        "cycle": 56808000,
+        "speed": 1
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "state",
+        "run": "paused",
+        "time": "2104000000000",
+        "cycle": 56808000,
+        "speed": 1,
+        "extra": 1
+      }
+    }
+  ]
+}

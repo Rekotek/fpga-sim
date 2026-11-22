@@ -1,0 +1,41 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "14000000000000"
+  },
+  "actions": [
+    {
+      "atPs": "11500000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "11600000000000",
+      "part": "s2",
+      "cmd": "release"
+    }
+  ],
+  "nets": {
+    "15": {
+      "toggles": 2,
+      "level": 0
+    },
+    "16": {
+      "toggles": 4,
+      "level": 1
+    },
+    "17": {
+      "toggles": 4,
+      "level": 1
+    },
+    "18": {
+      "toggles": 0,
+      "level": 1
+    }
+  },
+  "parts": {},
+  "notices": []
+}

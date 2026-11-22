@@ -1,0 +1,7 @@
+// IO_TYPE не совпадает со стандартом вывода: у 20K все выводы LVCMOS33.
+IO_LOC "clk" 4;
+IO_LOC "btn" 88;
+IO_PORT "btn" IO_TYPE=lvcmos33 PULL_MODE=DOWN;
+IO_LOC "led[0]" 15;
+IO_PORT "led[0]" IO_TYPE=LVCMOS18 DRIVE=8;
+IO_LOC "led[1]" 16;

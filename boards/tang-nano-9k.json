@@ -1,0 +1,126 @@
+{
+  "format": 1,
+  "id": "tang-nano-9k",
+  "name": "Sipeed Tang Nano 9K",
+  "fpga": {
+    "vendor": "gowin",
+    "device": "GW1NR-LV9QN88PC6/I5",
+    "ideName": "GW1NR-9C",
+    "package": "QN88",
+    "resources": { "lut4": 8640, "dff": 6480, "bsramBlocks": 26, "bsramKbit": 468, "mult18": 20, "pll": 2 }
+  },
+  "io": { "standard": "LVCMOS33", "voltage": 3.3 },
+  "clocks": [
+    { "id": "osc27", "pin": 52, "hz": 27000000, "label": "27 МГц" }
+  ],
+  "pins": {
+    "3":  { "name": "S1", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; подтянут на плате к 1,8 В", "en": "1.8 V bank; pulled up to 1.8 V on the board" } },
+    "4":  { "name": "S2", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; подтянут на плате к 1,8 В; JTAGSEL_N", "en": "1.8 V bank; pulled up to 1.8 V on the board; JTAGSEL_N" } },
+    "10": { "name": "LED0", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В", "en": "1.8 V bank" } },
+    "11": { "name": "LED1", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В", "en": "1.8 V bank" } },
+    "13": { "name": "LED2", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В", "en": "1.8 V bank" } },
+    "14": { "name": "LED3", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В", "en": "1.8 V bank" } },
+    "15": { "name": "LED4", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В", "en": "1.8 V bank" } },
+    "16": { "name": "LED5", "status": "onboard", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В", "en": "1.8 V bank" } },
+    "17": { "name": "UART_TX", "status": "onboard", "note": { "ru": "Выход из ПЛИС в BL702", "en": "Output from FPGA to BL702" } },
+    "18": { "name": "UART_RX", "status": "onboard", "note": { "ru": "Вход в ПЛИС из BL702", "en": "Input to FPGA from BL702" } },
+    "25": { "name": "IO25", "status": "free" },
+    "26": { "name": "IO26", "status": "free" },
+    "27": { "name": "IO27", "status": "free" },
+    "28": { "name": "IO28", "status": "free" },
+    "29": { "name": "IO29", "status": "free" },
+    "30": { "name": "IO30", "status": "free" },
+    "31": { "name": "IO31", "status": "header", "note": { "ru": "Назначение в источнике не указано", "en": "Purpose not given in the source" } },
+    "32": { "name": "IO32", "status": "header", "note": { "ru": "Назначение в источнике не указано", "en": "Purpose not given in the source" } },
+    "33": { "name": "IO33", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "34": { "name": "IO34", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "35": { "name": "IO35", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "36": { "name": "TF_CLK", "status": "header", "note": { "ru": "TF-карта", "en": "TF card" } },
+    "37": { "name": "TF_MOSI", "status": "header", "note": { "ru": "TF-карта", "en": "TF card" } },
+    "38": { "name": "TF_CS", "status": "header", "note": { "ru": "TF-карта", "en": "TF card" } },
+    "39": { "name": "TF_MISO", "status": "header", "note": { "ru": "TF-карта", "en": "TF card" } },
+    "40": { "name": "IO40", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "41": { "name": "IO41", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "42": { "name": "IO42", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "48": { "name": "IO48", "status": "header", "note": { "ru": "Разъём экрана SPI", "en": "SPI display connector" } },
+    "49": { "name": "IO49", "status": "header", "note": { "ru": "Разъём экрана SPI", "en": "SPI display connector" } },
+    "51": { "name": "IO51", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "52": { "name": "CLK_27M", "status": "clock" },
+    "53": { "name": "IO53", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "54": { "name": "IO54", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "55": { "name": "IO55", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "56": { "name": "IO56", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "57": { "name": "IO57", "status": "header", "note": { "ru": "Разъём RGB LCD", "en": "RGB LCD connector" } },
+    "63": { "name": "IO63", "status": "header", "note": { "ru": "Назначение в источнике не указано", "en": "Purpose not given in the source" } },
+    "68": { "name": "HDMI_CLK_N", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "69": { "name": "HDMI_CLK_P", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "70": { "name": "HDMI_D0_N", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "71": { "name": "HDMI_D0_P", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "72": { "name": "HDMI_D1_N", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "73": { "name": "HDMI_D1_P", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "74": { "name": "HDMI_D2_N", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "75": { "name": "HDMI_D2_P", "status": "onboard", "note": { "ru": "Подтянут на плате; выведен на гребёнку", "en": "Pulled up on the board; routed to the pin header" } },
+    "76": { "name": "IO76", "status": "header", "note": { "ru": "Разъём экрана SPI", "en": "SPI display connector" } },
+    "77": { "name": "IO77", "status": "header", "note": { "ru": "Разъём экрана SPI", "en": "SPI display connector" } },
+    "79": { "name": "IO79", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "80": { "name": "IO80", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "81": { "name": "IO81", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "82": { "name": "IO82", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "83": { "name": "IO83", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "84": { "name": "IO84", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "85": { "name": "IO85", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; назначение в источнике не указано", "en": "1.8 V bank; purpose not given in the source" } },
+    "86": { "name": "LCD_BL", "status": "header", "standard": "LVCMOS18", "note": { "ru": "Банк 1,8 В; подсветка экрана", "en": "1.8 V bank; display backlight" } }
+  },
+  "headers": [
+    {
+      "id": "left",
+      "contacts": [
+        { "pin": 38 }, { "pin": 37 }, { "pin": 36 }, { "pin": 39 }, { "pin": 25 }, { "pin": 26 },
+        { "pin": 27 }, { "pin": 28 }, { "pin": 29 }, { "pin": 30 }, { "pin": 33 }, { "pin": 34 },
+        { "pin": 40 }, { "pin": 35 }, { "pin": 41 }, { "pin": 42 }, { "pin": 51 }, { "pin": 53 },
+        { "pin": 54 }, { "pin": 55 }, { "pin": 56 }, { "pin": 57 }, { "pin": 68 }, { "pin": 69 }
+      ]
+    },
+    {
+      "id": "right",
+      "contacts": [
+        { "pin": 63 }, { "pin": 86 }, { "pin": 85 }, { "pin": 84 }, { "pin": 83 }, { "pin": 82 },
+        { "pin": 81 }, { "pin": 80 }, { "pin": 79 }, { "pin": 77 }, { "pin": 76 }, { "pin": 75 },
+        { "pin": 74 }, { "pin": 73 }, { "pin": 72 }, { "pin": 71 }, { "pin": 70 }, { "power": "5V" },
+        { "pin": 48 }, { "pin": 49 }, { "pin": 31 }, { "pin": 32 }, { "power": "GND" }, { "power": "3V3" }
+      ]
+    }
+  ],
+  "parts": [
+    { "id": "led0", "type": "led", "label": "LED0", "pins": { "in": 10 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 6.5,  "y": 62.0 } },
+    { "id": "led1", "type": "led", "label": "LED1", "pins": { "in": 11 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 9.1,  "y": 62.0 } },
+    { "id": "led2", "type": "led", "label": "LED2", "pins": { "in": 13 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 11.7, "y": 62.0 } },
+    { "id": "led3", "type": "led", "label": "LED3", "pins": { "in": 14 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 14.3, "y": 62.0 } },
+    { "id": "led4", "type": "led", "label": "LED4", "pins": { "in": 15 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 16.9, "y": 62.0 } },
+    { "id": "led5", "type": "led", "label": "LED5", "pins": { "in": 16 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 19.5, "y": 62.0 } },
+    { "id": "s1", "type": "button", "label": "S1", "pins": { "out": 3 }, "settings": { "activeLevel": 0, "idle": "drive", "key": "1" }, "geometry": { "x": 20.0, "y": 66.0 } },
+    { "id": "s2", "type": "button", "label": "S2", "pins": { "out": 4 }, "settings": { "activeLevel": 0, "idle": "drive", "key": "2" }, "geometry": { "x": 6.0,  "y": 66.0 } },
+    { "id": "uart", "type": "uart", "label": "UART (BL702)", "pins": { "fromFpga": 17, "toFpga": 18 }, "settings": { "baud": 115200 }, "geometry": { "x": 13.0, "y": 8.0 } }
+  ],
+  "devices": [
+    { "id": "hdmi", "label": { "ru": "HDMI", "en": "HDMI" }, "pins": [68, 69, 70, 71, 72, 73, 74, 75], "since": 2 },
+    { "id": "tf", "label": { "ru": "TF-карта", "en": "TF card" }, "pins": [36, 37, 39, 38], "since": 3 },
+    { "id": "psram", "label": { "ru": "PSRAM 64 Мбит (внутри корпуса)", "en": "PSRAM 64 Mbit (inside the package)" }, "pins": [], "since": 3 },
+    { "id": "flash", "label": { "ru": "Флеш-память с прошивкой", "en": "Flash memory with the bitstream" }, "pins": [], "since": null }
+  ],
+  "shared": [
+    { "pins": [68, 69, 70, 71, 72, 73, 74, 75], "users": ["HDMI", "гребёнка"] },
+    { "pins": [36, 37, 38, 39], "users": ["TF-карта", "гребёнка"] }
+  ],
+  "geometry": {
+    "unit": "mm",
+    "width": 26.0,
+    "height": 70.0,
+    "usb": { "x": 13.0, "y": 0.0, "side": "top" },
+    "chip": { "x": 13.0, "y": 34.0, "size": 10.0 },
+    "headerPitch": 2.54,
+    "headerLeftX": 1.6,
+    "headerRightX": 24.4,
+    "headerFirstY": 5.8
+  }
+}

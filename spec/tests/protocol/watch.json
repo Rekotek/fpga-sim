@@ -1,0 +1,60 @@
+{
+  "schema": "protocol/watch.schema.json",
+  "valid": [
+    {
+      "name": "два сигнала",
+      "data": {
+        "t": "watch",
+        "id": 8,
+        "signals": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "пустой список",
+      "data": {
+        "t": "watch",
+        "signals": []
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет signals",
+      "at": "/signals",
+      "data": {
+        "t": "watch",
+        "id": 8
+      }
+    },
+    {
+      "name": "сигнал по имени",
+      "at": "/signals/0",
+      "data": {
+        "t": "watch",
+        "signals": [
+          "top.q"
+        ]
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "watchX",
+        "signals": []
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "watch",
+        "signals": [],
+        "extra": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "type": "ws2812",
+  "since": 1,
+  "name": {
+    "ru": "WS2812",
+    "en": "WS2812"
+  },
+  "pins": [
+    {
+      "role": "din",
+      "dir": "in",
+      "edges": true,
+      "label": {
+        "ru": "Вход данных",
+        "en": "Data input"
+      }
+    }
+  ],
+  "settings": {
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256,
+      "default": 1,
+      "label": {
+        "ru": "Число светодиодов",
+        "en": "Number of LEDs"
+      }
+    },
+    "order": {
+      "type": "string",
+      "enum": [
+        "GRB",
+        "RGB"
+      ],
+      "default": "GRB",
+      "label": {
+        "ru": "Порядок цветов",
+        "en": "Color order"
+      }
+    },
+    "layout": {
+      "type": "string",
+      "enum": [
+        "strip",
+        "ring",
+        "matrix"
+      ],
+      "default": "strip",
+      "label": {
+        "ru": "Раскладка",
+        "en": "Layout"
+      }
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256,
+      "default": 8,
+      "label": {
+        "ru": "Ширина матрицы",
+        "en": "Matrix width"
+      }
+    }
+  },
+  "commands": [],
+  "events": [
+    {
+      "name": "timingError"
+    }
+  ]
+}

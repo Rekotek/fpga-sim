@@ -1,0 +1,74 @@
+{
+  "format": 1,
+  "type": "button",
+  "since": 1,
+  "name": {
+    "ru": "Кнопка",
+    "en": "Button"
+  },
+  "pins": [
+    {
+      "role": "out",
+      "dir": "out",
+      "edges": false,
+      "label": {
+        "ru": "Выход",
+        "en": "Output"
+      }
+    }
+  ],
+  "settings": {
+    "activeLevel": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ],
+      "default": 1,
+      "label": {
+        "ru": "Уровень при нажатии",
+        "en": "Level when pressed"
+      }
+    },
+    "key": {
+      "type": "string",
+      "maxLength": 1,
+      "default": "",
+      "label": {
+        "ru": "Клавиша",
+        "en": "Key"
+      }
+    },
+    "bounceMs": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 20,
+      "default": 0,
+      "label": {
+        "ru": "Дребезг, мс",
+        "en": "Bounce, ms"
+      }
+    },
+    "idle": {
+      "type": "string",
+      "enum": [
+        "release",
+        "drive"
+      ],
+      "default": "release",
+      "label": {
+        "ru": "В покое",
+        "en": "Idle"
+      }
+    }
+  },
+  "commands": [
+    {
+      "name": "press"
+    },
+    {
+      "name": "release"
+    }
+  ],
+  "events": []
+}

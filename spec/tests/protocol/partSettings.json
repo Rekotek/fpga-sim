@@ -1,0 +1,63 @@
+{
+  "schema": "protocol/partSettings.schema.json",
+  "valid": [
+    {
+      "name": "дребезг кнопки",
+      "data": {
+        "t": "partSettings",
+        "id": 10,
+        "part": "s1",
+        "settings": {
+          "bounceMs": 5
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет settings",
+      "at": "/settings",
+      "data": {
+        "t": "partSettings",
+        "part": "s1"
+      }
+    },
+    {
+      "name": "settings строкой",
+      "at": "/settings",
+      "data": {
+        "t": "partSettings",
+        "part": "s1",
+        "settings": "bounceMs=5"
+      }
+    },
+    {
+      "name": "id детали с пробелом",
+      "at": "/part",
+      "data": {
+        "t": "partSettings",
+        "part": "s 1",
+        "settings": {}
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "partSettingsX",
+        "part": "s1",
+        "settings": {}
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "partSettings",
+        "part": "s1",
+        "settings": {},
+        "extra": 1
+      }
+    }
+  ]
+}

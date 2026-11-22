@@ -1,0 +1,110 @@
+{
+  "schema": "protocol/step.schema.json",
+  "valid": [
+    {
+      "name": "такты",
+      "data": {
+        "t": "step",
+        "id": 7,
+        "unit": "cycle",
+        "count": 10
+      }
+    },
+    {
+      "name": "время",
+      "data": {
+        "t": "step",
+        "id": 7,
+        "unit": "time",
+        "ps": "1000000"
+      }
+    },
+    {
+      "name": "до изменения выхода",
+      "data": {
+        "t": "step",
+        "id": 7,
+        "unit": "change"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет unit",
+      "at": "/unit",
+      "data": {
+        "t": "step",
+        "id": 7
+      }
+    },
+    {
+      "name": "такты без count",
+      "at": "/count",
+      "data": {
+        "t": "step",
+        "unit": "cycle"
+      }
+    },
+    {
+      "name": "время без ps",
+      "at": "/ps",
+      "data": {
+        "t": "step",
+        "unit": "time"
+      }
+    },
+    {
+      "name": "время числом",
+      "at": "/ps",
+      "data": {
+        "t": "step",
+        "unit": "time",
+        "ps": 1000000
+      }
+    },
+    {
+      "name": "count у шага по времени",
+      "at": "",
+      "data": {
+        "t": "step",
+        "unit": "time",
+        "ps": "1000",
+        "count": 1
+      }
+    },
+    {
+      "name": "неизвестная единица",
+      "at": "/unit",
+      "data": {
+        "t": "step",
+        "unit": "frame"
+      }
+    },
+    {
+      "name": "ноль тактов",
+      "at": "/count",
+      "data": {
+        "t": "step",
+        "unit": "cycle",
+        "count": 0
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "stepX",
+        "unit": "change"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "step",
+        "unit": "change",
+        "extra": 1
+      }
+    }
+  ]
+}

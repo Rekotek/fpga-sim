@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/reset.schema.json",
+  "title": "Команда reset: возврат в начало",
+  "type": "object",
+  "required": [
+    "t"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "reset"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    }
+  }
+}

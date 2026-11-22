@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "pins": {
+    "btn": {
+      "pin": 87,
+      "pull": "down"
+    }
+  }
+}

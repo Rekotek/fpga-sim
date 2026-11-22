@@ -1,0 +1,80 @@
+{
+  "schema": "protocol/notice.schema.json",
+  "valid": [
+    {
+      "name": "висящий вход",
+      "data": {
+        "t": "notice",
+        "code": "INPUT_FLOATING",
+        "text": "Вход btn1 висит",
+        "net": "pin:88",
+        "time": "0"
+      }
+    },
+    {
+      "name": "без сети и детали",
+      "data": {
+        "t": "notice",
+        "code": "SLOW",
+        "text": "Ядро не успевает",
+        "time": "3000000000000"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет time",
+      "at": "/time",
+      "data": {
+        "t": "notice",
+        "code": "SLOW",
+        "text": "x"
+      }
+    },
+    {
+      "name": "неизвестный код",
+      "at": "/code",
+      "data": {
+        "t": "notice",
+        "code": "NET_SHORT",
+        "text": "Вход btn1 висит",
+        "net": "pin:88",
+        "time": "0"
+      }
+    },
+    {
+      "name": "сеть номером вывода",
+      "at": "/net",
+      "data": {
+        "t": "notice",
+        "code": "INPUT_FLOATING",
+        "text": "Вход btn1 висит",
+        "net": 88,
+        "time": "0"
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "noticeX",
+        "code": "INPUT_FLOATING",
+        "text": "Вход btn1 висит",
+        "net": "pin:88",
+        "time": "0"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "notice",
+        "code": "INPUT_FLOATING",
+        "text": "Вход btn1 висит",
+        "net": "pin:88",
+        "time": "0",
+        "extra": 1
+      }
+    }
+  ]
+}

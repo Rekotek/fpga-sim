@@ -1,0 +1,11 @@
+// Тактовый генератор 27 МГц
+IO_LOC  "clk" 4;
+IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
+// UART через BL616 в USB
+IO_LOC  "uart_tx" 69;
+IO_PORT "uart_tx" IO_TYPE=LVCMOS33;
+IO_LOC  "uart_rx" 70;
+IO_PORT "uart_rx" IO_TYPE=LVCMOS33;
+// Светодиод WS2812 на плате: вход данных DIN
+IO_LOC  "ws2812" 79;
+IO_PORT "ws2812" IO_TYPE=LVCMOS33 DRIVE=8;

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/hello.schema.json",
+  "title": "Команда hello: первое сообщение",
+  "type": "object",
+  "required": [
+    "t",
+    "protocol"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "hello"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "protocol": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

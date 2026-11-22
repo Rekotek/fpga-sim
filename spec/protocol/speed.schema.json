@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/speed.schema.json",
+  "title": "Команда speed: смена множителя на ходу",
+  "type": "object",
+  "required": [
+    "t",
+    "speed"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "speed"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "speed": {
+      "$ref": "common.schema.json#/$defs/speed"
+    }
+  }
+}

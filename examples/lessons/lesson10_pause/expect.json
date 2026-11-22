@@ -1,0 +1,42 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "1010000000000"
+  },
+  "actions": [
+    {
+      "atPs": "485000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "550000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "685000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "750000000000",
+      "part": "s1",
+      "cmd": "release"
+    }
+  ],
+  "nets": {},
+  "parts": {
+    "ws2812": {
+      "colors": [
+        "#192600"
+      ],
+      "errors": 0,
+      "events": []
+    }
+  },
+  "notices": []
+}

@@ -1,0 +1,15 @@
+{
+  "build": { "status": "ok", "codes": ["BLKSEQ"] },
+  "run": { "ps": "800000000000" },
+  "actions": [{ "atPs": "100000000000", "part": "s1", "cmd": "press" }],
+  "nets": {
+    "15": { "toggles": 1, "level": 0 },
+    "16": { "toggles": 1, "level": 0 },
+    "17": { "toggles": 0, "level": 1 },
+    "18": { "toggles": 1, "level": 0 },
+    "19": { "toggles": 1, "level": 0 },
+    "20": { "toggles": 1, "level": 0 }
+  },
+  "parts": {},
+  "notices": []
+}

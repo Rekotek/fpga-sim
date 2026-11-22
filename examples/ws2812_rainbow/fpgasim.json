@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "parts": [
+    {
+      "id": "strip",
+      "type": "ws2812",
+      "pins": { "din": 76 },
+      "settings": { "count": 8 },
+      "position": { "x": 0, "y": 0 }
+    }
+  ]
+}

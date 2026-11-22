@@ -1,0 +1,129 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "1700000000000"
+  },
+  "actions": [
+    {
+      "atPs": "100000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "200000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "213000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "215000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "300000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "400000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "500000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "600000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "700000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "800000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "900000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "1000000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "1100000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "1200000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "1300000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "1400000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "1500000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "1600000000000",
+      "part": "s1",
+      "cmd": "release"
+    }
+  ],
+  "nets": {
+    "15": {
+      "toggles": 4,
+      "level": 1
+    },
+    "16": {
+      "toggles": 2,
+      "level": 1
+    },
+    "17": {
+      "toggles": 2,
+      "level": 1
+    },
+    "18": {
+      "toggles": 2,
+      "level": 1
+    },
+    "19": {
+      "toggles": 2,
+      "level": 1
+    },
+    "20": {
+      "toggles": 2,
+      "level": 1
+    }
+  },
+  "parts": {},
+  "notices": []
+}

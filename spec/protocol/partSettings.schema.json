@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/partSettings.schema.json",
+  "title": "Команда partSettings: смена настроек детали на ходу",
+  "type": "object",
+  "required": [
+    "t",
+    "part",
+    "settings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "partSettings"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "part": {
+      "$ref": "common.schema.json#/$defs/partId"
+    },
+    "settings": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "binding": [768, 430],
+  "board": [440, 473],
+  "projects": [1200, 300],
+  "signals": [1200, 210],
+  "terminal": [1200, 210],
+  "testbench": [1200, 210],
+  "waves": [1200, 210],
+  "workspace": [1200, 760]
+}

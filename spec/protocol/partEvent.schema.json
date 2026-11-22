@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/partEvent.schema.json",
+  "title": "Сообщение partEvent: редкое событие детали",
+  "type": "object",
+  "required": [
+    "t",
+    "part",
+    "event",
+    "data",
+    "time"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "partEvent"
+    },
+    "part": {
+      "$ref": "common.schema.json#/$defs/partId"
+    },
+    "event": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+    },
+    "data": {
+      "type": "object"
+    },
+    "time": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    }
+  }
+}

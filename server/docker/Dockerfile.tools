@@ -1,0 +1,89 @@
+# FPGA SIM tools image: Verilator, Emscripten, Icarus and the core build tools (spec section 8.2).
+# Does not depend on repository files and takes long to build (Verilator from source), so it is
+# a separate image tagged with the tool versions: fpgasim-tools:vl<version>-em<version>.
+# The build image (Dockerfile.build) is built on top of it. The images are separate because
+# the Docker build cache is short-lived (on the VPS ~/bin/docker-prune.sh clears it weekly),
+# while a tagged image stays.
+ARG UBUNTU_VERSION=24.04
+FROM ubuntu:${UBUNTU_VERSION}
+
+ARG VERILATOR_VERSION
+ARG EMSCRIPTEN_VERSION
+# Number of parallel jobs when building Verilator. At most 3 on the VPS: neighbours run there.
+ARG JOBS=2
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates git make autoconf flex bison libfl2 libfl-dev zlib1g-dev \
+        perl python3 help2man clang lld g++ xz-utils bzip2 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Verilator: built from source at a release tag, with the clang compiler.
+RUN git clone --depth 1 --branch v${VERILATOR_VERSION} https://github.com/verilator/verilator /tmp/verilator \
+    && cd /tmp/verilator \
+    && autoconf \
+    && ./configure --prefix=/opt/verilator CXX=clang++ \
+    && make -j${JOBS} \
+    && make install \
+    && ln -s share/verilator/include /opt/verilator/include \
+    && rm -rf /tmp/verilator
+
+# Emscripten: emsdk at a version number.
+RUN git clone --depth 1 --branch ${EMSCRIPTEN_VERSION} https://github.com/emscripten-core/emsdk /opt/emsdk \
+    && cd /opt/emsdk \
+    && ./emsdk install ${EMSCRIPTEN_VERSION} \
+    && ./emsdk activate ${EMSCRIPTEN_VERSION} \
+    && ln -s /opt/emsdk/node/*/bin/node /usr/local/bin/node \
+    && rm -rf /opt/emsdk/.git /opt/emsdk/downloads
+
+ENV EMSDK=/opt/emsdk \
+    EM_CONFIG=/opt/emsdk/.emscripten \
+    PATH=/opt/verilator/bin:/opt/emsdk/upstream/emscripten:${PATH} \
+    FPGASIM_VERILATOR_VERSION=${VERILATOR_VERSION} \
+    FPGASIM_EMSCRIPTEN_VERSION=${EMSCRIPTEN_VERSION}
+
+# The Emscripten system libraries are built ahead of time: the build job runs
+# in a container with a read-only file system and cannot extend the cache.
+RUN mkdir /tmp/warm && cd /tmp/warm \
+    && printf '%s\n' '#include <chrono>' '#include <cstdio>' '#include <string>' '#include <vector>' \
+        'extern "C" int warm() { std::vector<std::string> v{"a"}; std::printf("%zu", v.size());' \
+        '  return (int)std::chrono::steady_clock::now().time_since_epoch().count(); }' > warm.cpp \
+    && for lto in "" "-flto"; do \
+         em++ -std=c++20 -O2 ${lto} warm.cpp -o warm.mjs \
+            -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker,node \
+            -sALLOW_MEMORY_GROWTH=1 -sFILESYSTEM=0 -sASSERTIONS=0 \
+            -sEXPORTED_FUNCTIONS=_warm || exit 1; \
+       done \
+    && chmod -R a+rX /opt/emsdk \
+    && rm -rf /tmp/warm
+
+# The cache is frozen: Emscripten neither writes to it nor takes locks. Without this, linking
+# in a container with a read-only file system fails on the lock file.
+ENV EM_FROZEN_CACHE=1
+
+# Core build tools. CMake and Ninja build the fpgasim_rt library and the tests,
+# nlohmann/json is needed by control messages, Catch2 by the tests (spec section 5.8).
+# The layer sits after the Verilator and Emscripten layers so that a change to the list does not rebuild them.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cmake ninja-build nlohmann-json3-dev catch2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Icarus Verilog for testbenches and Jinja2 for the shim template.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        iverilog python3-jinja2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Emscripten system libraries for linking with the file system: projects with memory data files
+# need it ($readmemh, spec section 7.5). The cache is frozen, so the layer thaws it.
+RUN mkdir /tmp/warm && cd /tmp/warm \
+    && printf '%s\n' '#include <cstdio>' \
+        'extern "C" int warm() { std::FILE* f = std::fopen("warm.hex", "r"); return f ? std::fgetc(f) : 0; }' > warm.cpp \
+    && echo 00 > warm.hex \
+    && env -u EM_FROZEN_CACHE em++ -std=c++20 -O2 warm.cpp -o warm.mjs \
+        -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=worker,node \
+        -sALLOW_MEMORY_GROWTH=1 -sFILESYSTEM=1 -sASSERTIONS=0 \
+        -sEXPORTED_FUNCTIONS=_warm --embed-file warm.hex \
+    && chmod -R a+rX /opt/emsdk \
+    && rm -rf /tmp/warm
+
+WORKDIR /work

@@ -1,0 +1,451 @@
+{
+  "schema": "fpgasim.schema.json",
+  "valid": [
+    {
+      "name": "только format",
+      "data": {
+        "format": 1
+      }
+    },
+    {
+      "name": "config из раздела 8.3",
+      "data": {
+        "format": 1,
+        "board": "tang-nano-20k"
+      }
+    },
+    {
+      "name": "деталь из раздела 2.3",
+      "data": {
+        "format": 1,
+        "parts": [
+          {
+            "id": "led_ext1",
+            "type": "led",
+            "pins": {
+              "in": 73
+            },
+            "settings": {
+              "color": "green",
+              "activeLevel": 1
+            },
+            "position": {
+              "x": 3,
+              "y": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "запись из раздела 2.4",
+      "data": {
+        "format": 1,
+        "record": {
+          "signals": [
+            "top.cnt_a",
+            "pin:15"
+          ],
+          "mode": "ring",
+          "depth": 200000,
+          "windowPs": 100000000000,
+          "trigger": null
+        }
+      }
+    },
+    {
+      "name": "все поля раздела 2.2",
+      "data": {
+        "format": 1,
+        "name": "blink3",
+        "board": "tang-nano-20k",
+        "design": {
+          "files": [
+            "top.v",
+            "rtl/uart_tx.v"
+          ],
+          "top": "top",
+          "parameters": {
+            "CLK_HZ": 27000000,
+            "MODE": "fast"
+          },
+          "defines": {
+            "SIM": true,
+            "WIDTH": "8"
+          },
+          "includeDirs": [
+            ".",
+            "rtl/include"
+          ],
+          "constraints": "top.cst",
+          "visibility": "all"
+        },
+        "pins": {
+          "clk": {
+            "pin": 4
+          },
+          "led[0]": {
+            "pin": 15,
+            "pull": "none"
+          }
+        },
+        "boardParts": {
+          "led0": {
+            "enabled": false
+          },
+          "s1": {
+            "enabled": true,
+            "settings": {
+              "bounceMs": 5
+            }
+          }
+        },
+        "parts": [
+          {
+            "id": "led_ext1",
+            "type": "led",
+            "pins": {
+              "in": 73
+            },
+            "settings": {
+              "color": "green",
+              "activeLevel": 1
+            },
+            "position": {
+              "x": 3,
+              "y": 1
+            }
+          },
+          {
+            "id": "sw1",
+            "type": "switch",
+            "pins": {
+              "out": 74
+            }
+          }
+        ],
+        "watch": [
+          {
+            "signal": "top.cnt_a",
+            "radix": "hex"
+          },
+          {
+            "signal": "top.q"
+          }
+        ],
+        "record": {
+          "signals": [
+            "top.cnt_a",
+            "pin:15"
+          ],
+          "mode": "window",
+          "depth": 200000,
+          "windowPs": 100000000000,
+          "trigger": {
+            "signal": "top.q",
+            "edge": "rise"
+          }
+        },
+        "testbenches": [
+          "tb_top.v"
+        ],
+        "sim": {
+          "speed": 0.5
+        }
+      }
+    },
+    {
+      "name": "значения null и false, скорость max",
+      "data": {
+        "format": 1,
+        "design": {
+          "files": null,
+          "top": null,
+          "constraints": false
+        },
+        "testbenches": null,
+        "sim": {
+          "speed": "max"
+        }
+      }
+    },
+    {
+      "name": "неизвестные поля не отклоняются",
+      "data": {
+        "format": 1,
+        "futureField": {
+          "a": 1
+        },
+        "design": {
+          "synth": true
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет format",
+      "at": "/format",
+      "data": {
+        "board": "tang-nano-20k"
+      }
+    },
+    {
+      "name": "format другой версии",
+      "at": "/format",
+      "data": {
+        "format": 2
+      }
+    },
+    {
+      "name": "путь с ..",
+      "at": "/design/files/0",
+      "data": {
+        "format": 1,
+        "design": {
+          "files": [
+            "../top.v"
+          ]
+        }
+      }
+    },
+    {
+      "name": "путь от корня",
+      "at": "/design/constraints",
+      "data": {
+        "format": 1,
+        "design": {
+          "constraints": "/etc/top.cst"
+        }
+      }
+    },
+    {
+      "name": "constraints: true",
+      "at": "/design/constraints",
+      "data": {
+        "format": 1,
+        "design": {
+          "constraints": true
+        }
+      }
+    },
+    {
+      "name": "макрос со значением false",
+      "at": "/design/defines/SIM",
+      "data": {
+        "format": 1,
+        "design": {
+          "defines": {
+            "SIM": false
+          }
+        }
+      }
+    },
+    {
+      "name": "режим видимости",
+      "at": "/design/visibility",
+      "data": {
+        "format": 1,
+        "design": {
+          "visibility": "debug"
+        }
+      }
+    },
+    {
+      "name": "подтяжка",
+      "at": "/pins/clk/pull",
+      "data": {
+        "format": 1,
+        "pins": {
+          "clk": {
+            "pin": 4,
+            "pull": "keeper"
+          }
+        }
+      }
+    },
+    {
+      "name": "привязка без вывода",
+      "at": "/pins/clk/pin",
+      "data": {
+        "format": 1,
+        "pins": {
+          "clk": {
+            "pull": "up"
+          }
+        }
+      }
+    },
+    {
+      "name": "имя бита порта",
+      "at": "/pins/led[0:1]",
+      "data": {
+        "format": 1,
+        "pins": {
+          "led[0:1]": {
+            "pin": 15
+          }
+        }
+      }
+    },
+    {
+      "name": "id детали с дефисом",
+      "at": "/parts/0/id",
+      "data": {
+        "format": 1,
+        "parts": [
+          {
+            "id": "led-ext1",
+            "type": "led",
+            "pins": {
+              "in": 73
+            },
+            "settings": {
+              "color": "green",
+              "activeLevel": 1
+            },
+            "position": {
+              "x": 3,
+              "y": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "деталь без pins",
+      "at": "/parts/0/pins",
+      "data": {
+        "format": 1,
+        "parts": [
+          {
+            "id": "led1",
+            "type": "led"
+          }
+        ]
+      }
+    },
+    {
+      "name": "система счисления",
+      "at": "/watch/0/radix",
+      "data": {
+        "format": 1,
+        "watch": [
+          {
+            "signal": "top.q",
+            "radix": "oct"
+          }
+        ]
+      }
+    },
+    {
+      "name": "глубина записи сверх предела",
+      "at": "/record/depth",
+      "data": {
+        "format": 1,
+        "record": {
+          "depth": 2000001
+        }
+      }
+    },
+    {
+      "name": "сигналов записи больше 64",
+      "at": "/record/signals",
+      "data": {
+        "format": 1,
+        "record": {
+          "signals": [
+            "top.s0",
+            "top.s1",
+            "top.s2",
+            "top.s3",
+            "top.s4",
+            "top.s5",
+            "top.s6",
+            "top.s7",
+            "top.s8",
+            "top.s9",
+            "top.s10",
+            "top.s11",
+            "top.s12",
+            "top.s13",
+            "top.s14",
+            "top.s15",
+            "top.s16",
+            "top.s17",
+            "top.s18",
+            "top.s19",
+            "top.s20",
+            "top.s21",
+            "top.s22",
+            "top.s23",
+            "top.s24",
+            "top.s25",
+            "top.s26",
+            "top.s27",
+            "top.s28",
+            "top.s29",
+            "top.s30",
+            "top.s31",
+            "top.s32",
+            "top.s33",
+            "top.s34",
+            "top.s35",
+            "top.s36",
+            "top.s37",
+            "top.s38",
+            "top.s39",
+            "top.s40",
+            "top.s41",
+            "top.s42",
+            "top.s43",
+            "top.s44",
+            "top.s45",
+            "top.s46",
+            "top.s47",
+            "top.s48",
+            "top.s49",
+            "top.s50",
+            "top.s51",
+            "top.s52",
+            "top.s53",
+            "top.s54",
+            "top.s55",
+            "top.s56",
+            "top.s57",
+            "top.s58",
+            "top.s59",
+            "top.s60",
+            "top.s61",
+            "top.s62",
+            "top.s63",
+            "top.s64"
+          ]
+        }
+      }
+    },
+    {
+      "name": "фронт условия запуска",
+      "at": "/record/trigger",
+      "data": {
+        "format": 1,
+        "record": {
+          "trigger": {
+            "signal": "top.q",
+            "edge": "both"
+          }
+        }
+      }
+    },
+    {
+      "name": "нулевая скорость",
+      "at": "/sim/speed",
+      "data": {
+        "format": 1,
+        "sim": {
+          "speed": 0
+        }
+      }
+    }
+  ]
+}

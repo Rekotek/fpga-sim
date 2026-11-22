@@ -1,0 +1,7 @@
+# Стиль C++ проекта (ядро, стенд замера). Проверка: make lint.
+BasedOnStyle: Google
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 120
+DerivePointerAlignment: false
+PointerAlignment: Left

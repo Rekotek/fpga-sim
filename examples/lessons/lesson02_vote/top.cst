@@ -1,0 +1,9 @@
+IO_LOC  "btn_s1" 88;
+IO_PORT "btn_s1" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_LOC  "btn_s2" 87;
+IO_PORT "btn_s2" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+// Третий голос: без провода подтяжка вниз даёт 0, провод на 3V3 даёт 1
+IO_LOC  "vote3" 73;
+IO_PORT "vote3" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_LOC  "led0" 15;
+IO_PORT "led0" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;

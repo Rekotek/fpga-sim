@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/recordStart.schema.json",
+  "title": "Команда recordStart: начало записи",
+  "type": "object",
+  "required": [
+    "t",
+    "signals",
+    "mode"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "recordStart"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "common.schema.json#/$defs/sig"
+          },
+          {
+            "$ref": "common.schema.json#/$defs/pinRef"
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 64
+    },
+    "mode": {
+      "enum": [
+        "ring",
+        "window"
+      ]
+    },
+    "depth": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000000
+    },
+    "windowPs": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    },
+    "trigger": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "signal",
+            "edge"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "signal": {
+              "oneOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/sig"
+                },
+                {
+                  "$ref": "common.schema.json#/$defs/pinRef"
+                }
+              ]
+            },
+            "edge": {
+              "enum": [
+                "rise",
+                "fall",
+                "change"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

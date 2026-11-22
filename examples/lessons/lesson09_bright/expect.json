@@ -1,0 +1,55 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "50000000000"
+  },
+  "actions": [
+    {
+      "atPs": "1000000000",
+      "part": "uart",
+      "cmd": "send",
+      "args": {
+        "bytes": [
+          53,
+          97,
+          57
+        ]
+      }
+    }
+  ],
+  "nets": {
+    "15": {
+      "dutyMax": 0.08
+    },
+    "16": {
+      "toggles": 1,
+      "level": 0
+    },
+    "17": {
+      "toggles": 0,
+      "level": 1
+    },
+    "18": {
+      "toggles": 2,
+      "level": 1
+    },
+    "19": {
+      "toggles": 1,
+      "level": 0
+    },
+    "20": {
+      "toggles": 0,
+      "level": 1
+    }
+  },
+  "parts": {
+    "uart": {
+      "text": "5a9",
+      "events": []
+    }
+  },
+  "notices": []
+}

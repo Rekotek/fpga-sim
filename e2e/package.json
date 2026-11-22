@@ -1,0 +1,10 @@
+{
+  "name": "fpgasim-e2e",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "26.6.6",
+    "typescript": "6.0.3"
+  }
+}

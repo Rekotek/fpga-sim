@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/recordFetch.schema.json",
+  "title": "Команда recordFetch: запрос данных записи",
+  "type": "object",
+  "required": [
+    "t",
+    "record"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "recordFetch"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "record": {
+      "$ref": "common.schema.json#/$defs/record"
+    },
+    "fromPs": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    },
+    "toPs": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    }
+  }
+}

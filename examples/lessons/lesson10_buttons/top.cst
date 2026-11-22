@@ -1,0 +1,11 @@
+// Тактовый генератор 27 МГц
+IO_LOC  "clk" 4;
+IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
+// Кнопки S1 и S2 (полярность — в top.v, localparam PRESSED)
+IO_LOC  "btn_s1" 88;
+IO_PORT "btn_s1" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_LOC  "btn_s2" 87;
+IO_PORT "btn_s2" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+// Светодиод WS2812 на плате: вход данных DIN
+IO_LOC  "ws2812" 79;
+IO_PORT "ws2812" IO_TYPE=LVCMOS33 DRIVE=8;

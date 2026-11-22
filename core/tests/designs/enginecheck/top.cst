@@ -1,0 +1,8 @@
+IO_LOC "clk" 4;
+IO_LOC "en" 73;
+IO_PORT "en" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "out[0]" 15;
+IO_LOC "out[1]" 16;
+IO_LOC "out[2]" 17;
+IO_LOC "out[3]" 18;
+IO_LOC "seen" 19;

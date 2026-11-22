@@ -1,0 +1,172 @@
+{
+  "schema": "protocol/recordStart.schema.json",
+  "valid": [
+    {
+      "name": "кольцо",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": null
+      }
+    },
+    {
+      "name": "окно с условием запуска",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "window",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": {
+          "signal": 1,
+          "edge": "rise"
+        }
+      }
+    },
+    {
+      "name": "только обязательные поля",
+      "data": {
+        "t": "recordStart",
+        "signals": [
+          "pin:4"
+        ],
+        "mode": "ring"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет mode",
+      "at": "/mode",
+      "data": {
+        "t": "recordStart",
+        "signals": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "сигнал по имени",
+      "at": "/signals/0",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          "top.cnt_a"
+        ],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": null
+      }
+    },
+    {
+      "name": "пустой список сигналов",
+      "at": "/signals",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": null
+      }
+    },
+    {
+      "name": "окно числом",
+      "at": "/windowPs",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": 100000000000,
+        "trigger": null
+      }
+    },
+    {
+      "name": "глубина сверх предела",
+      "at": "/depth",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "ring",
+        "depth": 2000001,
+        "windowPs": "100000000000",
+        "trigger": null
+      }
+    },
+    {
+      "name": "фронт условия запуска",
+      "at": "/trigger",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": {
+          "signal": 1,
+          "edge": "both"
+        }
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "recordStartX",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": null
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "recordStart",
+        "id": 11,
+        "signals": [
+          1,
+          "pin:15"
+        ],
+        "mode": "ring",
+        "depth": 200000,
+        "windowPs": "100000000000",
+        "trigger": null,
+        "extra": 1
+      }
+    }
+  ]
+}

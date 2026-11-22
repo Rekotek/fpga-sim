@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "parts": [
+    {
+      "id": "vote3",
+      "type": "switch",
+      "pins": {
+        "out": 73
+      },
+      "settings": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ]
+}

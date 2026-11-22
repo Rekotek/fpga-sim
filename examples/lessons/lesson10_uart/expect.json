@@ -1,0 +1,39 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "20000000000"
+  },
+  "actions": [
+    {
+      "atPs": "1000000000",
+      "part": "uart",
+      "cmd": "send",
+      "args": {
+        "bytes": [
+          103,
+          55,
+          109,
+          51
+        ]
+      }
+    }
+  ],
+  "nets": {},
+  "parts": {
+    "uart": {
+      "text": "g7m3",
+      "events": []
+    },
+    "ws2812": {
+      "colors": [
+        "#540054"
+      ],
+      "errors": 0,
+      "events": []
+    }
+  },
+  "notices": []
+}

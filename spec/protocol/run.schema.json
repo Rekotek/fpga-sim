@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/run.schema.json",
+  "title": "Команда run: пуск",
+  "type": "object",
+  "required": [
+    "t"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "run"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "speed": {
+      "$ref": "common.schema.json#/$defs/speed"
+    }
+  }
+}

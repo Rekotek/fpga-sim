@@ -1,0 +1,127 @@
+{
+  "schema": "part.schema.json",
+  "valid": [
+    {
+      "name": "led",
+      "file": "parts/led/part.json"
+    },
+    {
+      "name": "button",
+      "file": "parts/button/part.json"
+    },
+    {
+      "name": "switch",
+      "file": "parts/switch/part.json"
+    },
+    {
+      "name": "uart",
+      "file": "parts/uart/part.json"
+    },
+    {
+      "name": "ws2812",
+      "file": "parts/ws2812/part.json"
+    },
+    {
+      "name": "probe",
+      "file": "parts/probe/part.json"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет commands",
+      "at": "/commands",
+      "from": "parts/led/part.json",
+      "remove": [
+        "/commands"
+      ]
+    },
+    {
+      "name": "format другой версии",
+      "at": "/format",
+      "from": "parts/led/part.json",
+      "set": {
+        "/format": 0
+      }
+    },
+    {
+      "name": "тип с заглавной буквы",
+      "at": "/type",
+      "from": "parts/led/part.json",
+      "set": {
+        "/type": "Led"
+      }
+    },
+    {
+      "name": "название без русского",
+      "at": "/name/ru",
+      "from": "parts/led/part.json",
+      "set": {
+        "/name": {
+          "en": "LED"
+        }
+      }
+    },
+    {
+      "name": "нет выводов",
+      "at": "/pins",
+      "from": "parts/led/part.json",
+      "set": {
+        "/pins": []
+      }
+    },
+    {
+      "name": "направление вывода",
+      "at": "/pins/0/dir",
+      "from": "parts/led/part.json",
+      "set": {
+        "/pins/0/dir": "inout"
+      }
+    },
+    {
+      "name": "edges не булево",
+      "at": "/pins/0/edges",
+      "from": "parts/led/part.json",
+      "set": {
+        "/pins/0/edges": 0
+      }
+    },
+    {
+      "name": "настройка без умолчания",
+      "at": "/settings/color/default",
+      "from": "parts/led/part.json",
+      "remove": [
+        "/settings/color/default"
+      ]
+    },
+    {
+      "name": "тип настройки",
+      "at": "/settings/color/type",
+      "from": "parts/led/part.json",
+      "set": {
+        "/settings/color/type": "color"
+      }
+    },
+    {
+      "name": "команда без имени",
+      "at": "/commands/0/name",
+      "from": "parts/led/part.json",
+      "set": {
+        "/commands": [
+          {
+            "args": {}
+          }
+        ]
+      }
+    },
+    {
+      "name": "событие строкой",
+      "at": "/events/0",
+      "from": "parts/led/part.json",
+      "set": {
+        "/events": [
+          "framingError"
+        ]
+      }
+    }
+  ]
+}

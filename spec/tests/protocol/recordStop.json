@@ -1,0 +1,51 @@
+{
+  "schema": "protocol/recordStop.schema.json",
+  "valid": [
+    {
+      "name": "с id",
+      "data": {
+        "t": "recordStop",
+        "id": 5
+      }
+    },
+    {
+      "name": "без id",
+      "data": {
+        "t": "recordStop"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "recordStopX"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "recordStop",
+        "extra": 1
+      }
+    },
+    {
+      "name": "id строкой",
+      "at": "/id",
+      "data": {
+        "t": "recordStop",
+        "id": "1"
+      }
+    },
+    {
+      "name": "id отрицательный",
+      "at": "/id",
+      "data": {
+        "t": "recordStop",
+        "id": -1
+      }
+    }
+  ]
+}

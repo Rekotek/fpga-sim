@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# fpgasim-admin on the VPS (spec section 8.6, accounts spec section 3.8 in docs/tz-accounts.md): the tool runs inside
+# the service container; the key file /etc/fpgasim/keys.toml and the database /var/lib/fpgasim/accounts/accounts.db
+# belong to root and are written from there.
+#
+#   /opt/fpgasim/deploy/fpgasim-admin key add taras
+#   /opt/fpgasim/deploy/fpgasim-admin key disable taras
+#   /opt/fpgasim/deploy/fpgasim-admin key list
+#   /opt/fpgasim/deploy/fpgasim-admin user add taras --name Taras --admin
+#   /opt/fpgasim/deploy/fpgasim-admin user list
+#   /opt/fpgasim/deploy/fpgasim-admin db restore /var/lib/fpgasim/backup/accounts-20261120.db
+#
+# db restore runs with the service stopped: the command starts a one-off container of the same image
+# and does not enter the running one.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+# The Compose command is an array, not a shell function: exec does not run a function.
+COMPOSE=(docker compose --env-file /var/lib/fpgasim/deploy/compose.env -f deploy/compose.yaml)
+if [ "${1:-}" = "db" ]; then
+    exec "${COMPOSE[@]}" run --rm --no-deps -T api fpgasim-admin "$@"
+fi
+exec "${COMPOSE[@]}" exec -T api fpgasim-admin "$@"

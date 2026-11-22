@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "type": "led",
+  "since": 1,
+  "name": {
+    "ru": "Светодиод",
+    "en": "LED"
+  },
+  "pins": [
+    {
+      "role": "in",
+      "dir": "in",
+      "edges": false,
+      "label": {
+        "ru": "Вход",
+        "en": "Input"
+      }
+    }
+  ],
+  "settings": {
+    "activeLevel": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ],
+      "default": 1,
+      "label": {
+        "ru": "Горит при уровне",
+        "en": "Lights at level"
+      }
+    },
+    "color": {
+      "type": "string",
+      "enum": [
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "orange",
+        "white"
+      ],
+      "default": "red",
+      "label": {
+        "ru": "Цвет",
+        "en": "Color"
+      }
+    }
+  },
+  "commands": [],
+  "events": []
+}

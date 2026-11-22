@@ -1,0 +1,531 @@
+{
+  "schema": "protocol/configure.schema.json",
+  "valid": [
+    {
+      "name": "пример раздела 4.4",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "бестактовая схема без деталей",
+      "data": {
+        "t": "configure",
+        "id": 3,
+        "board": "tang-nano-20k",
+        "clock": null,
+        "nets": [],
+        "parts": [],
+        "watch": []
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет clock",
+      "at": "/clock",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "частота такта нулевая",
+      "at": "/clock",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 0
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "сеть с портом без бита",
+      "at": "/nets/0/bit",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "сеть без подтяжки",
+      "at": "/nets/0/pull",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 73
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "деталь без типа",
+      "at": "/parts/0/type",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "pins": {
+              "in": 15
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "наблюдение по имени сигнала",
+      "at": "/watch/0",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          "top.cnt_a"
+        ]
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "configureX",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ]
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "configure",
+        "id": 2,
+        "board": "tang-nano-20k",
+        "clock": {
+          "port": "clk",
+          "hz": 27000000
+        },
+        "nets": [
+          {
+            "pin": 4,
+            "port": "clk",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 15,
+            "port": "led",
+            "bit": 0,
+            "pull": "none"
+          },
+          {
+            "pin": 88,
+            "port": "btn1",
+            "bit": 0,
+            "pull": "down"
+          },
+          {
+            "pin": 73,
+            "pull": "none"
+          }
+        ],
+        "parts": [
+          {
+            "id": "led0",
+            "type": "led",
+            "pins": {
+              "in": 15
+            },
+            "settings": {
+              "activeLevel": 0
+            }
+          },
+          {
+            "id": "s1",
+            "type": "button",
+            "pins": {
+              "out": 88
+            },
+            "settings": {
+              "activeLevel": 1
+            }
+          }
+        ],
+        "watch": [
+          12,
+          13
+        ],
+        "extra": 1
+      }
+    }
+  ]
+}

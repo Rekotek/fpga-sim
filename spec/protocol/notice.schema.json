@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/notice.schema.json",
+  "title": "Сообщение notice: замечание симулятора",
+  "type": "object",
+  "required": [
+    "t",
+    "code",
+    "text",
+    "time"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "notice"
+    },
+    "code": {
+      "enum": [
+        "INPUT_FLOATING",
+        "NET_CONFLICT",
+        "RECORD_OVERFLOW",
+        "MODEL_FINISH",
+        "SLOW"
+      ]
+    },
+    "text": {
+      "type": "string"
+    },
+    "net": {
+      "description": "Сеть по выводу платы: pin:N.",
+      "$ref": "common.schema.json#/$defs/pinRef"
+    },
+    "part": {
+      "$ref": "common.schema.json#/$defs/partId"
+    },
+    "time": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    }
+  }
+}

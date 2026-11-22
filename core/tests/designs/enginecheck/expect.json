@@ -1,0 +1,24 @@
+{
+  "build": { "status": "ok", "codes": [] },
+  "run": { "ps": "1000000000" },
+  "actions": [],
+  "nets": {
+    "15": { "toggles": 201 },
+    "19": { "toggles": 0, "level": 0 },
+    "73": { "toggles": 0, "level": 1 }
+  },
+  "parts": {},
+  "notices": ["MODEL_FINISH"],
+  "cycle": 201,
+  "engine": {
+    "cycles": 20,
+    "watch": ["top.cnt", "top.wide", "top.out"],
+    "watchWords": [[20], [1048575, 0, 0], [4]],
+    "record": ["pin:4", "top.cnt", "top.wide"],
+    "traces": [
+      { "kind": "clock", "count": 40 },
+      { "kind": "counter", "count": 20 },
+      { "kind": "any", "count": 20 }
+    ]
+  }
+}

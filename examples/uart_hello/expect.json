@@ -1,0 +1,8 @@
+{
+  "build": {"status": "ok", "codes": []},
+  "run": {"ps": "2100000000000"},
+  "actions": [],
+  "nets": {},
+  "parts": {"uart": {"text": "Hello, FPGA SIM!\r\nHello, FPGA SIM!\r\nHello, FPGA SIM!\r\n", "events": []}},
+  "notices": []
+}

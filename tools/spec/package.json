@@ -1,0 +1,9 @@
+{
+  "name": "fpgasim-spec-check",
+  "private": true,
+  "type": "module",
+  "description": "Проверка форматов по схемам spec/ (make check-spec)",
+  "dependencies": {
+    "ajv": "8.20.0"
+  }
+}

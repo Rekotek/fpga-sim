@@ -1,0 +1,9 @@
+{
+  "name": "fpgasim-bench",
+  "private": true,
+  "type": "module",
+  "description": "Стенд этапа 0: замер скорости в Chrome через Playwright",
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

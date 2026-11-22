@@ -1,0 +1,36 @@
+[project]
+name = "fpgasim-server"
+version = "0.1.0"
+description = "Сервер сборки FPGA SIM (раздел 8 ТЗ)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "jsonschema>=4.23",
+]
+
+[project.scripts]
+fpgasim-admin = "fpgasim_server.admin:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+    # The job in the build image runs the shim template; a test compares it with the reference output.
+    "jinja2>=3.1",
+    # Third-party VCD parser: the testbench tests read the waveform dump with it.
+    "pyvcd>=0.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fpgasim_server"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+# The ruff settings are shared by the whole repository and live in the root: ruff.toml.

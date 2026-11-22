@@ -1,0 +1,21 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "2502000000000"
+  },
+  "actions": [],
+  "nets": {},
+  "parts": {
+    "ws2812": {
+      "colors": [
+        "#212100"
+      ],
+      "errors": 0,
+      "events": []
+    }
+  },
+  "notices": []
+}

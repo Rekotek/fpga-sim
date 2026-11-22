@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "parts": [
+    {
+      "id": "ped_r",
+      "type": "led",
+      "pins": { "in": 73 },
+      "settings": { "activeLevel": 1, "color": "red" },
+      "position": { "x": 0, "y": 0 }
+    },
+    {
+      "id": "ped_g",
+      "type": "led",
+      "pins": { "in": 74 },
+      "settings": { "activeLevel": 1, "color": "green" },
+      "position": { "x": 0, "y": 1 }
+    }
+  ]
+}

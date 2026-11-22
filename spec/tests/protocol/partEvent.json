@@ -1,0 +1,90 @@
+{
+  "schema": "protocol/partEvent.schema.json",
+  "valid": [
+    {
+      "name": "скорость UART не совпала",
+      "data": {
+        "t": "partEvent",
+        "part": "uart",
+        "event": "baudMismatch",
+        "data": {
+          "baud": 9600
+        },
+        "time": "5000000000"
+      }
+    },
+    {
+      "name": "пустые данные",
+      "data": {
+        "t": "partEvent",
+        "part": "uart",
+        "event": "framingError",
+        "data": {},
+        "time": "5000000000"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет data",
+      "at": "/data",
+      "data": {
+        "t": "partEvent",
+        "part": "uart",
+        "event": "baudMismatch",
+        "time": "5000000000"
+      }
+    },
+    {
+      "name": "время числом",
+      "at": "/time",
+      "data": {
+        "t": "partEvent",
+        "part": "uart",
+        "event": "baudMismatch",
+        "data": {
+          "baud": 9600
+        },
+        "time": 5000000000
+      }
+    },
+    {
+      "name": "данные строкой",
+      "at": "/data",
+      "data": {
+        "t": "partEvent",
+        "part": "uart",
+        "event": "baudMismatch",
+        "data": "9600",
+        "time": "5000000000"
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "partEventX",
+        "part": "uart",
+        "event": "baudMismatch",
+        "data": {
+          "baud": 9600
+        },
+        "time": "5000000000"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "partEvent",
+        "part": "uart",
+        "event": "baudMismatch",
+        "data": {
+          "baud": 9600
+        },
+        "time": "5000000000",
+        "extra": 1
+      }
+    }
+  ]
+}

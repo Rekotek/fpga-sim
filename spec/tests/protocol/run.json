@@ -1,0 +1,60 @@
+{
+  "schema": "protocol/run.schema.json",
+  "valid": [
+    {
+      "name": "без скорости",
+      "data": {
+        "t": "run",
+        "id": 4
+      }
+    },
+    {
+      "name": "скорость числом",
+      "data": {
+        "t": "run",
+        "id": 4,
+        "speed": 0.1
+      }
+    },
+    {
+      "name": "скорость max",
+      "data": {
+        "t": "run",
+        "speed": "max"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "скорость нулевая",
+      "at": "/speed",
+      "data": {
+        "t": "run",
+        "speed": 0
+      }
+    },
+    {
+      "name": "скорость неизвестным словом",
+      "at": "/speed",
+      "data": {
+        "t": "run",
+        "speed": "fast"
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "runX"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "run",
+        "extra": 1
+      }
+    }
+  ]
+}

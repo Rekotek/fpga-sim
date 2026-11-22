@@ -1,0 +1,16 @@
+// Образец заголовка модели Verilator 5.050 (формат строк портов — решение 8).
+class Vtop final : public VerilatedModel {
+  public:
+    VL_IN8(&clk,0,0);
+    VL_IN8(&in8,7,0);
+    VL_INOUT8(&io1,0,0);
+    VL_OUT8(&out1,0,0);
+    VL_OUT8(&led,5,0);
+    VL_OUT16(&out16,15,0);
+    VL_OUT(&out32,31,0);
+    VL_OUT64(&out40,39,0);
+    VL_OUTW(&out70,69,0,3);
+    VL_IN8(&bus__02Da,3,1);
+    VL_IN64(&in33,0,32);
+    VL_INW(&in128,127,0,4);
+};

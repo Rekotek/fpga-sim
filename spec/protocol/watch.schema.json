@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/watch.schema.json",
+  "title": "Команда watch: замена списка наблюдения",
+  "type": "object",
+  "required": [
+    "t",
+    "signals"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "watch"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/sig"
+      }
+    }
+  }
+}

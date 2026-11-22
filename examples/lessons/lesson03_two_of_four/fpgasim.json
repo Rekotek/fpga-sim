@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "parts": [
+    {
+      "id": "in3",
+      "type": "switch",
+      "pins": {
+        "out": 73
+      },
+      "settings": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "in4",
+      "type": "switch",
+      "pins": {
+        "out": 74
+      },
+      "settings": {},
+      "position": {
+        "x": 0,
+        "y": 1
+      }
+    }
+  ]
+}

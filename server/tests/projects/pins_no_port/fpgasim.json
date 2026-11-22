@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "pins": {
+    "clk": {
+      "pin": 4
+    },
+    "nosuch": {
+      "pin": 17
+    }
+  }
+}

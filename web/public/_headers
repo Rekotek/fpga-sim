@@ -1,0 +1,17 @@
+# Static-file headers on Cloudflare Pages (spec section 10.1). `vite preview` serves the same headers
+# in the end-to-end test setup (web/vite.config.ts). __BUILD_URL__ is the build server address: the build
+# writes VITE_BUILD_URL in its place, the preview server the setup address (decision 173).
+#
+# Content security policy:
+#   script-src   own scripts; 'wasm-unsafe-eval' compiles sim.wasm; blob: is the core module sim.mjs,
+#                which the Worker loads from memory;
+#   worker-src   the core Worker (created from its own file, so it does not need blob:);
+#   style-src    own styles; 'unsafe-inline' for styles that the CodeMirror editor creates on the fly;
+#   connect-src  own origin and the build server;
+#   img-src      own images and data: (icons of editor message markers from CodeMirror).
+# Strict-Transport-Security: the access key arrives in the link and is stored in the browser, so the page needs HTTPS only.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' __BUILD_URL__; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Strict-Transport-Security: max-age=31536000

@@ -1,0 +1,133 @@
+{
+  "schema": "board.schema.json",
+  "valid": [
+    {
+      "name": "Tang Nano 20K",
+      "file": "boards/tang-nano-20k.json"
+    },
+    {
+      "name": "Tang Nano 9K",
+      "file": "boards/tang-nano-9k.json"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет clocks",
+      "at": "/clocks",
+      "from": "boards/tang-nano-20k.json",
+      "remove": [
+        "/clocks"
+      ]
+    },
+    {
+      "name": "format другой версии",
+      "at": "/format",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/format": 2
+      }
+    },
+    {
+      "name": "неизвестное состояние вывода",
+      "at": "/pins/4/status",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/pins/4/status": "clk"
+      }
+    },
+    {
+      "name": "номер вывода не число",
+      "at": "/pins/A4",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/pins/A4": {
+          "name": "X",
+          "status": "free"
+        }
+      }
+    },
+    {
+      "name": "частота такта дробная",
+      "at": "/clocks/0/hz",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/clocks/0/hz": 27500000.5
+      }
+    },
+    {
+      "name": "контакт гребёнки с выводом и питанием",
+      "at": "/headers/0/contacts/0",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/headers/0/contacts/0": {
+          "pin": 73,
+          "power": "GND"
+        }
+      }
+    },
+    {
+      "name": "неизвестная линия питания",
+      "at": "/headers/1/contacts/0",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/headers/1/contacts/0/power": "12V"
+      }
+    },
+    {
+      "name": "встроенная деталь без geometry",
+      "at": "/parts/0/geometry",
+      "from": "boards/tang-nano-20k.json",
+      "remove": [
+        "/parts/0/geometry"
+      ]
+    },
+    {
+      "name": "вывод детали строкой",
+      "at": "/parts/0/pins/in",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/parts/0/pins/in": "15"
+      }
+    },
+    {
+      "name": "since устройства строкой",
+      "at": "/devices/0/since",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/devices/0/since": "2"
+      }
+    },
+    {
+      "name": "единица геометрии",
+      "at": "/geometry/unit",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/geometry/unit": "px"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/leds",
+      "from": "boards/tang-nano-20k.json",
+      "set": {
+        "/leds": []
+      }
+    },
+    {
+      "name": "стандарт вывода пустой",
+      "at": "/pins/3/standard",
+      "from": "boards/tang-nano-9k.json",
+      "set": {
+        "/pins/3/standard": ""
+      }
+    },
+    {
+      "name": "стандарт вывода не строка",
+      "at": "/pins/10/standard",
+      "from": "boards/tang-nano-9k.json",
+      "set": {
+        "/pins/10/standard": 18
+      }
+    }
+  ]
+}

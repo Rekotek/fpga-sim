@@ -1,0 +1,11 @@
+# Образы собираются из корня репозитория; в контекст идёт только то, что копируют Dockerfile.
+*
+!core/
+core/build/
+!parts/
+!boards/
+!spec/
+!server/
+server/tests/
+**/__pycache__/
+**/.venv/

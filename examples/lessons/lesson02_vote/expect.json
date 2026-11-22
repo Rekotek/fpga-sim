@@ -1,0 +1,59 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "8000000000"
+  },
+  "actions": [
+    {
+      "atPs": "1000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "2000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "3000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "4000000000",
+      "part": "vote3",
+      "cmd": "set",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "atPs": "5000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "6000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "7000000000",
+      "part": "s1",
+      "cmd": "release"
+    }
+  ],
+  "nets": {
+    "15": {
+      "toggles": 4,
+      "level": 1,
+      "dutyMin": 0.49,
+      "dutyMax": 0.51
+    }
+  },
+  "parts": {},
+  "notices": []
+}

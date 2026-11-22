@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/ok.schema.json",
+  "title": "Сообщение ok: успех команды",
+  "description": "Кроме id несёт поля ответа своей команды: warnings (configure), signals (signals), record (recordStart), info (recordFetch).",
+  "type": "object",
+  "required": [
+    "t",
+    "id"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "ok"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "common.schema.json#/$defs/code"
+          },
+          "text": {
+            "type": "string"
+          },
+          "net": {
+            "$ref": "common.schema.json#/$defs/pinRef"
+          },
+          "part": {
+            "$ref": "common.schema.json#/$defs/partId"
+          },
+          "port": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "signals": {
+      "description": "Раздел 4.5 ТЗ.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sig",
+          "path",
+          "width",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "sig": {
+            "$ref": "common.schema.json#/$defs/sig"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "kind": {
+            "enum": [
+              "port",
+              "wire",
+              "reg",
+              "memory",
+              "param"
+            ]
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "record": {
+      "$ref": "common.schema.json#/$defs/record"
+    },
+    "info": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "index",
+          "name",
+          "width"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

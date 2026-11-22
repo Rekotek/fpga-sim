@@ -1,0 +1,71 @@
+{
+  "format": 1,
+  "about": "Эталонные двоичные сообщения протокола (раздел 4.6 ТЗ). Каждая запись описывает содержимое файла; файлы создаёт tools/spec/vectors.mjs --write. Кодирование на C++ и TypeScript обязано давать те же байты. Значения f32 выбраны точно представимыми.",
+  "vectors": [
+    {
+      "file": "frame.bin",
+      "kind": "FRAME",
+      "seq": 7,
+      "timePs": "2100000000000",
+      "frame": {
+        "spanPs": "16000000000",
+        "cycle": 56700000,
+        "realUs": 11875,
+        "ratio": 1.5,
+        "nets": [
+          { "level": 1, "flags": 1, "toggles": 4, "duty": 0.5 },
+          { "level": 0, "flags": 2, "toggles": 0, "duty": 0 },
+          { "level": 0, "flags": 8, "toggles": 3, "duty": 0.25 },
+          { "level": 1, "flags": 7, "toggles": 4294967295, "duty": 1 }
+        ],
+        "watch": [
+          { "sig": 3, "width": 25, "words": [13499999] },
+          { "sig": 9, "width": 70, "words": [4294967295, 305419896, 63] }
+        ],
+        "parts": [
+          { "index": 6, "state": [1] },
+          { "index": 8, "state": [1, 2, 3, 4, 5] },
+          { "index": 9, "state": [10, 20, 30, 40] }
+        ]
+      }
+    },
+    {
+      "file": "frame_empty.bin",
+      "kind": "FRAME",
+      "seq": 0,
+      "timePs": "0",
+      "frame": { "spanPs": "0", "cycle": 0, "realUs": 0, "ratio": 0, "nets": [], "watch": [], "parts": [] }
+    },
+    {
+      "file": "trace.bin",
+      "kind": "TRACE",
+      "seq": 2,
+      "timePs": "900000000000",
+      "trace": {
+        "record": 3,
+        "fromPs": "1000",
+        "toPs": "18446744073709551615",
+        "changes": [
+          { "timePs": "1000", "index": 0, "words": [1] },
+          { "timePs": "1000", "index": 1, "words": [4294967295, 1] },
+          { "timePs": "37037", "index": 0, "words": [0] },
+          { "timePs": "500000000000", "index": 1, "words": [0, 2] }
+        ]
+      }
+    },
+    {
+      "file": "part_data.bin",
+      "kind": "PART_DATA",
+      "seq": 5,
+      "timePs": "86805555",
+      "partData": { "part": 2, "channel": 0, "bytes": [72, 105, 33] }
+    },
+    {
+      "file": "part_data_aligned.bin",
+      "kind": "PART_DATA",
+      "seq": 6,
+      "timePs": "86805556",
+      "partData": { "part": 65535, "channel": 1, "bytes": [0, 255, 10, 13] }
+    }
+  ]
+}

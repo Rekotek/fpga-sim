@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/recordState.schema.json",
+  "title": "Сообщение recordState: состояние записи",
+  "type": "object",
+  "required": [
+    "t",
+    "record",
+    "state",
+    "changes",
+    "fromPs",
+    "toPs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "recordState"
+    },
+    "record": {
+      "$ref": "common.schema.json#/$defs/record"
+    },
+    "state": {
+      "enum": [
+        "armed",
+        "recording",
+        "done",
+        "stopped"
+      ]
+    },
+    "changes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fromPs": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    },
+    "toPs": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    }
+  }
+}

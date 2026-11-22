@@ -1,0 +1,30 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "2200000000000"
+  },
+  "actions": [],
+  "nets": {
+    "15": {
+      "dutyMin": 0.45,
+      "dutyMax": 0.62
+    },
+    "16": {
+      "toggles": 0,
+      "level": 1
+    },
+    "19": {
+      "toggles": 0,
+      "level": 1
+    },
+    "20": {
+      "toggles": 2,
+      "level": 1
+    }
+  },
+  "parts": {},
+  "notices": []
+}

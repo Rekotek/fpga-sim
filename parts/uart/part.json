@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "type": "uart",
+  "since": 1,
+  "name": {
+    "ru": "UART",
+    "en": "UART"
+  },
+  "pins": [
+    {
+      "role": "fromFpga",
+      "dir": "in",
+      "edges": true,
+      "label": {
+        "ru": "Из ПЛИС (TX схемы)",
+        "en": "From FPGA (design TX)"
+      }
+    },
+    {
+      "role": "toFpga",
+      "dir": "out",
+      "edges": false,
+      "label": {
+        "ru": "В ПЛИС (RX схемы)",
+        "en": "To FPGA (design RX)"
+      }
+    }
+  ],
+  "settings": {
+    "baud": {
+      "type": "integer",
+      "minimum": 300,
+      "maximum": 3000000,
+      "default": 115200,
+      "label": {
+        "ru": "Скорость, бод",
+        "en": "Speed, baud"
+      }
+    },
+    "lineEnding": {
+      "type": "string",
+      "enum": [
+        "none",
+        "lf",
+        "crlf"
+      ],
+      "default": "none",
+      "label": {
+        "ru": "Конец строки при вводе",
+        "en": "Line ending on input"
+      }
+    }
+  },
+  "commands": [
+    {
+      "name": "send",
+      "args": {
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "framingError"
+    },
+    {
+      "name": "baudMismatch"
+    }
+  ]
+}

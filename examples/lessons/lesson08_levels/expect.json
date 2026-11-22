@@ -1,0 +1,39 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "10000000000"
+  },
+  "actions": [],
+  "nets": {
+    "15": {
+      "togglesMin": 2000,
+      "dutyMin": 0.002,
+      "dutyMax": 0.006
+    },
+    "16": {
+      "dutyMin": 0.496,
+      "dutyMax": 0.504
+    },
+    "17": {
+      "dutyMin": 0.746,
+      "dutyMax": 0.754
+    },
+    "18": {
+      "dutyMin": 0.871,
+      "dutyMax": 0.879
+    },
+    "19": {
+      "dutyMin": 0.9335,
+      "dutyMax": 0.9415
+    },
+    "20": {
+      "dutyMin": 0.9648,
+      "dutyMax": 0.9728
+    }
+  },
+  "parts": {},
+  "notices": []
+}

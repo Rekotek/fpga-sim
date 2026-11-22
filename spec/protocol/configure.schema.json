@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/configure.schema.json",
+  "title": "Команда configure: сети, детали и наблюдение (раздел 4.4)",
+  "type": "object",
+  "required": [
+    "t",
+    "board",
+    "clock",
+    "nets",
+    "parts",
+    "watch"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "configure"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "board": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "clock": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "port",
+            "hz"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "port": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hz": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      ]
+    },
+    "nets": {
+      "description": "Порядок в массиве задаёт номер сети в двоичных сообщениях.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "pin",
+          "pull"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "pin": {
+            "$ref": "common.schema.json#/$defs/pin"
+          },
+          "port": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bit": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pull": {
+            "$ref": "common.schema.json#/$defs/pull"
+          }
+        },
+        "dependentRequired": {
+          "port": [
+            "bit"
+          ],
+          "bit": [
+            "port"
+          ]
+        }
+      }
+    },
+    "parts": {
+      "description": "Порядок в массиве задаёт номер детали в двоичных сообщениях.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "pins"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/partId"
+          },
+          "type": {
+            "$ref": "common.schema.json#/$defs/partType"
+          },
+          "pins": {
+            "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+            },
+            "additionalProperties": {
+              "$ref": "common.schema.json#/$defs/pin"
+            }
+          },
+          "settings": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "watch": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/sig"
+      }
+    }
+  }
+}

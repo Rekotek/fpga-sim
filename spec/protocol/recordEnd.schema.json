@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/recordEnd.schema.json",
+  "title": "Сообщение recordEnd: конец данных записи",
+  "type": "object",
+  "required": [
+    "t",
+    "record"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "recordEnd"
+    },
+    "record": {
+      "$ref": "common.schema.json#/$defs/record"
+    }
+  }
+}

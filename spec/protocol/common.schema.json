@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/common.schema.json",
+  "title": "Общие определения протокола",
+  "description": "Раздел 4.1 ТЗ. Отдельным сообщением не является.",
+  "$defs": {
+    "id": {
+      "description": "Номер команды; его выбирает интерфейс.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "timePs": {
+      "description": "Время симуляции в пикосекундах, строка десятичных цифр.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "speed": {
+      "oneOf": [
+        {
+          "const": "max"
+        },
+        {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      ]
+    },
+    "sig": {
+      "description": "Номер сигнала из ответа signals.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "pin": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pinRef": {
+      "description": "Сеть по выводу платы: в списке записи, в notice и в предупреждениях.",
+      "type": "string",
+      "pattern": "^pin:[1-9][0-9]*$"
+    },
+    "pull": {
+      "enum": [
+        "up",
+        "down",
+        "none"
+      ]
+    },
+    "partId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_]+$"
+    },
+    "partType": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "record": {
+      "description": "Номер записи.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    }
+  }
+}

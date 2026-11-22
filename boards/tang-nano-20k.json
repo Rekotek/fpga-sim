@@ -1,0 +1,133 @@
+{
+  "format": 1,
+  "id": "tang-nano-20k",
+  "name": "Sipeed Tang Nano 20K",
+  "fpga": {
+    "vendor": "gowin",
+    "device": "GW2AR-LV18QN88C8/I7",
+    "ideName": "GW2AR-18C",
+    "package": "QN88",
+    "resources": { "lut4": 20736, "dff": 15552, "bsramBlocks": 46, "bsramKbit": 828, "mult18": 48, "pll": 2 }
+  },
+  "io": { "standard": "LVCMOS33", "voltage": 3.3 },
+  "clocks": [
+    { "id": "osc27", "pin": 4, "hz": 27000000, "label": "27 МГц" }
+  ],
+  "pins": {
+    "4":  { "name": "CLK_27M", "status": "clock" },
+    "10": { "name": "MS5351_CLK0", "status": "onboard", "note": { "ru": "Дополнительный такт, версия 2", "en": "Extra clock, board version 2" } },
+    "11": { "name": "MS5351_CLK1", "status": "onboard", "note": { "ru": "Дополнительный такт, версия 2", "en": "Extra clock, board version 2" } },
+    "13": { "name": "MS5351_CLK2", "status": "onboard", "note": { "ru": "Дополнительный такт, версия 2", "en": "Extra clock, board version 2" } },
+    "15": { "name": "LED0", "status": "onboard" },
+    "16": { "name": "LED1", "status": "onboard" },
+    "17": { "name": "LED2", "status": "onboard", "note": { "ru": "Общий с джойстиком 2 (CLK)", "en": "Shared with joystick 2 (CLK)" } },
+    "18": { "name": "LED3", "status": "onboard", "note": { "ru": "Общий с джойстиком 2 (ATTN)", "en": "Shared with joystick 2 (ATTN)" } },
+    "19": { "name": "LED4", "status": "onboard", "note": { "ru": "Общий с джойстиком 2 (DATA)", "en": "Shared with joystick 2 (DATA)" } },
+    "20": { "name": "LED5", "status": "onboard", "note": { "ru": "Общий с джойстиком 2 (CMD)", "en": "Shared with joystick 2 (CMD)" } },
+    "25": { "name": "LCD_HS", "status": "header" },
+    "26": { "name": "LCD_VS", "status": "header" },
+    "27": { "name": "LCD_B7", "status": "header" },
+    "28": { "name": "LCD_B6", "status": "header" },
+    "29": { "name": "LCD_B5", "status": "header" },
+    "30": { "name": "LCD_B4", "status": "header" },
+    "31": { "name": "LCD_B3", "status": "header" },
+    "33": { "name": "HDMI_CLK_P", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "34": { "name": "HDMI_CLK_N", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "35": { "name": "HDMI_D0_P", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "36": { "name": "HDMI_D0_N", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "37": { "name": "HDMI_D1_P", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "38": { "name": "HDMI_D1_N", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "39": { "name": "HDMI_D2_P", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "40": { "name": "HDMI_D2_N", "status": "onboard", "note": { "ru": "Общий с RGB LCD", "en": "Shared with RGB LCD" } },
+    "41": { "name": "LCD_R4", "status": "header" },
+    "42": { "name": "LCD_R3", "status": "header" },
+    "48": { "name": "LCD_DE", "status": "header" },
+    "49": { "name": "LCD_BL", "status": "header" },
+    "51": { "name": "PA_EN", "status": "onboard", "note": { "ru": "Включение усилителя MAX98357A", "en": "MAX98357A amplifier enable" } },
+    "52": { "name": "EDID_DAT", "status": "header", "note": { "ru": "EDID HDMI и джойстик 1 (CLK)", "en": "HDMI EDID and joystick 1 (CLK)" } },
+    "53": { "name": "EDID_CLK", "status": "header", "note": { "ru": "EDID HDMI и джойстик 1 (CMD)", "en": "HDMI EDID and joystick 1 (CMD)" } },
+    "54": { "name": "I2S_DIN", "status": "onboard" },
+    "55": { "name": "I2S_LRCK", "status": "onboard" },
+    "56": { "name": "I2S_BCLK", "status": "onboard" },
+    "59": { "name": "FLASH", "status": "forbidden", "note": { "ru": "Флеш-память с прошивкой", "en": "Flash memory with the bitstream" } },
+    "60": { "name": "FLASH", "status": "forbidden", "note": { "ru": "Флеш-память с прошивкой", "en": "Flash memory with the bitstream" } },
+    "61": { "name": "FLASH", "status": "forbidden", "note": { "ru": "Флеш-память с прошивкой", "en": "Flash memory with the bitstream" } },
+    "62": { "name": "FLASH", "status": "forbidden", "note": { "ru": "Флеш-память с прошивкой", "en": "Flash memory with the bitstream" } },
+    "69": { "name": "UART_TX", "status": "onboard", "note": { "ru": "Выход из ПЛИС в BL616", "en": "Output from FPGA to BL616" } },
+    "70": { "name": "UART_RX", "status": "onboard", "note": { "ru": "Вход в ПЛИС из BL616", "en": "Input to FPGA from BL616" } },
+    "71": { "name": "JOY1_DATA", "status": "free", "note": { "ru": "Свободен без джойстика 1", "en": "Free without joystick 1" } },
+    "72": { "name": "JOY1_ATTN", "status": "free", "note": { "ru": "Свободен без джойстика 1", "en": "Free without joystick 1" } },
+    "73": { "name": "IO73", "status": "free" },
+    "74": { "name": "IO74", "status": "free" },
+    "75": { "name": "IO75", "status": "free" },
+    "76": { "name": "IO76", "status": "free", "note": { "ru": "Вход глобального такта GCLKC_1", "en": "Global clock input GCLKC_1" } },
+    "77": { "name": "LCD_CLK", "status": "header", "note": { "ru": "Вход глобального такта GCLKT_1", "en": "Global clock input GCLKT_1" } },
+    "79": { "name": "WS2812_DIN", "status": "onboard", "note": { "ru": "Вход глобального такта GCLKC_0", "en": "Global clock input GCLKC_0" } },
+    "80": { "name": "SDIO_D2", "status": "header" },
+    "81": { "name": "TF_CS", "status": "onboard" },
+    "82": { "name": "TF_MOSI", "status": "onboard" },
+    "83": { "name": "TF_CLK", "status": "onboard" },
+    "84": { "name": "TF_MISO", "status": "onboard" },
+    "85": { "name": "SDIO_D1", "status": "header" },
+    "86": { "name": "IO86", "status": "free" },
+    "87": { "name": "S2", "status": "onboard" },
+    "88": { "name": "S1", "status": "onboard" }
+  },
+  "headers": [
+    {
+      "id": "left",
+      "contacts": [
+        { "pin": 73 }, { "pin": 74 }, { "pin": 75 }, { "pin": 85 }, { "pin": 77 },
+        { "pin": 15 }, { "pin": 16 }, { "pin": 27 }, { "pin": 28 }, { "pin": 25 },
+        { "pin": 26 }, { "pin": 29 }, { "pin": 30 }, { "pin": 31 }, { "pin": 17 },
+        { "pin": 20 }, { "pin": 19 }, { "pin": 18 }, { "power": "3V3" }, { "power": "GND" }
+      ]
+    },
+    {
+      "id": "right",
+      "contacts": [
+        { "power": "5V" }, { "power": "GND" }, { "pin": 76 }, { "pin": 80 }, { "pin": 42 },
+        { "pin": 41 }, { "pin": 56 }, { "pin": 54 }, { "pin": 51 }, { "pin": 48 },
+        { "pin": 55 }, { "pin": 49 }, { "pin": 86 }, { "pin": 79 }, { "power": "GND" },
+        { "power": "3V3" }, { "pin": 72 }, { "pin": 71 }, { "pin": 53 }, { "pin": 52 }
+      ]
+    }
+  ],
+  "parts": [
+    { "id": "led0", "type": "led", "label": "LED0", "pins": { "in": 15 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 6.0,  "y": 47.0 } },
+    { "id": "led1", "type": "led", "label": "LED1", "pins": { "in": 16 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 8.2,  "y": 47.0 } },
+    { "id": "led2", "type": "led", "label": "LED2", "pins": { "in": 17 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 10.4, "y": 47.0 } },
+    { "id": "led3", "type": "led", "label": "LED3", "pins": { "in": 18 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 12.6, "y": 47.0 } },
+    { "id": "led4", "type": "led", "label": "LED4", "pins": { "in": 19 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 14.8, "y": 47.0 } },
+    { "id": "led5", "type": "led", "label": "LED5", "pins": { "in": 20 }, "settings": { "activeLevel": 0, "color": "orange" }, "geometry": { "x": 17.0, "y": 47.0 } },
+    { "id": "s1", "type": "button", "label": "S1", "pins": { "out": 88 }, "settings": { "activeLevel": 1, "key": "1" }, "geometry": { "x": 5.0,  "y": 51.0 } },
+    { "id": "s2", "type": "button", "label": "S2", "pins": { "out": 87 }, "settings": { "activeLevel": 1, "key": "2" }, "geometry": { "x": 17.5, "y": 51.0 } },
+    { "id": "uart", "type": "uart", "label": "UART (BL616)", "pins": { "fromFpga": 69, "toFpga": 70 }, "settings": { "baud": 115200 }, "geometry": { "x": 11.3, "y": 6.0 } },
+    { "id": "ws2812", "type": "ws2812", "label": "WS2812", "pins": { "din": 79 }, "settings": { "count": 1 }, "geometry": { "x": 11.3, "y": 42.0 } }
+  ],
+  "devices": [
+    { "id": "hdmi", "label": { "ru": "HDMI", "en": "HDMI" }, "pins": [33, 34, 35, 36, 37, 38, 39, 40], "since": 2 },
+    { "id": "i2s", "label": { "ru": "Звук I2S (MAX98357A)", "en": "I2S audio (MAX98357A)" }, "pins": [56, 55, 54, 51], "since": 2 },
+    { "id": "ms5351", "label": { "ru": "Генератор MS5351", "en": "MS5351 clock generator" }, "pins": [10, 11, 13], "since": 2 },
+    { "id": "tf", "label": { "ru": "TF-карта", "en": "TF card" }, "pins": [83, 82, 84, 81], "since": 3 },
+    { "id": "sdram", "label": { "ru": "SDRAM 64 Мбит (внутри корпуса)", "en": "SDRAM 64 Mbit (inside the package)" }, "pins": [], "since": 3 },
+    { "id": "flash", "label": { "ru": "Флеш-память с прошивкой", "en": "Flash memory with the bitstream" }, "pins": [59, 60, 61, 62], "since": null }
+  ],
+  "shared": [
+    { "pins": [17, 18, 19, 20], "users": ["LED2–LED5", "джойстик 2"] },
+    { "pins": [33, 34, 35, 36, 37, 38, 39, 40, 25, 26], "users": ["HDMI", "разъём RGB LCD"] },
+    { "pins": [52, 53], "users": ["EDID HDMI", "джойстик 1"] },
+    { "pins": [71, 72], "users": ["джойстик 1", "макетка"] }
+  ],
+  "geometry": {
+    "unit": "mm",
+    "width": 22.55,
+    "height": 54.04,
+    "usb": { "x": 11.3, "y": 0.0, "side": "top" },
+    "chip": { "x": 11.3, "y": 24.0, "size": 10.0 },
+    "headerPitch": 2.54,
+    "headerLeftX": 1.3,
+    "headerRightX": 21.25,
+    "headerFirstY": 2.9
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "format": 1,
+  "type": "probe",
+  "since": 1,
+  "name": {
+    "ru": "Пробник",
+    "en": "Probe"
+  },
+  "pins": [
+    {
+      "role": "in",
+      "dir": "in",
+      "edges": false,
+      "label": {
+        "ru": "Вход",
+        "en": "Input"
+      }
+    }
+  ],
+  "settings": {
+    "label": {
+      "type": "string",
+      "default": "",
+      "label": {
+        "ru": "Подпись",
+        "en": "Caption"
+      }
+    }
+  },
+  "commands": [],
+  "events": []
+}

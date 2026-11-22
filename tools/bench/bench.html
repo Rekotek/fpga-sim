@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<title>FPGA SIM: замер скорости</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 24px; max-width: 760px; }
+  table { border-collapse: collapse; margin-top: 12px; }
+  td, th { padding: 4px 12px; border-bottom: 1px solid #8884; text-align: right; }
+  td:first-child, th:first-child { text-align: left; }
+  .bad { color: #c00; }
+</style>
+<h1>FPGA SIM: замер скорости (этап 0)</h1>
+<p>Пример <code>blink3</code>, 2,1 с времени симуляции (56,7 млн тактов) на прогон. Один разогревочный
+прогон и пять измеряемых на вариант. Порог реального времени: 27 млн тактов в секунду.</p>
+<p><button id="start">Начать замер</button> <span id="status"></span></p>
+<table id="table">
+  <tr><th>Вариант</th><th>Медиана, млн тактов/с</th><th>Лучший</th><th>Отношение к 27 МГц</th><th>Переключения</th></tr>
+</table>
+<script type="module">
+  import { HALF_STEPS, RUNS, summarize } from './common.mjs';
+
+  const params = new URLSearchParams(location.search);
+  // Without the out parameter the cores built by the versions from server/docker/versions.env are used.
+  async function defaultOut() {
+    const env = await (await fetch('/server/docker/versions.env')).text();
+    const get = (k) => new RegExp(`^${k}=(.*)$`, 'm').exec(env)[1];
+    return `/bench/out/vl${get('VERILATOR_VERSION')}-em${get('EMSCRIPTEN_VERSION')}`;
+  }
+  const outRoot = params.get('out') ?? (await defaultOut());
+  const status = document.getElementById('status');
+  const table = document.getElementById('table');
+
+  function runVariant(v) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(new URL('./bench_worker.mjs', import.meta.url), { type: 'module' });
+      worker.onmessage = (e) => {
+        if (e.data.progress) { status.textContent = `${v.name}: прогон ${e.data.progress} из ${RUNS + 1}`; return; }
+        worker.terminate();
+        if (e.data.error) reject(new Error(e.data.error)); else resolve(e.data.runs);
+      };
+      worker.onerror = (e) => { worker.terminate(); reject(new Error(e.message)); };
+      worker.postMessage({ url: new URL(`${outRoot}/wasm/${v.name}/bench.mjs`, location.href).href, halfSteps: HALF_STEPS, runs: RUNS + 1 });
+    });
+  }
+
+  async function runAll() {
+    document.getElementById('start').disabled = true;
+    const manifest = await (await fetch(`${outRoot}/wasm/manifest.json`)).json();
+    const results = [];
+    try {
+      for (const v of manifest) {
+        const entry = { env: 'chrome', mode: v.mode, opt: v.opt, lto: v.lto, wasmBytes: v.wasmBytes, ...summarize(await runVariant(v)) };
+        results.push(entry);
+        const row = table.insertRow();
+        row.innerHTML = `<td>${v.name}</td><td>${entry.median.toFixed(1)}</td><td>${entry.best.toFixed(1)}</td>` +
+          `<td>${(entry.median / 27).toFixed(2)}×</td><td>${entry.toggles.slice(0, 3).join(', ')}</td>`;
+      }
+      status.textContent = 'Готово.';
+      window.__benchResults = { userAgent: navigator.userAgent, cpus: navigator.hardwareConcurrency, halfSteps: HALF_STEPS, results };
+    } catch (err) {
+      status.textContent = `Сбой: ${err.message}`;
+      status.className = 'bad';
+      window.__benchError = String(err.message);
+    }
+    window.__benchDone = true;
+  }
+
+  document.getElementById('start').onclick = runAll;
+  if (params.has('auto')) runAll();
+</script>
+</html>

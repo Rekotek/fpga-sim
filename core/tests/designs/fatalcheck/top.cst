@@ -1,0 +1,5 @@
+IO_LOC "clk" 4;
+IO_LOC "out[0]" 15;
+IO_LOC "out[1]" 16;
+IO_LOC "out[2]" 17;
+IO_LOC "out[3]" 18;

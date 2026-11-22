@@ -1,0 +1,80 @@
+{
+  "schema": "protocol/part.schema.json",
+  "valid": [
+    {
+      "name": "нажатие кнопки",
+      "data": {
+        "t": "part",
+        "id": 9,
+        "part": "s1",
+        "cmd": "press"
+      }
+    },
+    {
+      "name": "байты в UART",
+      "data": {
+        "t": "part",
+        "id": 9,
+        "part": "uart",
+        "cmd": "send",
+        "args": {
+          "bytes": [
+            72,
+            105
+          ]
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет cmd",
+      "at": "/cmd",
+      "data": {
+        "t": "part",
+        "part": "s1"
+      }
+    },
+    {
+      "name": "деталь по номеру",
+      "at": "/part",
+      "data": {
+        "t": "part",
+        "part": 1,
+        "cmd": "press"
+      }
+    },
+    {
+      "name": "args массивом",
+      "at": "/args",
+      "data": {
+        "t": "part",
+        "part": "uart",
+        "cmd": "send",
+        "args": [
+          72,
+          105
+        ]
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "partX",
+        "part": "s1",
+        "cmd": "press"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "part",
+        "part": "s1",
+        "cmd": "press",
+        "extra": 1
+      }
+    }
+  ]
+}

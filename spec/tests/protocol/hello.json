@@ -1,0 +1,65 @@
+{
+  "schema": "protocol/hello.schema.json",
+  "valid": [
+    {
+      "name": "с id",
+      "data": {
+        "t": "hello",
+        "id": 1,
+        "protocol": 1
+      }
+    },
+    {
+      "name": "без id",
+      "data": {
+        "t": "hello",
+        "protocol": 1
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет protocol",
+      "at": "/protocol",
+      "data": {
+        "t": "hello",
+        "id": 1
+      }
+    },
+    {
+      "name": "protocol строкой",
+      "at": "/protocol",
+      "data": {
+        "t": "hello",
+        "id": 1,
+        "protocol": "1"
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "helloX",
+        "protocol": 1
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "hello",
+        "protocol": 1,
+        "extra": 1
+      }
+    },
+    {
+      "name": "id строкой",
+      "at": "/id",
+      "data": {
+        "t": "hello",
+        "protocol": 1,
+        "id": "1"
+      }
+    }
+  ]
+}

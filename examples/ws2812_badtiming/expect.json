@@ -1,0 +1,8 @@
+{
+  "build": {"status": "ok", "codes": []},
+  "run": {"ps": "900000000"},
+  "actions": [],
+  "nets": {},
+  "parts": {"ws2812": {"colors": ["#100000"], "errors": 46, "events": [{"event": "timingError", "data": {"highNs": {"min": 500, "max": 550}, "bit": 0, "count": 23}}]}},
+  "notices": []
+}

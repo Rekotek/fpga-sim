@@ -1,0 +1,780 @@
+{
+  "format": 1,
+  "codes": {
+    "BLKSEQ": {
+      "level": "important",
+      "text": {
+        "ru": "В тактовом `always` стоит блокирующее `=`. Для регистров используйте `<=`, иначе порядок строк меняет схему",
+        "en": "Blocking `=` in a clocked `always` block. Use `<=` for registers, otherwise the order of lines changes the circuit"
+      },
+      "explain": {
+        "ru": "Блокирующее `=` исполняется сразу, поэтому следующая строка того же `always` уже видит новое значение, и вместо цепочки триггеров получается один. В блоке `always @(posedge clk)` пишите `q <= d;` вместо `q = d;`: тогда все регистры обновляются разом по фронту такта.",
+        "en": "Blocking `=` takes effect at once, so the next line of the same `always` block already sees the new value, and instead of a chain of flip-flops you get one. In an `always @(posedge clk)` block write `q <= d;` instead of `q = d;`: then all registers update together on the clock edge."
+      }
+    },
+    "COMBDLY": {
+      "level": "important",
+      "text": {
+        "ru": "В комбинационном `always` стоит `<=`. Здесь нужно `=`",
+        "en": "Non-blocking `<=` in a combinational `always` block. Use `=` here"
+      },
+      "explain": {
+        "ru": "Неблокирующее `<=` откладывает запись до конца шага, и в комбинационной логике результат в симуляции может разойтись со схемой на плате. В `always @(*)` пишите `y = a & b;` вместо `y <= a & b;`.",
+        "en": "Non-blocking `<=` delays the write until the end of the step, and in combinational logic the simulation result can differ from the circuit on the board. In `always @(*)` write `y = a & b;` instead of `y <= a & b;`."
+      }
+    },
+    "LATCH": {
+      "level": "important",
+      "text": {
+        "ru": "Получилась защёлка: сигнал присваивается не во всех ветвях. Добавьте `else` или значение по умолчанию",
+        "en": "A latch was inferred: the signal is not assigned in every branch. Add `else` or a default value"
+      },
+      "explain": {
+        "ru": "Если в комбинационном `always` сигнал получает значение не при всех условиях, схема обязана помнить прежнее значение — так появляется защёлка, которой вы не просили. Задайте значение в начале блока (`y = 1'b0;`) или допишите ветвь `else`, а в `case` — `default`.",
+        "en": "If a signal in a combinational `always` block does not get a value under every condition, the circuit must remember the old value, and this creates a latch you did not ask for. Set a value at the start of the block (`y = 1'b0;`) or add an `else` branch, and in a `case` add `default`."
+      }
+    },
+    "WIDTHTRUNC": {
+      "level": "important",
+      "text": {
+        "ru": "Значение шире приёмника, старшие разряды отбрасываются",
+        "en": "The value is wider than the target; the upper bits are dropped"
+      },
+      "explain": {
+        "ru": "Справа от присваивания больше разрядов, чем слева, и старшие разряды теряются. Если это задумано, выберите нужные разряды явно: `y = sum[7:0];`. Если нет — расширьте приёмник: `reg [8:0] y;`.",
+        "en": "The right side of the assignment has more bits than the left side, and the upper bits are lost. If this is intended, select the bits you need explicitly: `y = sum[7:0];`. If not, make the target wider: `reg [8:0] y;`."
+      }
+    },
+    "WIDTH": {
+      "level": "important",
+      "text": {
+        "ru": "Значение шире приёмника, старшие разряды отбрасываются",
+        "en": "The value is wider than the target; the upper bits are dropped"
+      },
+      "explain": {
+        "ru": "Разрядности слева и справа от присваивания или в сравнении не совпадают. Проверьте объявления сигналов и размеры констант: `8'd255` вместо `255`, `cnt[7:0]` вместо `cnt`.",
+        "en": "The widths on the left and right of the assignment or in a comparison do not match. Check the signal declarations and the sizes of constants: `8'd255` instead of `255`, `cnt[7:0]` instead of `cnt`."
+      }
+    },
+    "WIDTHEXPAND": {
+      "level": "note",
+      "text": {
+        "ru": "Значение у́же приёмника, оно дополняется нулями",
+        "en": "The value is narrower than the target; it is padded with zeros"
+      },
+      "explain": {
+        "ru": "В присваивании или сравнении одна сторона короче другой; недостающие старшие разряды заполняются нулями. Чаще всего это безвредно. Чтобы замечание ушло, приведите разрядности к одной: объявите параметр с размером (`localparam [24:0] LIMIT = …;`) или расширьте сигнал.",
+        "en": "In an assignment or comparison one side is shorter than the other; the missing upper bits are filled with zeros. Usually this is harmless. To clear the warning, make the widths equal: declare the parameter with a size (`localparam [24:0] LIMIT = …;`) or extend the signal."
+      }
+    },
+    "IMPLICIT": {
+      "level": "important",
+      "text": {
+        "ru": "Сигнал не объявлен и создан неявно как одноразрядный провод. Проверьте имя на опечатку",
+        "en": "The signal is not declared and was created implicitly as a 1-bit wire. Check the name for a typo"
+      },
+      "explain": {
+        "ru": "Имя встретилось без объявления, и компилятор сам создал провод в один разряд. Обычно это опечатка в имени или забытое объявление шины: вместо восьми разрядов по схеме пойдёт один. Объявите сигнал явно: `wire [7:0] data;`.",
+        "en": "The name appears without a declaration, and the compiler created a 1-bit wire for it. Usually this is a typo in the name or a missing bus declaration: one bit goes through the circuit instead of eight. Declare the signal explicitly: `wire [7:0] data;`."
+      }
+    },
+    "UNDRIVEN": {
+      "level": "important",
+      "text": {
+        "ru": "У сигнала нет источника, он всегда равен нулю",
+        "en": "The signal has no driver; it is always zero"
+      },
+      "explain": {
+        "ru": "Сигнал читается, но ему нигде не присваивается значение. В симуляторе он равен нулю, на плате результат не определён. Проверьте имя на опечатку и добавьте `assign` или присваивание в `always`.",
+        "en": "The signal is read, but nothing assigns a value to it. In the simulator it is zero; on the board the result is undefined. Check the name for a typo and add an `assign` or an assignment in an `always` block."
+      }
+    },
+    "UNUSEDSIGNAL": {
+      "level": "note",
+      "text": {
+        "ru": "Сигнал объявлен, но не используется",
+        "en": "The signal is declared but not used"
+      },
+      "explain": {
+        "ru": "Сигнал или часть его разрядов нигде не читается. Схема от этого не ломается, но часто это след опечатки: вы пользуетесь другим именем. Удалите сигнал, если он не нужен.",
+        "en": "The signal or some of its bits are never read. This does not break the circuit, but often it is a sign of a typo: you use a different name. Remove the signal if you do not need it."
+      }
+    },
+    "UNUSED": {
+      "level": "note",
+      "text": {
+        "ru": "Сигнал объявлен, но не используется",
+        "en": "The signal is declared but not used"
+      },
+      "explain": {
+        "ru": "Сигнал или часть его разрядов нигде не читается. Схема от этого не ломается, но часто это след опечатки: вы пользуетесь другим именем. Удалите сигнал, если он не нужен.",
+        "en": "The signal or some of its bits are never read. This does not break the circuit, but often it is a sign of a typo: you use a different name. Remove the signal if you do not need it."
+      }
+    },
+    "UNUSEDPARAM": {
+      "level": "note",
+      "text": {
+        "ru": "Параметр не используется",
+        "en": "The parameter is not used"
+      },
+      "explain": {
+        "ru": "Параметр объявлен, но в модуле не используется. Удалите его или проверьте, не стоит ли в коде число там, где должен стоять параметр: `cnt == LIMIT - 1` вместо `cnt == 99`.",
+        "en": "The parameter is declared but the module does not use it. Remove it, or check whether the code has a number where the parameter should be: `cnt == LIMIT - 1` instead of `cnt == 99`."
+      }
+    },
+    "MULTIDRIVEN": {
+      "level": "important",
+      "text": {
+        "ru": "У сигнала несколько источников в разных блоках `always`",
+        "en": "The signal is driven from several `always` blocks"
+      },
+      "explain": {
+        "ru": "Одному сигналу присваивают значение в двух блоках `always`. На плате такую схему собрать нельзя: у регистра один вход данных. Перенесите все присваивания этому сигналу в один блок.",
+        "en": "One signal is assigned in two `always` blocks. Such a circuit cannot be built on the board: a register has one data input. Move all assignments to this signal into one block."
+      }
+    },
+    "CASEINCOMPLETE": {
+      "level": "important",
+      "text": {
+        "ru": "В `case` перечислены не все значения и нет `default`",
+        "en": "The `case` does not list all values and has no `default`"
+      },
+      "explain": {
+        "ru": "При значении, которого нет в списке, `case` ничего не делает, и сигнал сохраняет прежнее значение — в комбинационной логике это защёлка. Добавьте ветвь `default: y = 1'b0;`.",
+        "en": "For a value that is not in the list, `case` does nothing, and the signal keeps its old value; in combinational logic this is a latch. Add a `default: y = 1'b0;` branch."
+      }
+    },
+    "CASEOVERLAP": {
+      "level": "important",
+      "text": {
+        "ru": "Ветви `case` перекрываются",
+        "en": "`case` branches overlap"
+      },
+      "explain": {
+        "ru": "Одно и то же значение подходит к двум ветвям `case`; сработает только первая из них. Проверьте значения в ветвях: скорее всего, одно из них повторено или записано с ошибкой.",
+        "en": "The same value matches two `case` branches; only the first of them runs. Check the values in the branches: most likely one of them is repeated or has a mistake."
+      }
+    },
+    "PINMISSING": {
+      "level": "important",
+      "text": {
+        "ru": "При подключении модуля пропущен порт",
+        "en": "A port is missing in the module instance"
+      },
+      "explain": {
+        "ru": "У модуля есть порт, которого нет в списке подключений. Неподключённый вход читается как ноль. Допишите подключение `.имя(сигнал)`, а если выход действительно не нужен — оставьте скобки пустыми: `.имя()`.",
+        "en": "The module has a port that is not in the connection list. An unconnected input reads as zero. Add the connection `.name(signal)`, and if the output is really not needed, leave the parentheses empty: `.name()`."
+      }
+    },
+    "PINCONNECTEMPTY": {
+      "level": "note",
+      "text": {
+        "ru": "Порт модуля оставлен неподключённым",
+        "en": "A module port is left unconnected"
+      },
+      "explain": {
+        "ru": "Порт подключён с пустыми скобками: `.имя()`. Для ненужного выхода это нормально. Для входа проверьте, что так и задумано: он будет читаться как ноль.",
+        "en": "The port is connected with empty parentheses: `.name()`. For an unused output this is fine. For an input, check that this is intended: it will read as zero."
+      }
+    },
+    "UNOPTFLAT": {
+      "level": "important",
+      "text": {
+        "ru": "Комбинационная петля: сигнал зависит сам от себя без регистра",
+        "en": "Combinational loop: the signal depends on itself without a register"
+      },
+      "explain": {
+        "ru": "Значение сигнала через цепочку комбинационной логики зависит от него самого. На плате такая схема либо генерирует, либо застревает в случайном состоянии, а симулятор может показывать неверное значение. Разорвите петлю регистром: вычисляйте новое значение в `always @(posedge clk)`.",
+        "en": "Through a chain of combinational logic, the value of the signal depends on itself. On the board such a circuit either oscillates or gets stuck in a random state, and the simulator can show a wrong value. Break the loop with a register: compute the new value in `always @(posedge clk)`."
+      }
+    },
+    "SYNCASYNCNET": {
+      "level": "important",
+      "text": {
+        "ru": "Сброс используется и как синхронный, и как асинхронный",
+        "en": "The reset is used both as synchronous and as asynchronous"
+      },
+      "explain": {
+        "ru": "Один и тот же сигнал сброса в одном блоке стоит в списке чувствительности (`always @(posedge clk or posedge rst)`), а в другом проверяется только по такту. Выберите один способ сброса и пишите его одинаково во всех блоках.",
+        "en": "The same reset signal is in the sensitivity list of one block (`always @(posedge clk or posedge rst)`), and in another block it is checked only on the clock. Choose one reset style and write it the same way in all blocks."
+      }
+    },
+    "SELRANGE": {
+      "level": "important",
+      "text": {
+        "ru": "Индекс выходит за границы разрядов",
+        "en": "The index is out of the bit range"
+      },
+      "explain": {
+        "ru": "Выбран разряд, которого у сигнала нет: например, `data[8]` у `reg [7:0] data`. В симуляторе такой разряд читается как ноль, запись в него теряется. Проверьте границы в объявлении и в выборке.",
+        "en": "The selected bit does not exist in the signal: for example, `data[8]` of `reg [7:0] data`. In the simulator such a bit reads as zero, and a write to it is lost. Check the range in the declaration and in the select."
+      }
+    },
+    "CMPCONST": {
+      "level": "important",
+      "text": {
+        "ru": "Сравнение всегда истинно или всегда ложно",
+        "en": "The comparison is always true or always false"
+      },
+      "explain": {
+        "ru": "Сравнение даёт один и тот же ответ при любом значении сигнала: например, восьмиразрядный счётчик сравнивается с 300. Проверьте разрядность сигнала и число в сравнении.",
+        "en": "The comparison gives the same answer for any value of the signal: for example, an 8-bit counter is compared with 300. Check the signal width and the number in the comparison."
+      }
+    },
+    "UNSIGNED": {
+      "level": "important",
+      "text": {
+        "ru": "Сравнение всегда истинно или всегда ложно",
+        "en": "The comparison is always true or always false"
+      },
+      "explain": {
+        "ru": "Беззнаковое значение сравнивается с нулём: `cnt >= 0` всегда истинно, `cnt < 0` всегда ложно. Если нужны отрицательные числа, объявите сигнал как `reg signed [7:0] cnt;`, иначе исправьте условие.",
+        "en": "An unsigned value is compared with zero: `cnt >= 0` is always true, `cnt < 0` is always false. If you need negative numbers, declare the signal as `reg signed [7:0] cnt;`; otherwise fix the condition."
+      }
+    },
+    "STMTDLY": {
+      "level": "important",
+      "text": {
+        "ru": "Задержка `#` в схеме не исполняется: в ПЛИС задержек нет",
+        "en": "The `#` delay does not run in the circuit: an FPGA has no delays"
+      },
+      "explain": {
+        "ru": "Запись вида `#10 a = 1;` — задержка для тестбенча. В схеме для ПЛИС задержек нет, и симулятор её пропускает. Для отсчёта времени заведите счётчик тактов.",
+        "en": "A statement like `#10 a = 1;` is a delay for a testbench. A circuit for an FPGA has no delays, and the simulator skips it. To count time, use a clock counter."
+      }
+    },
+    "ASSIGNDLY": {
+      "level": "important",
+      "text": {
+        "ru": "Задержка `#` в схеме не исполняется: в ПЛИС задержек нет",
+        "en": "The `#` delay does not run in the circuit: an FPGA has no delays"
+      },
+      "explain": {
+        "ru": "Запись вида `a <= #5 b;` задаёт задержку присваивания. В схеме для ПЛИС задержек нет, и симулятор её пропускает. Уберите `#5`; для отсчёта времени заведите счётчик тактов.",
+        "en": "A statement like `a <= #5 b;` sets an assignment delay. A circuit for an FPGA has no delays, and the simulator skips it. Remove `#5`; to count time, use a clock counter."
+      }
+    },
+    "INITIALDLY": {
+      "level": "note",
+      "text": {
+        "ru": "В `initial` стоит `<=`",
+        "en": "Non-blocking `<=` in an `initial` block"
+      },
+      "explain": {
+        "ru": "В блоке `initial` стоит неблокирующее `<=`. Для начальных значений пишите `=`: `initial q = 1'b0;` или задайте значение при объявлении: `reg q = 1'b0;`.",
+        "en": "The `initial` block has a non-blocking `<=`. For initial values write `=`: `initial q = 1'b0;`, or set the value in the declaration: `reg q = 1'b0;`."
+      }
+    },
+    "MULTITOP": {
+      "level": "important",
+      "text": {
+        "ru": "В проекте несколько верхних модулей",
+        "en": "The project has several top modules"
+      },
+      "explain": {
+        "ru": "В проекте несколько модулей, которые никем не используются, и любой из них мог бы быть верхним. Откройте `fpgasim.json` и задайте поле `design.top`, либо подключите лишний модуль там, где он должен стоять.",
+        "en": "The project has several modules that no other module uses, and any of them could be the top. Open `fpgasim.json` and set the `design.top` field, or instantiate the extra module where it belongs."
+      }
+    },
+    "PROCASSWIRE": {
+      "level": "important",
+      "text": {
+        "ru": "Присваивание проводу внутри `always`: объявите сигнал как `reg`",
+        "en": "Assignment to a wire inside `always`: declare the signal as `reg`"
+      },
+      "explain": {
+        "ru": "Внутри `always` значение можно присваивать только сигналу, объявленному как `reg`. Замените `wire y;` на `reg y;` (для порта — `output reg y`) или вынесите присваивание из блока: `assign y = a & b;`.",
+        "en": "Inside `always` you can assign only to a signal declared as `reg`. Replace `wire y;` with `reg y;` (for a port, `output reg y`) or move the assignment out of the block: `assign y = a & b;`."
+      }
+    },
+    "DECLFILENAME": {
+      "level": "hidden"
+    },
+    "EOFNEWLINE": {
+      "level": "hidden"
+    },
+    "GENUNNAMED": {
+      "level": "hidden"
+    },
+    "VARHIDDEN": {
+      "level": "hidden"
+    },
+    "TIMESCALEMOD": {
+      "level": "hidden"
+    },
+    "UNUSEDGENVAR": {
+      "level": "hidden"
+    },
+    "PINNOCONNECT": {
+      "level": "hidden"
+    },
+    "IMPORTSTAR": {
+      "level": "hidden"
+    },
+    "PROCASSINIT": {
+      "level": "hidden"
+    },
+    "TOP_AMBIGUOUS": {
+      "level": "important",
+      "text": {
+        "ru": "Верхним может быть любой из нескольких модулей. Выберите верхний модуль в настройках проекта",
+        "en": "Any of several modules can be the top. Choose the top module in the project settings"
+      },
+      "explain": {
+        "ru": "Сервер ищет модуль, который не используется внутри других модулей, и нашёл несколько. Задайте верхний модуль в файле `fpgasim.json` полем `design.top`, например `\"design\": { \"top\": \"top\" }`.",
+        "en": "The server looks for a module that is not used inside other modules, and it found several. Set the top module in the `fpgasim.json` file with the `design.top` field, for example `\"design\": { \"top\": \"top\" }`."
+      }
+    },
+    "TOP_NOT_FOUND": {
+      "level": "important",
+      "text": {
+        "ru": "Верхний модуль не найден: в проекте нет модуля, который никем не используется",
+        "en": "Top module not found: every module in the project is used by another one"
+      },
+      "explain": {
+        "ru": "Сервер ищет модуль, который не используется внутри других модулей, и такого нет: либо в проекте нет файлов схемы, либо модули подключают друг друга по кругу. Проверьте, что файл с верхним модулем входит в проект и имеет расширение `.v` или `.sv`.",
+        "en": "The server looks for a module that is not used inside other modules, and there is none: either the project has no design files, or the modules instantiate each other in a loop. Check that the file with the top module is in the project and has the `.v` or `.sv` extension."
+      }
+    },
+    "CST_AMBIGUOUS": {
+      "level": "important",
+      "text": {
+        "ru": "В проекте несколько файлов привязки `.cst`. Выберите один в настройках проекта",
+        "en": "The project has several `.cst` constraint files. Choose one in the project settings"
+      },
+      "explain": {
+        "ru": "Привязка портов к выводам берётся из одного файла `.cst`. Оставьте в проекте один такой файл или назовите нужный в `fpgasim.json` полем `design.constraints`.",
+        "en": "Ports are assigned to pins from one `.cst` file. Keep one such file in the project, or name the one you need in `fpgasim.json` with the `design.constraints` field."
+      }
+    },
+    "CST_NO_PORT": {
+      "level": "important",
+      "text": {
+        "ru": "В файле привязки назван порт `{port}`, которого нет у верхнего модуля",
+        "en": "The constraint file names port `{port}`, which the top module does not have"
+      },
+      "explain": {
+        "ru": "Имя в строке `IO_LOC` должно совпадать с именем порта верхнего модуля, а для шины — с именем разряда: `IO_LOC \"led[0]\" 15;`. Проверьте имя на опечатку и убедитесь, что верхним выбран нужный модуль.",
+        "en": "The name in an `IO_LOC` line must match a port name of the top module, and for a bus it must match the bit name: `IO_LOC \"led[0]\" 15;`. Check the name for a typo and make sure the correct module is selected as the top."
+      }
+    },
+    "CST_NO_PIN": {
+      "level": "important",
+      "text": {
+        "ru": "У платы нет вывода `{pin}`",
+        "en": "The board has no pin `{pin}`"
+      },
+      "explain": {
+        "ru": "В строке `IO_LOC` стоит номер, которого нет у микросхемы этой платы. Номера выводов подписаны на чертеже платы; у встроенных светодиодов Tang Nano 20K это 15–20, у кнопок — 88 и 87. Если файл написан для другой платы, смените плату проекта в диалоге «Настройки проекта».",
+        "en": "The `IO_LOC` line has a number that the chip on this board does not have. Pin numbers are shown on the board drawing; for the onboard LEDs of Tang Nano 20K they are 15–20, for the buttons 88 and 87. If the file was written for another board, change the project board in the “Project settings” dialog."
+      }
+    },
+    "CST_PIN_TWICE": {
+      "level": "important",
+      "text": {
+        "ru": "На вывод `{pin}` привязаны два порта",
+        "en": "Two ports are assigned to pin `{pin}`"
+      },
+      "explain": {
+        "ru": "Две строки `IO_LOC` называют один и тот же номер вывода. На одном выводе может быть только один порт: исправьте номер в одной из строк.",
+        "en": "Two `IO_LOC` lines name the same pin number. One pin can carry only one port: fix the number in one of the lines."
+      }
+    },
+    "CST_PORT_TWICE": {
+      "level": "important",
+      "text": {
+        "ru": "Порт `{port}` привязан дважды",
+        "en": "Port `{port}` is assigned twice"
+      },
+      "explain": {
+        "ru": "Для одного порта есть две строки `IO_LOC`. Порт стоит ровно на одном выводе: удалите лишнюю строку.",
+        "en": "One port has two `IO_LOC` lines. A port goes to exactly one pin: remove the extra line."
+      }
+    },
+    "CST_SYNTAX": {
+      "level": "important",
+      "text": {
+        "ru": "Строка файла привязки не разобрана",
+        "en": "A line of the constraint file cannot be parsed"
+      },
+      "explain": {
+        "ru": "Строка не похожа ни на `IO_LOC \"имя\" номер;`, ни на `IO_PORT \"имя\" параметр=значение;`. Проверьте кавычки вокруг имени и точку с запятой в конце.",
+        "en": "The line looks neither like `IO_LOC \"name\" number;` nor like `IO_PORT \"name\" parameter=value;`. Check the quotes around the name and the semicolon at the end."
+      }
+    },
+    "CST_UNKNOWN": {
+      "level": "note",
+      "text": {
+        "ru": "Инструкция `{statement}` в файле привязки пропущена: симулятор понимает только `IO_LOC` и `IO_PORT`",
+        "en": "The `{statement}` statement in the constraint file is skipped: the simulator understands only `IO_LOC` and `IO_PORT`"
+      },
+      "explain": {
+        "ru": "Симулятор читает из файла привязки только номера выводов (`IO_LOC`) и подтяжки (`IO_PORT … PULL_MODE=…`). Остальные инструкции нужны среде Gowin и на симуляцию не влияют; править файл не нужно.",
+        "en": "From the constraint file the simulator reads only pin numbers (`IO_LOC`) and pull-ups/pull-downs (`IO_PORT … PULL_MODE=…`). Other statements are for the Gowin tools and do not affect the simulation; you do not need to edit the file."
+      }
+    },
+    "CST_DIFF_PAIR": {
+      "level": "note",
+      "text": {
+        "ru": "Дифференциальная пара: взят первый вывод `{pin}`",
+        "en": "Differential pair: the first pin `{pin}` is used"
+      },
+      "explain": {
+        "ru": "В строке `IO_LOC` через запятую названы два вывода дифференциальной пары. Симулятор ведёт один сигнал и берёт первый из них; для схемы на плате строка остаётся верной.",
+        "en": "The `IO_LOC` line names the two pins of a differential pair, separated by a comma. The simulator handles one signal and takes the first of them; for the circuit on the board the line stays correct."
+      }
+    },
+    "CST_KEEPER": {
+      "level": "note",
+      "text": {
+        "ru": "`PULL_MODE=KEEPER` не моделируется и считается как `NONE`",
+        "en": "`PULL_MODE=KEEPER` is not modeled and is treated as `NONE`"
+      },
+      "explain": {
+        "ru": "Режим `KEEPER` удерживает на выводе последний уровень; в симуляторе такой модели нет, вывод считается не подтянутым. Если входу нужен определённый уровень в покое, задайте `PULL_MODE=UP` или `PULL_MODE=DOWN`.",
+        "en": "The `KEEPER` mode holds the last level on the pin; the simulator has no such model, so the pin is treated as having no pull. If an input needs a defined idle level, set `PULL_MODE=UP` or `PULL_MODE=DOWN`."
+      }
+    },
+    "CST_TOO_MANY": {
+      "level": "important",
+      "text": {
+        "ru": "В файле привязки слишком много замечаний, остальные не показаны",
+        "en": "The constraint file has too many warnings; the rest are not shown"
+      },
+      "explain": {
+        "ru": "Показаны только первые замечания по файлу привязки. Исправьте их и соберите проект снова: остальные появятся, если останутся.",
+        "en": "Only the first warnings for the constraint file are shown. Fix them and build the project again: the rest will appear if they remain."
+      }
+    },
+    "PINS_NO_PORT": {
+      "level": "important",
+      "text": {
+        "ru": "В привязке назван порт `{port}`, которого нет у верхнего модуля",
+        "en": "The pin assignment names port `{port}`, which the top module does not have"
+      },
+      "explain": {
+        "ru": "В поле `pins` файла `fpgasim.json` стоит имя, которого нет среди портов верхнего модуля. Проверьте имя на опечатку; разряд шины записывается как `led[0]`.",
+        "en": "The `pins` field of the `fpgasim.json` file has a name that is not among the ports of the top module. Check the name for a typo; a bus bit is written as `led[0]`."
+      }
+    },
+    "PINS_NO_PIN": {
+      "level": "important",
+      "text": {
+        "ru": "У платы нет вывода `{pin}`",
+        "en": "The board has no pin `{pin}`"
+      },
+      "explain": {
+        "ru": "В поле `pins` файла `fpgasim.json` стоит номер, которого нет у микросхемы этой платы. Номера выводов подписаны на чертеже платы. Если привязка написана для другой платы, смените плату проекта в диалоге «Настройки проекта».",
+        "en": "The `pins` field of the `fpgasim.json` file has a number that the chip on this board does not have. Pin numbers are shown on the board drawing. If the assignment was written for another board, change the project board in the “Project settings” dialog."
+      }
+    },
+    "PINS_PIN_TWICE": {
+      "level": "important",
+      "text": {
+        "ru": "На вывод `{pin}` привязаны два порта",
+        "en": "Two ports are assigned to pin `{pin}`"
+      },
+      "explain": {
+        "ru": "В поле `pins` файла `fpgasim.json` два порта стоят на одном выводе. На одном выводе может быть только один порт: исправьте номер у одного из них.",
+        "en": "In the `pins` field of the `fpgasim.json` file two ports are on the same pin. One pin can carry only one port: fix the number of one of them."
+      }
+    },
+    "PINS_IGNORED": {
+      "level": "important",
+      "text": {
+        "ru": "Действует файл привязки `{constraints}`, поэтому привязка из настроек проекта не используется",
+        "en": "The constraint file `{constraints}` is in effect, so the pin assignment from the project settings is not used"
+      },
+      "explain": {
+        "ru": "Когда действует файл `.cst`, привязка берётся только из него — так же, как при сборке для платы. Чтобы действовала привязка из `fpgasim.json`, уберите файл `.cst` из проекта или отключите его: `\"design\": { \"constraints\": false }`.",
+        "en": "When a `.cst` file is in effect, pins are assigned only from it, the same as in a build for the board. To use the pin assignment from `fpgasim.json`, remove the `.cst` file from the project or turn it off: `\"design\": { \"constraints\": false }`."
+      }
+    },
+    "PIN_FORBIDDEN": {
+      "level": "important",
+      "text": {
+        "ru": "Вывод `{pin}` занят на плате, использовать его нельзя",
+        "en": "Pin `{pin}` is taken on the board and cannot be used"
+      },
+      "explain": {
+        "ru": "Этот вывод на плате соединён с устройством, которому нельзя мешать, — например, с флеш-памятью, из которой загружается прошивка. Выберите другой вывод: свободные отмечены на чертеже платы.",
+        "en": "On the board this pin is connected to a device that must not be disturbed, for example the flash memory the bitstream loads from. Choose another pin: free pins are marked on the board drawing."
+      }
+    },
+    "DEVICE_NOT_MODELED": {
+      "level": "note",
+      "text": {
+        "ru": "Вывод `{pin}` ведёт к устройству «{device}». Модель устройства появится в версии {since}",
+        "en": "Pin `{pin}` goes to the device “{device}”. A model of the device will come in version {since}"
+      },
+      "explain": {
+        "ru": "Порт `{port}` привязан к выводу, который на плате соединён с этим устройством. Привязка верна, и на настоящей плате схема будет работать с устройством. В симуляторе модели устройства пока нет: выход порта никуда не идёт, вход читается как 0.",
+        "en": "Port `{port}` is assigned to a pin that is connected to this device on the board. The assignment is correct, and on a real board the circuit will work with the device. The simulator has no model of the device yet: the port output goes nowhere, and the input reads as 0."
+      }
+    },
+    "CST_IO_TYPE": {
+      "level": "important",
+      "text": {
+        "ru": "Порт `{port}`: в файле привязки `IO_TYPE={given}`, а вывод `{pin}` на плате работает со стандартом `{expected}`",
+        "en": "Port `{port}`: the constraint file has `IO_TYPE={given}`, but pin `{pin}` on the board uses the `{expected}` standard"
+      },
+      "explain": {
+        "ru": "Стандарт вывода задаёт напряжение и пороги входа. Он должен совпадать с напряжением банка, в котором стоит вывод. На симуляцию `IO_TYPE` не влияет, но на настоящей плате другой стандарт даёт неверные уровни. Исправьте строку: `IO_PORT \"{port}\" IO_TYPE={expected};`.",
+        "en": "The I/O standard sets the voltage and the input thresholds. It must match the voltage of the bank that holds the pin. `IO_TYPE` does not affect the simulation, but on a real board a different standard gives wrong levels. Fix the line: `IO_PORT \"{port}\" IO_TYPE={expected};`."
+      }
+    },
+    "PORT_UNBOUND": {
+      "level": "important",
+      "text": {
+        "ru": "Порт `{port}` не привязан к выводам платы. Свободный вход читается как 0, выход никуда не идёт",
+        "en": "Port `{port}` is not assigned to board pins. A free input reads as 0, and an output goes nowhere"
+      },
+      "explain": {
+        "ru": "У порта нет строки `IO_LOC` в файле привязки. Допишите её, например `IO_LOC \"led[0]\" 15;`. Если порт на плате не нужен, уберите его из верхнего модуля.",
+        "en": "The port has no `IO_LOC` line in the constraint file. Add one, for example `IO_LOC \"led[0]\" 15;`. If the port is not needed on the board, remove it from the top module."
+      }
+    },
+    "CLOCK_EXTRA": {
+      "level": "important",
+      "text": {
+        "ru": "Порт `{port}` стоит на тактовом выводе, но такт в этой версии один",
+        "en": "Port `{port}` is on a clock pin, but this version has only one clock"
+      },
+      "explain": {
+        "ru": "Симулятор этой версии ведёт один такт — от генератора 27 МГц на выводе 4. Второй тактовый вход будет читаться как обычный вход с постоянным уровнем. Несколько тактов появятся в версии 2.",
+        "en": "This version of the simulator drives one clock, from the 27 MHz oscillator on pin 4. A second clock input will read as an ordinary input with a constant level. Multiple clocks will come in version 2."
+      }
+    },
+    "TB_MIXED": {
+      "level": "note",
+      "text": {
+        "ru": "В одном файле лежат и схема, и тестбенч. Файл остаётся в сборке; тестбенч лучше вынести в отдельный файл",
+        "en": "One file holds both the design and a testbench. The file stays in the build; it is better to move the testbench to a separate file"
+      },
+      "explain": {
+        "ru": "Тестбенч — код для проверки, в схему для платы он не входит. Когда он лежит в одном файле со схемой, его модуль может быть принят за верхний. Перенесите тестбенч в отдельный файл, например `tb_top.v`.",
+        "en": "A testbench is code for testing; it is not part of the circuit for the board. When it is in the same file as the design, its module can be taken for the top. Move the testbench to a separate file, for example `tb_top.v`."
+      }
+    },
+    "CONFIG_INVALID": {
+      "level": "important",
+      "text": {
+        "ru": "Файл `fpgasim.json` не соответствует формату",
+        "en": "The `fpgasim.json` file does not match the format"
+      },
+      "explain": {
+        "ru": "В файле настроек проекта ошибка: он не разбирается как JSON, либо в нём нет обязательного поля, либо у поля неверный вид. Откройте `fpgasim.json` и исправьте место, названное в сообщении. Если файл удалить, настройки определятся сами.",
+        "en": "The project settings file has an error: it does not parse as JSON, or a required field is missing, or a field has a wrong form. Open `fpgasim.json` and fix the place named in the message. If you delete the file, the settings will be detected automatically."
+      }
+    },
+    "CONFIG_UNKNOWN_FIELD": {
+      "level": "note",
+      "text": {
+        "ru": "В `fpgasim.json` есть неизвестное поле `{field}`. Оно сохраняется, но не используется",
+        "en": "`fpgasim.json` has an unknown field `{field}`. It is kept but not used"
+      },
+      "explain": {
+        "ru": "Имя поля не входит в формат `fpgasim.json`. Чаще всего это опечатка, например `bord` вместо `board`. Исправьте имя или удалите поле.",
+        "en": "The field name is not part of the `fpgasim.json` format. Most often this is a typo, for example `bord` instead of `board`. Fix the name or remove the field."
+      }
+    },
+    "BOARD_UNKNOWN": {
+      "level": "important",
+      "text": {
+        "ru": "Платы `{board}` нет",
+        "en": "There is no board `{board}`"
+      },
+      "explain": {
+        "ru": "В поле `board` файла `fpgasim.json` стоит плата, которой симулятор не знает. В этой версии плата одна: `\"board\": \"tang-nano-20k\"`.",
+        "en": "The `board` field of the `fpgasim.json` file names a board that the simulator does not know. This version has one board: `\"board\": \"tang-nano-20k\"`."
+      }
+    },
+    "FILE_NOT_FOUND": {
+      "level": "important",
+      "text": {
+        "ru": "В настройках проекта назван файл `{path}`, которого нет в проекте",
+        "en": "The project settings name the file `{path}`, which is not in the project"
+      },
+      "explain": {
+        "ru": "В поле `design.files`, `design.constraints` или `testbenches` файла `fpgasim.json` стоит путь, по которому в проекте нет файла. Проверьте имя или удалите его из настроек.",
+        "en": "The `design.files`, `design.constraints` or `testbenches` field of the `fpgasim.json` file has a path with no file in the project. Check the name or remove it from the settings."
+      }
+    },
+    "FILE_NOT_DESIGN": {
+      "level": "important",
+      "text": {
+        "ru": "Файл `{path}` назван файлом схемы, но это не `.v` и не `.sv`",
+        "en": "The file `{path}` is listed as a design file, but it is not `.v` or `.sv`"
+      },
+      "explain": {
+        "ru": "В списке `design.files` файла `fpgasim.json` должны стоять только файлы на Verilog с расширением `.v` или `.sv`. Уберите из списка лишний файл: файлы привязки и данных в нём не перечисляются.",
+        "en": "The `design.files` list of the `fpgasim.json` file must contain only Verilog files with the `.v` or `.sv` extension. Remove the extra file from the list: constraint and data files do not go there."
+      }
+    },
+    "GOWIN_PRIMITIVE_UNSUPPORTED": {
+      "level": "important",
+      "text": {
+        "ru": "Примитив Gowin `{module}` пока не поддерживается, он появится в версии 2",
+        "en": "The Gowin primitive `{module}` is not supported yet; it will come in version 2"
+      },
+      "explain": {
+        "ru": "Схема использует готовый блок микросхемы Gowin, например `rPLL` или `OSC`. Моделей таких блоков в симуляторе пока нет, поэтому проект не собирается. Для симуляции замените блок своей логикой: например, вместо `rPLL` возьмите такт 27 МГц напрямую.",
+        "en": "The design uses a built-in block of the Gowin chip, for example `rPLL` or `OSC`. The simulator has no models of such blocks yet, so the project does not build. For simulation, replace the block with your own logic: for example, instead of `rPLL` use the 27 MHz clock directly."
+      }
+    },
+    "MODULE_NOT_FOUND": {
+      "level": "important",
+      "text": {
+        "ru": "Модуль `{module}` не найден. Проверьте имя и состав файлов проекта",
+        "en": "Module `{module}` not found. Check the name and the files in the project"
+      },
+      "explain": {
+        "ru": "Схема подключает модуль, описания которого нет ни в одном файле проекта. Проверьте имя на опечатку и добавьте в проект файл с этим модулем.",
+        "en": "The design instantiates a module that is not defined in any project file. Check the name for a typo and add the file with this module to the project."
+      }
+    },
+    "TOOLCHAIN_FAILED": {
+      "level": "important",
+      "text": {
+        "ru": "Внутренняя ошибка сборки",
+        "en": "Internal build error"
+      },
+      "explain": {
+        "ru": "Схема прошла проверку, но при сборке на сервере произошёл сбой. Это ошибка симулятора, а не вашего кода. Скопируйте отчёт и передайте его преподавателю.",
+        "en": "The design passed the checks, but the build on the server failed. This is a simulator error, not an error in your code. Copy the report and send it to your teacher."
+      }
+    },
+    "BUILD_TIMEOUT": {
+      "level": "important",
+      "text": {
+        "ru": "Сборка не уложилась в отведённое время",
+        "en": "The build did not finish in the allowed time"
+      },
+      "explain": {
+        "ru": "Сервер остановил сборку, потому что она шла слишком долго. Так бывает у очень больших схем. Повторите сборку; если не помогло, уменьшите схему — например, разрядность счётчиков и размер памяти.",
+        "en": "The server stopped the build because it took too long. This happens with very large designs. Build again; if that does not help, make the design smaller, for example the counter widths and the memory size."
+      }
+    },
+    "BUILD_OOM": {
+      "level": "important",
+      "text": {
+        "ru": "Сборке не хватило памяти",
+        "en": "The build ran out of memory"
+      },
+      "explain": {
+        "ru": "Сервер остановил сборку, потому что ей не хватило памяти. Так бывает у очень больших схем: уменьшите размер памяти и число повторений в `generate`.",
+        "en": "The server stopped the build because it ran out of memory. This happens with very large designs: reduce the memory size and the number of repetitions in `generate`."
+      }
+    },
+    "WASM_TOO_LARGE": {
+      "level": "important",
+      "text": {
+        "ru": "Собранная схема больше допустимого размера",
+        "en": "The built design is larger than the allowed size"
+      },
+      "explain": {
+        "ru": "Собранный файл схемы больше, чем сервер отдаёт браузеру. Уменьшите схему — например, размер памяти и число повторений в `generate`.",
+        "en": "The built design file is larger than the server sends to the browser. Make the design smaller, for example the memory size and the number of repetitions in `generate`."
+      }
+    },
+    "DIAGNOSTICS_TRUNCATED": {
+      "level": "note",
+      "text": {
+        "ru": "Предупреждений слишком много, часть не показана",
+        "en": "Too many warnings; some are not shown"
+      },
+      "explain": {
+        "ru": "Показана только часть предупреждений компилятора. Исправьте показанные и соберите проект снова: остальные появятся, если останутся.",
+        "en": "Only some of the compiler warnings are shown. Fix the ones shown and build the project again: the rest will appear if they remain."
+      }
+    },
+    "C_CODE_UNSUPPORTED": {
+      "level": "important",
+      "text": {
+        "ru": "Вставки кода C в схему (`$c`, `systemc_*`) не поддерживаются",
+        "en": "C code inserts in the design (`$c`, `systemc_*`) are not supported"
+      },
+      "explain": {
+        "ru": "Системная функция `$c` и вставки `` `systemc_… `` добавляют в модель код на C++. Сервер такой код не исполняет из соображений безопасности. Уберите вставки из схемы.",
+        "en": "The `$c` system function and `` `systemc_… `` inserts add C++ code to the model. For security reasons the server does not run such code. Remove the inserts from the design."
+      }
+    },
+    "TOP_NO_PORTS": {
+      "level": "important",
+      "text": {
+        "ru": "У модуля `{top}` нет портов, верхним он быть не может",
+        "en": "Module `{top}` has no ports, so it cannot be the top"
+      },
+      "explain": {
+        "ru": "Модуль без портов — это тестбенч, а не схема: у него нет входов и выходов, которые можно привязать к выводам платы. Задайте в `fpgasim.json` полем `design.top` модуль схемы, а тестбенч запускайте на вкладке «Тестбенч».",
+        "en": "A module without ports is a testbench, not a design: it has no inputs and outputs to assign to board pins. Set a design module with the `design.top` field in `fpgasim.json`, and run the testbench on the “Testbench” tab."
+      }
+    },
+    "BUILD_DISK_LIMIT": {
+      "level": "important",
+      "text": {
+        "ru": "Сборка заняла на диске больше допустимого: схема слишком велика",
+        "en": "The build used more disk space than allowed: the design is too large"
+      },
+      "explain": {
+        "ru": "Промежуточные файлы сборки заняли на сервере больше места, чем отведено одному проекту. Уменьшите схему — например, размер памяти и число повторений в `generate`.",
+        "en": "The intermediate build files took more space on the server than one project is allowed. Make the design smaller, for example the memory size and the number of repetitions in `generate`."
+      }
+    },
+    "TB_NO_MODULE": {
+      "level": "important",
+      "text": {
+        "ru": "В файле `{path}` нет модуля тестбенча",
+        "en": "The file `{path}` has no testbench module"
+      },
+      "explain": {
+        "ru": "Тестбенч — модуль, экземпляр которого никто не создаёт: он сам создаёт экземпляр схемы и подаёт на неё сигналы. В выбранном файле такого модуля нет: либо файл пуст, либо каждый его модуль используется внутри этого же файла. Пример начала тестбенча: `module tb_top; reg clk = 0; top dut (.clk(clk)); endmodule`.",
+        "en": "A testbench is a module that nothing instantiates: it instantiates the design itself and drives its signals. The selected file has no such module: either the file is empty, or each of its modules is used inside the same file. Example of a testbench start: `module tb_top; reg clk = 0; top dut (.clk(clk)); endmodule`."
+      }
+    },
+    "TB_TIMEOUT": {
+      "level": "important",
+      "text": {
+        "ru": "Тестбенч не закончился за {seconds} с и остановлен",
+        "en": "The testbench did not finish in {seconds} s and was stopped"
+      },
+      "explain": {
+        "ru": "Сервер останавливает тестбенч, который работает дольше отведённого времени. Чаще всего в нём нет `$finish` или цикл не кончается. Добавьте остановку: `initial begin #1000; $finish; end`. Если схема считает до миллионов тактов, начните со значения счётчика рядом с границей.",
+        "en": "The server stops a testbench that runs longer than the allowed time. Most often it has no `$finish`, or a loop never ends. Add a stop: `initial begin #1000; $finish; end`. If the design counts to millions of clock cycles, start the counter at a value near the limit."
+      }
+    },
+    "TB_OOM": {
+      "level": "important",
+      "text": {
+        "ru": "Тестбенчу не хватило памяти",
+        "en": "The testbench ran out of memory"
+      },
+      "explain": {
+        "ru": "Сервер остановил тестбенч, потому что ему не хватило {megabytes} МБ памяти. Уменьшите размер массивов в тестбенче и число сигналов в `$dumpvars`: например, `$dumpvars(1, tb_top);` записывает только сигналы самого тестбенча.",
+        "en": "The server stopped the testbench because {megabytes} MB of memory was not enough. Reduce the array sizes in the testbench and the number of signals in `$dumpvars`: for example, `$dumpvars(1, tb_top);` records only the signals of the testbench itself."
+      }
+    },
+    "TB_DISK_LIMIT": {
+      "level": "important",
+      "text": {
+        "ru": "Тестбенч записал на диск больше допустимого",
+        "en": "The testbench wrote more to disk than allowed"
+      },
+      "explain": {
+        "ru": "Файлы, которые создал тестбенч, заняли на сервере больше места, чем отведено одному запуску. Проверьте циклы с `$fwrite` и `$fdisplay` и сократите время записи осциллограммы: `$dumpoff;` останавливает её, `$dumpon;` продолжает.",
+        "en": "The files the testbench created took more space on the server than one run is allowed. Check loops with `$fwrite` and `$fdisplay`, and shorten the waveform recording: `$dumpoff;` stops it, `$dumpon;` resumes it."
+      }
+    },
+    "TB_VCD_TOO_LARGE": {
+      "level": "important",
+      "text": {
+        "ru": "Файл осциллограммы больше {megabytes} МБ: он не сохранён",
+        "en": "The waveform file is larger than {megabytes} MB: it was not saved"
+      },
+      "explain": {
+        "ru": "Тестбенч отработал, но его файл осциллограммы больше допустимого размера, поэтому кнопка «Показать осциллограмму» недоступна. Запишите меньше сигналов (`$dumpvars(1, tb_top);` вместо `$dumpvars(0, tb_top);`) или более короткий участок: `$dumpoff;` останавливает запись, `$dumpon;` продолжает.",
+        "en": "The testbench finished, but its waveform file is larger than allowed, so the “Show waveform” button is not available. Record fewer signals (`$dumpvars(1, tb_top);` instead of `$dumpvars(0, tb_top);`) or a shorter interval: `$dumpoff;` stops the recording, `$dumpon;` resumes it."
+      }
+    }
+  }
+}

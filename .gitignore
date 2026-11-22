@@ -1,0 +1,17 @@
+# рабочие деревья агентов
+.worktrees/
+.ralphex/
+
+# результаты сборок замера (кроме bench/results.json)
+bench/out/
+
+node_modules/
+.DS_Store
+__pycache__/
+core/build/
+.fpgasim/
+.venv/
+
+# сборка интерфейса и итоги сквозных тестов
+web/dist/
+.wrangler/

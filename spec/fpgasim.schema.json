@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fpgasim.schema.json",
+  "title": "fpgasim.json",
+  "description": "Настройки проекта, раздел 2 ТЗ. Неизвестные поля схема не отклоняет: они сохраняются при перезаписи, предупреждение о них выдаёт сервер.",
+  "type": "object",
+  "required": ["format"],
+  "properties": {
+    "format": { "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "board": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "design": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "oneOf": [{ "type": "null" }, { "type": "array", "items": { "$ref": "#/$defs/path" }, "uniqueItems": true }]
+        },
+        "top": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+        "parameters": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/identifier" },
+          "additionalProperties": { "type": ["number", "string"] }
+        },
+        "defines": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/identifier" },
+          "additionalProperties": { "oneOf": [{ "type": "string" }, { "const": true }] }
+        },
+        "includeDirs": { "type": "array", "items": { "$ref": "#/$defs/path" } },
+        "constraints": { "oneOf": [{ "type": "null" }, { "const": false }, { "$ref": "#/$defs/path" }] },
+        "visibility": { "enum": ["all", "ports"] }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/portBit" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["pin"],
+        "properties": {
+          "pin": { "$ref": "#/$defs/pin" },
+          "pull": { "$ref": "#/$defs/pull" }
+        }
+      }
+    },
+    "boardParts": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/partId" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "settings": { "type": "object" }
+        }
+      }
+    },
+    "parts": { "type": "array", "items": { "$ref": "#/$defs/part" } },
+    "watch": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["signal"],
+        "properties": {
+          "signal": { "type": "string", "minLength": 1 },
+          "radix": { "enum": ["bin", "hex", "dec", "sdec"] }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "properties": {
+        "signals": { "type": "array", "items": { "type": "string", "minLength": 1 }, "maxItems": 64 },
+        "mode": { "enum": ["ring", "window"] },
+        "depth": { "type": "integer", "minimum": 1, "maximum": 2000000 },
+        "windowPs": { "type": "integer", "minimum": 1 },
+        "trigger": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["signal", "edge"],
+              "properties": {
+                "signal": { "type": "string", "minLength": 1 },
+                "edge": { "enum": ["rise", "fall", "change"] }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "testbenches": {
+      "oneOf": [{ "type": "null" }, { "type": "array", "items": { "$ref": "#/$defs/path" }, "uniqueItems": true }]
+    },
+    "sim": {
+      "type": "object",
+      "properties": {
+        "speed": { "oneOf": [{ "const": "max" }, { "type": "number", "exclusiveMinimum": 0 }] }
+      }
+    }
+  },
+  "$defs": {
+    "path": {
+      "description": "Относительный путь: разделитель «/», без «..», без пустых частей.",
+      "type": "string",
+      "pattern": "^[^/\\\\]+(/[^/\\\\]+)*$",
+      "not": { "pattern": "(^|/)\\.\\.(/|$)" }
+    },
+    "identifier": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$" },
+    "portBit": {
+      "description": "Имя бита порта, как в .cst: clk, led[0].",
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_$]*(\\[[0-9]+\\])?$"
+    },
+    "pin": { "type": "integer", "minimum": 1 },
+    "pull": { "enum": ["up", "down", "none"] },
+    "partId": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+    "part": {
+      "description": "Деталь на макетке, раздел 2.3 ТЗ.",
+      "type": "object",
+      "required": ["id", "type", "pins"],
+      "properties": {
+        "id": { "$ref": "#/$defs/partId" },
+        "type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "pins": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+          "additionalProperties": { "$ref": "#/$defs/pin" }
+        },
+        "settings": { "type": "object" },
+        "position": {
+          "type": "object",
+          "required": ["x", "y"],
+          "properties": {
+            "x": { "type": "integer", "minimum": 0 },
+            "y": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

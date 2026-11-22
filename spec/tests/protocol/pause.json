@@ -1,0 +1,51 @@
+{
+  "schema": "protocol/pause.schema.json",
+  "valid": [
+    {
+      "name": "с id",
+      "data": {
+        "t": "pause",
+        "id": 5
+      }
+    },
+    {
+      "name": "без id",
+      "data": {
+        "t": "pause"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "pauseX"
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "pause",
+        "extra": 1
+      }
+    },
+    {
+      "name": "id строкой",
+      "at": "/id",
+      "data": {
+        "t": "pause",
+        "id": "1"
+      }
+    },
+    {
+      "name": "id отрицательный",
+      "at": "/id",
+      "data": {
+        "t": "pause",
+        "id": -1
+      }
+    }
+  ]
+}

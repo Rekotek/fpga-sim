@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/step.schema.json",
+  "title": "Команда step: шаг на паузе",
+  "type": "object",
+  "required": [
+    "t",
+    "unit"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "step"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "unit": {
+      "enum": [
+        "cycle",
+        "time",
+        "change"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "ps": {
+      "$ref": "common.schema.json#/$defs/timePs"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "unit": {
+            "const": "cycle"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "count"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "count"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "unit": {
+            "const": "time"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "ps"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "ps"
+          ]
+        }
+      }
+    }
+  ]
+}

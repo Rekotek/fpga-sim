@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/signals.schema.json",
+  "title": "Команда signals: запрос дерева сигналов",
+  "type": "object",
+  "required": [
+    "t"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "signals"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "part.schema.json",
+  "title": "Описание детали",
+  "description": "parts/<type>/part.json, раздел 5.7 ТЗ.",
+  "type": "object",
+  "required": ["format", "type", "since", "name", "pins", "settings", "commands", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": 1 },
+    "type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "since": { "type": "integer", "minimum": 1 },
+    "name": { "$ref": "#/$defs/text" },
+    "pins": {
+      "description": "Порядок в массиве задаёт номер роли (раздел 5.6 ТЗ).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["role", "dir", "edges", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "role": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+          "dir": { "enum": ["in", "out"] },
+          "edges": { "type": "boolean" },
+          "label": { "$ref": "#/$defs/text" }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type", "default", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "enum": ["integer", "number", "string", "boolean"] },
+          "enum": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": ["integer", "number", "string"] } },
+          "minimum": { "type": "number" },
+          "maximum": { "type": "number" },
+          "maxLength": { "type": "integer", "minimum": 0 },
+          "default": { "type": ["integer", "number", "string", "boolean"] },
+          "label": { "$ref": "#/$defs/text" }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+          "args": {
+            "description": "Аргументы команды: имя → описание значения.",
+            "type": "object",
+            "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+            "additionalProperties": { "$ref": "#/$defs/argument" }
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": {
+      "description": "Строка для интерфейса по языкам; русский обязателен.",
+      "type": "object",
+      "required": ["ru"],
+      "propertyNames": { "pattern": "^[a-z]{2}$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "argument": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["integer", "number", "string", "boolean", "array"] },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" },
+        "items": { "$ref": "#/$defs/argument" }
+      }
+    }
+  }
+}

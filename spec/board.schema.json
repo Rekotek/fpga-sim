@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "board.schema.json",
+  "title": "Файл платы",
+  "description": "boards/<id>.json, раздел 3 ТЗ.",
+  "type": "object",
+  "required": ["format", "id", "name", "fpga", "io", "clocks", "pins", "headers", "parts", "devices", "shared", "geometry"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "fpga": {
+      "type": "object",
+      "required": ["vendor", "device", "package"],
+      "additionalProperties": false,
+      "properties": {
+        "vendor": { "type": "string", "minLength": 1 },
+        "device": { "type": "string", "minLength": 1 },
+        "ideName": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "resources": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+      }
+    },
+    "io": {
+      "type": "object",
+      "required": ["standard", "voltage"],
+      "additionalProperties": false,
+      "properties": {
+        "standard": { "type": "string", "minLength": 1 },
+        "voltage": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "clocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "pin", "hz"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+          "pin": { "$ref": "#/$defs/pin" },
+          "hz": { "type": "integer", "minimum": 1 },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["clock", "onboard", "free", "header", "forbidden"] },
+          "standard": { "description": "Стандарт вывода, если он отличается от io.standard платы.", "type": "string", "minLength": 1 },
+          "note": { "$ref": "part.schema.json#/$defs/text" }
+        }
+      }
+    },
+    "headers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "contacts"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+          "contacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": ["pin"],
+                  "additionalProperties": false,
+                  "properties": { "pin": { "$ref": "#/$defs/pin" } }
+                },
+                {
+                  "type": "object",
+                  "required": ["power"],
+                  "additionalProperties": false,
+                  "properties": { "power": { "enum": ["3V3", "5V", "GND"] } }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "description": "Встроенная деталь: объект раздела 2.3 плюс label и geometry.",
+        "type": "object",
+        "required": ["id", "type", "label", "pins", "geometry"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+          "type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "label": { "type": "string", "minLength": 1 },
+          "pins": {
+            "type": "object",
+            "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+            "additionalProperties": { "$ref": "#/$defs/pin" }
+          },
+          "settings": { "type": "object" },
+          "position": {
+            "type": "object",
+            "required": ["x", "y"],
+            "additionalProperties": false,
+            "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } }
+          },
+          "geometry": { "$ref": "#/$defs/point" }
+        }
+      }
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "pins", "since"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+          "label": { "$ref": "part.schema.json#/$defs/text" },
+          "pins": { "type": "array", "items": { "$ref": "#/$defs/pin" }, "uniqueItems": true },
+          "since": { "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }] }
+        }
+      }
+    },
+    "shared": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pins", "users"],
+        "additionalProperties": false,
+        "properties": {
+          "pins": { "type": "array", "items": { "$ref": "#/$defs/pin" }, "minItems": 1, "uniqueItems": true },
+          "users": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 2 }
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "required": ["unit", "width", "height", "usb", "chip", "headerPitch", "headerLeftX", "headerRightX", "headerFirstY"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": { "const": "mm" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "usb": {
+          "type": "object",
+          "required": ["x", "y", "side"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "side": { "enum": ["top", "bottom"] }
+          }
+        },
+        "chip": {
+          "type": "object",
+          "required": ["x", "y", "size"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "size": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "headerPitch": { "type": "number", "exclusiveMinimum": 0 },
+        "headerLeftX": { "type": "number" },
+        "headerRightX": { "type": "number" },
+        "headerFirstY": { "type": "number" }
+      }
+    }
+  },
+  "$defs": {
+    "pin": { "type": "integer", "minimum": 1 },
+    "point": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/recordStop.schema.json",
+  "title": "Команда recordStop: остановка записи",
+  "type": "object",
+  "required": [
+    "t"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "recordStop"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    }
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "520000000000"
+  },
+  "actions": [
+    {
+      "atPs": "20000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "20000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "60000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "60000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "80000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "80000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "120000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "120000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "140000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "140000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "180000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "180000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "200000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "200000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "240000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "240000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "260000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "260000000000",
+      "part": "s2",
+      "cmd": "press"
+    },
+    {
+      "atPs": "300000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "300000000000",
+      "part": "s2",
+      "cmd": "release"
+    },
+    {
+      "atPs": "320000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "360000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "380000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "420000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "440000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "480000000000",
+      "part": "s1",
+      "cmd": "release"
+    }
+  ],
+  "nets": {},
+  "parts": {
+    "ws2812": {
+      "colors": [
+        "#505000"
+      ],
+      "errors": 0,
+      "events": []
+    }
+  },
+  "notices": []
+}

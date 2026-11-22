@@ -1,0 +1,15 @@
+{
+  "build": { "status": "ok", "codes": [] },
+  "run": { "ps": "1000000000" },
+  "actions": [],
+  "nets": {
+    "15": { "toggles": 1687, "level": 0 },
+    "16": { "toggles": 1688, "level": 0 },
+    "17": { "toggles": 1688, "level": 0 },
+    "18": { "toggles": 1687, "level": 1 },
+    "19": { "toggles": 1686, "level": 0 },
+    "20": { "toggles": 0, "level": 0 }
+  },
+  "parts": {},
+  "notices": []
+}

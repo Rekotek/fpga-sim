@@ -1,0 +1,52 @@
+# FPGA SIM build server on the VPS (spec sections 8.1 and 10.2). Compose project: fpgasim.
+#
+# deploy/remote.sh sets the variables in the file /var/lib/fpgasim/deploy/compose.env:
+#   FPGASIM_API_IMAGE     service image of this deployment, for example fpgasim-api:20261118-2140-1f4e3bb
+#   FPGASIM_BUILD_IMAGE   build image, for example fpgasim-build:vl5.050-em7.0.0-rt0.1.0
+#   FPGASIM_PORT          port on 127.0.0.1 that the host nginx points to
+#   FPGASIM_CORS_ORIGINS  interface origins allowed in CORS, from the site settings (decision 173)
+#
+# The system nginx with other sites holds ports 80 and 443 on this VPS, so the project has no Caddy
+# (decision 31): the service listens only on 127.0.0.1, and an nginx vhost does TLS and proxying.
+# (deploy/nginx-build.conf.example).
+name: fpgasim
+
+services:
+  api:
+    image: ${FPGASIM_API_IMAGE:?}
+    restart: unless-stopped
+    # The Docker socket equals root on the VPS (decision 41), so the service itself has nothing extra:
+    # read-only file system, no privilege escalation, and two capabilities kept:
+    # reading and deleting the job files that belong to user 10001.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+      - FOWNER
+    ports:
+      - "127.0.0.1:${FPGASIM_PORT:-8090}:8080"
+    environment:
+      FPGASIM_IMAGE: ${FPGASIM_BUILD_IMAGE:?}
+      FPGASIM_CORS_ORIGINS: ${FPGASIM_CORS_ORIGINS:-}
+    volumes:
+      # The service starts jobs with the docker run command; it never runs foreign code itself.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Settings and keys. fpgasim-admin writes the key file from inside the container.
+      - /etc/fpgasim:/etc/fpgasim
+      # Cache and job folders. The path is the same in the container and on the VPS: Docker binds the job folder by it.
+      - /var/lib/fpgasim:/var/lib/fpgasim
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/v1/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"

@@ -1,0 +1,6 @@
+# Стиль Python проекта (сервер, сценарии в tools/). Проверка: make lint.
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "ANN"]

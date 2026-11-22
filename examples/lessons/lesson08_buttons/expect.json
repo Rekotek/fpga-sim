@@ -1,0 +1,119 @@
+{
+  "build": {
+    "status": "ok",
+    "codes": []
+  },
+  "run": {
+    "ps": "900000000000"
+  },
+  "actions": [
+    {
+      "atPs": "50000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "100000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "150000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "200000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "250000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "300000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "350000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "400000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "450000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "500000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "550000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "600000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "650000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "700000000000",
+      "part": "s1",
+      "cmd": "release"
+    },
+    {
+      "atPs": "750000000000",
+      "part": "s1",
+      "cmd": "press"
+    },
+    {
+      "atPs": "800000000000",
+      "part": "s1",
+      "cmd": "release"
+    }
+  ],
+  "nets": {
+    "15": {
+      "dutyMin": 0.17,
+      "dutyMax": 0.21
+    },
+    "16": {
+      "toggles": 7,
+      "level": 0
+    },
+    "17": {
+      "toggles": 3,
+      "level": 0
+    },
+    "18": {
+      "toggles": 1,
+      "level": 0
+    },
+    "19": {
+      "toggles": 0,
+      "level": 0
+    },
+    "20": {
+      "toggles": 0,
+      "level": 1
+    }
+  },
+  "parts": {},
+  "notices": []
+}

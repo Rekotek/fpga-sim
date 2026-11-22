@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/part.schema.json",
+  "title": "Команда part: команда детали (раздел 6)",
+  "type": "object",
+  "required": [
+    "t",
+    "part",
+    "cmd"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "part"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "part": {
+      "$ref": "common.schema.json#/$defs/partId"
+    },
+    "cmd": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+    },
+    "args": {
+      "type": "object"
+    }
+  }
+}

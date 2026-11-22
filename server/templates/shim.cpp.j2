@@ -1,0 +1,48 @@
+// Создано сервером сборки FPGA SIM. Не править.
+#include "Vtop.h"
+#include "fpgasim/engine_verilator.h"
+
+namespace {
+
+struct Shim final : fpgasim::VerilatorEngine<Vtop, Shim> {
+    static constexpr fpgasim::PortDesc kPorts[] = {
+{% for p in ports %}
+        { "{{ p.cstr }}", fpgasim::PortDir::{{ p.dir }}, {{ p.width }} },
+{% endfor %}
+    };
+    static constexpr const char* kTop = "{{ top }}";
+
+    // Общая часть обращается к портам через прослойку, поэтому модель создаётся здесь.
+    Shim() { init(); }
+
+    void* portData(int port) {
+        switch (port) {
+{% for p in ports %}
+            case {{ loop.index0 }}: return &top_->{{ p.cname }};
+{% endfor %}
+        }
+        return nullptr;
+    }
+
+    bool outputsChanged() {
+        bool changed = false;
+{% for p in ports if p.dir == "Out" %}
+        if (FPGASIM_DIFFERS(top_->{{ p.cname }}, prev_{{ p.cname }})) {
+            FPGASIM_COPY(prev_{{ p.cname }}, top_->{{ p.cname }});
+            markChanged({{ p.index }});
+            changed = true;
+        }
+{% endfor %}
+        return changed;
+    }
+
+{% for p in ports if p.dir == "Out" %}
+    {{ p.ctype }} prev_{{ p.cname }}{};
+{% endfor %}
+};
+
+}  // namespace
+
+std::unique_ptr<fpgasim::Engine> fpgasim::createEngine() {
+    return std::make_unique<Shim>();
+}

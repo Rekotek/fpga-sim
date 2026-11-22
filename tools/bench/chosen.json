@@ -1,0 +1,6 @@
+{
+  "comment": "Выбор по итогам этапа 0 (docs/decisions.md). По нему merge.mjs считает вывод по правилу.",
+  "mode": "all",
+  "opt": "O2",
+  "buildVariant": "lib-pch-j2"
+}

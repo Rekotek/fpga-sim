@@ -1,0 +1,29 @@
+# FPGA SIM build image (spec section 8.2): tools, the runtime library, the job script.
+# Built on top of the tools image (Dockerfile.tools) from the repository root: tools/bench/image.sh
+# or make image. Rebuilt when core/, parts/, boards/, server/job/ or server/templates/ change.
+ARG TOOLS_IMAGE
+FROM ${TOOLS_IMAGE}
+
+# WebAssembly runtime library (spec section 5.8): libfpgasim_rt.a, headers, host.js.
+# nlohmann/json goes next to the core headers: the Emscripten compiler does not see the system /usr/include.
+COPY core /src/core
+COPY parts /src/parts
+RUN mkdir -p /opt/fpgasim/include /opt/fpgasim/rt \
+    && cp -r /src/core/include/fpgasim /opt/fpgasim/include/ \
+    && cp -r /usr/include/nlohmann /opt/fpgasim/include/ \
+    && emcmake cmake -S /src/core -B /tmp/rt -G Ninja -DFPGASIM_JSON_INCLUDE=/opt/fpgasim/include \
+    && cmake --build /tmp/rt \
+    && cp /tmp/rt/libfpgasim_rt.a /src/core/src/wasm/host.js /src/core/VERSION /opt/fpgasim/rt/ \
+    && rm -rf /tmp/rt /src
+
+# The job script, the shim template and the board files.
+COPY server/job /opt/fpgasim/job
+COPY server/templates /opt/fpgasim/templates
+COPY boards /opt/fpgasim/boards
+RUN mkdir -p /opt/fpgasim/bin \
+    && printf '%s\n' '#!/bin/sh' 'exec python3 /opt/fpgasim/job/job.py "$@"' > /opt/fpgasim/bin/job \
+    && chmod 755 /opt/fpgasim/bin/job \
+    && /opt/fpgasim/bin/job pch /opt/fpgasim/rt/engine.pch \
+    && chmod -R a+rX /opt/fpgasim
+
+WORKDIR /work

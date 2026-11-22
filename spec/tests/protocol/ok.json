@@ -1,0 +1,150 @@
+{
+  "schema": "protocol/ok.schema.json",
+  "valid": [
+    {
+      "name": "без полей ответа",
+      "data": {
+        "t": "ok",
+        "id": 4
+      }
+    },
+    {
+      "name": "ответ configure",
+      "data": {
+        "t": "ok",
+        "id": 2,
+        "warnings": [
+          {
+            "code": "INOUT_UNSUPPORTED",
+            "text": "Порт io1 двунаправленный",
+            "port": "io1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ответ signals из раздела 4.5",
+      "data": {
+        "t": "ok",
+        "id": 3,
+        "signals": [
+          {
+            "sig": 0,
+            "path": "top.clk",
+            "width": 1,
+            "kind": "port"
+          },
+          {
+            "sig": 1,
+            "path": "top.cnt_a",
+            "width": 25,
+            "kind": "reg"
+          },
+          {
+            "sig": 9,
+            "path": "top.u_rx.mem",
+            "width": 8,
+            "kind": "memory",
+            "depth": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "ответ recordStart",
+      "data": {
+        "t": "ok",
+        "id": 11,
+        "record": 0
+      }
+    },
+    {
+      "name": "ответ recordFetch",
+      "data": {
+        "t": "ok",
+        "id": 12,
+        "info": [
+          {
+            "index": 0,
+            "name": "top.cnt_a",
+            "width": 25
+          },
+          {
+            "index": 1,
+            "name": "pin:15",
+            "width": 1
+          }
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет id",
+      "at": "/id",
+      "data": {
+        "t": "ok"
+      }
+    },
+    {
+      "name": "вид сигнала",
+      "at": "/signals/0/kind",
+      "data": {
+        "t": "ok",
+        "id": 3,
+        "signals": [
+          {
+            "sig": 0,
+            "path": "top.clk",
+            "width": 1,
+            "kind": "input"
+          }
+        ]
+      }
+    },
+    {
+      "name": "предупреждение без кода",
+      "at": "/warnings/0/code",
+      "data": {
+        "t": "ok",
+        "id": 2,
+        "warnings": [
+          {
+            "text": "x"
+          }
+        ]
+      }
+    },
+    {
+      "name": "info без разрядности",
+      "at": "/info/0/width",
+      "data": {
+        "t": "ok",
+        "id": 12,
+        "info": [
+          {
+            "index": 0,
+            "name": "top.q"
+          }
+        ]
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "okX",
+        "id": 1
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "ok",
+        "id": 1,
+        "extra": 1
+      }
+    }
+  ]
+}

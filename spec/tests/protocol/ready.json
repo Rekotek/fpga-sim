@@ -1,0 +1,243 @@
+{
+  "schema": "protocol/ready.schema.json",
+  "valid": [
+    {
+      "name": "blink3",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": {
+          "name": "verilator",
+          "version": "5.050"
+        },
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "in",
+            "width": 1
+          },
+          {
+            "name": "led",
+            "dir": "out",
+            "width": 6
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ]
+      }
+    },
+    {
+      "name": "без портов и деталей",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": {
+          "name": "verilator",
+          "version": "5.050"
+        },
+        "top": "top",
+        "ports": [],
+        "partTypes": []
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "нет engine",
+      "at": "/engine",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "in",
+            "width": 1
+          },
+          {
+            "name": "led",
+            "dir": "out",
+            "width": 6
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ]
+      }
+    },
+    {
+      "name": "движок строкой",
+      "at": "/engine",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": "verilator 5.050",
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "in",
+            "width": 1
+          },
+          {
+            "name": "led",
+            "dir": "out",
+            "width": 6
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ]
+      }
+    },
+    {
+      "name": "направление порта",
+      "at": "/ports/0/dir",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": {
+          "name": "verilator",
+          "version": "5.050"
+        },
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "input",
+            "width": 1
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ]
+      }
+    },
+    {
+      "name": "нулевая разрядность",
+      "at": "/ports/0/width",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": {
+          "name": "verilator",
+          "version": "5.050"
+        },
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "in",
+            "width": 0
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ]
+      }
+    },
+    {
+      "name": "чужой тип сообщения",
+      "at": "/t",
+      "data": {
+        "t": "readyX",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": {
+          "name": "verilator",
+          "version": "5.050"
+        },
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "in",
+            "width": 1
+          },
+          {
+            "name": "led",
+            "dir": "out",
+            "width": 6
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ]
+      }
+    },
+    {
+      "name": "лишнее поле",
+      "at": "/extra",
+      "data": {
+        "t": "ready",
+        "protocol": 1,
+        "runtime": "0.1.0",
+        "engine": {
+          "name": "verilator",
+          "version": "5.050"
+        },
+        "top": "top",
+        "ports": [
+          {
+            "name": "clk",
+            "dir": "in",
+            "width": 1
+          },
+          {
+            "name": "led",
+            "dir": "out",
+            "width": 6
+          }
+        ],
+        "partTypes": [
+          "led",
+          "button",
+          "switch",
+          "uart",
+          "ws2812",
+          "probe"
+        ],
+        "extra": 1
+      }
+    }
+  ]
+}

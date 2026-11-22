@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protocol/ready.schema.json",
+  "title": "Сообщение ready: ответ на hello",
+  "type": "object",
+  "required": [
+    "t",
+    "protocol",
+    "runtime",
+    "engine",
+    "top",
+    "ports",
+    "partTypes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "const": "ready"
+    },
+    "protocol": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "runtime": {
+      "description": "Версия среды исполнения, строка из core/VERSION.",
+      "type": "string",
+      "minLength": 1
+    },
+    "engine": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "verilator"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "top": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "dir",
+          "width"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dir": {
+            "enum": [
+              "in",
+              "out",
+              "inout"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "partTypes": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/partType"
+      },
+      "uniqueItems": true
+    }
+  }
+}
