@@ -93,6 +93,8 @@ class ModelFailed(Exception):  # noqa: N818 — the name states what happened
 
 
 class Model(Protocol):
+    name: str  # the configured model, shown in /v1/info
+
     def call(self, messages: list[dict[str, Any]], language: str) -> Reply: ...
 
 
@@ -140,6 +142,8 @@ def last_text(messages: list[dict[str, Any]]) -> str | None:
 class FakeModel:
     """The scripted model of the tests (decision 177): no key, no network, no cost."""
 
+    name = "fake"
+
     def call(self, messages: list[dict[str, Any]], language: str) -> Reply:
         question = last_text(messages)
         usage = Usage(100, 20, 0, 0)
@@ -162,6 +166,7 @@ class AnthropicModel:
         import anthropic  # the package loads only when the assistant is on
 
         self.settings = settings
+        self.name = settings.model
         self.anthropic = anthropic
         self.client = anthropic.Anthropic(api_key=key, timeout=120, max_retries=2)
 

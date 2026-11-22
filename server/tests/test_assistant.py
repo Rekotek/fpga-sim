@@ -139,3 +139,112 @@ def test_нет_ключа_нет_модели(tmp_path: Path) -> None:
     assert make_model(AssistantSettings(enabled=True, key_file=key)) is not None
     assert isinstance(make_model(AssistantSettings(enabled=True, model="fake")), FakeModel)
     assert make_model(AssistantSettings(enabled=False, model="fake")) is None
+
+
+# --- The /v1/assistant operation -----------------------------------------------------
+
+import json  # noqa: E402
+from typing import Any  # noqa: E402
+
+QUESTION = [{"role": "user", "content": "Почему горит LED0?"}]
+
+
+def assistant_env(make_env: Any, **limits: Any) -> Any:  # noqa: ANN401
+    env = make_env(**limits)
+    env.service.model = FakeModel()
+    return env
+
+
+def ask(env: Any, messages: list[dict[str, Any]], headers: dict[str, str] | None = None) -> Any:  # noqa: ANN401
+    return env.client.post("/v1/assistant", json={"messages": messages, "language": "ru"}, headers=headers or env.auth)
+
+
+def test_помощник_отвечает_через_инструменты(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env)
+    first = ask(env, QUESTION)
+    assert first.status_code == 200, first.text
+    body = first.json()
+    assert body["stop_reason"] == "tool_use"
+    assert body["usage"] == {"input": 100, "output": 20, "cacheRead": 0, "cacheWrite": 0}
+    results = [{"type": "tool_result", "tool_use_id": b["id"], "content": "{}"} for b in body["content"]]
+    history = [*QUESTION, {"role": "assistant", "content": body["content"]}, {"role": "user", "content": results}]
+    second = ask(env, history)
+    assert second.status_code == 200, second.text
+    assert second.json()["content"][0]["text"].startswith("Тестовый ответ")
+    assert env.service.usage.tokens_today("key:tester") == 240
+    info = env.client.get("/v1/info", headers=env.auth).json()
+    assert info["assistant"] == {"enabled": True, "model": "fake"}
+    assert info["limits"]["assistant_tokens_per_day"] == 400_000
+
+
+def test_помощник_выключен(make_env: Any) -> None:  # noqa: ANN401
+    env = make_env()
+    assert env.service.model is None
+    response = ask(env, QUESTION)
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "ASSISTANT_OFF"
+    assert env.client.get("/v1/info", headers=env.auth).json()["assistant"] == {"enabled": False, "model": None}
+
+
+def test_дневной_лимит_пользователя(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env, assistant_tokens_per_day=100)
+    assert ask(env, QUESTION).status_code == 200
+    refused = ask(env, QUESTION)
+    assert refused.status_code == 429
+    assert refused.json()["error"]["code"] == "ASSISTANT_LIMIT"
+    assert "00:00 UTC" in refused.json()["error"]["text"]
+    password = env.add_user("ann")
+    assert ask(env, QUESTION, env.login("ann", password)).status_code == 200
+
+
+def test_общий_дневной_лимит(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env, assistant_tokens_per_day_total=100)
+    assert ask(env, QUESTION).status_code == 200
+    password = env.add_user("ann")
+    refused = ask(env, QUESTION, env.login("ann", password))
+    assert refused.status_code == 429
+    assert refused.json()["error"]["code"] == "ASSISTANT_LIMIT"
+
+
+def test_лимит_в_минуту(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env, assistant_requests_per_minute=1)
+    assert ask(env, QUESTION).status_code == 200
+    refused = ask(env, QUESTION)
+    assert refused.status_code == 429
+    assert refused.json()["error"]["code"] == "RATE_LIMITED"
+
+
+def test_сбой_модели(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env)
+    response = ask(env, [{"role": "user", "content": "#сбой"}])
+    assert response.status_code == 502
+    assert response.json()["error"] == {"code": "ASSISTANT_FAILED", "text": "Помощник не ответил: тестовый сбой"}
+    assert env.service.usage.tokens_today("key:tester") == 0
+
+
+def test_длинный_разговор(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env)
+    long = [{"role": "user", "content": "a"}, {"role": "assistant", "content": []}] * 30 + QUESTION
+    response = ask(env, long)
+    assert response.status_code == 413
+    assert response.json()["error"]["code"] == "ASSISTANT_TOO_LONG"
+    broken = ask(env, [*QUESTION, *QUESTION])
+    assert broken.status_code == 400
+    huge = ask(env, [{"role": "user", "content": "x" * (1024 * 1024 + 1)}])
+    assert huge.status_code == 413
+
+
+def test_журнал_без_текста(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env)
+    ask(env, QUESTION)
+    record = [r for r in env.log if r["op"] == "assistant"][-1]
+    assert record["result"] == "ok"
+    assert record["model"] == "fake"
+    assert (record["tokensIn"], record["tokensOut"], record["cacheRead"], record["cacheWrite"]) == (100, 20, 0, 0)
+    assert record["stopReason"] == "tool_use"
+    assert "LED0" not in json.dumps(record, ensure_ascii=False)
+
+
+def test_без_входа_нельзя(make_env: Any) -> None:  # noqa: ANN401
+    env = assistant_env(make_env)
+    assert ask(env, QUESTION, {"Authorization": "Bearer wrong"}).status_code == 401
