@@ -20,6 +20,14 @@ function send(question: string): void {
   });
 }
 
+// The conversation marks its own failures with codes; a server failure comes as the server text.
+function errorMessage(error: string): string {
+  if (error === "refused") return t("assistant.refused");
+  if (error === "cutoff") return t("assistant.cutoff");
+  if (error === "noAnswer") return t("assistant.noAnswer");
+  return error;
+}
+
 function TurnView({ turn }: { turn: Turn }) {
   return (
     <div className="space-y-1.5" data-testid="assistant-turn">
@@ -29,11 +37,7 @@ function TurnView({ turn }: { turn: Turn }) {
           <Markdown text={turn.answer} />
         </div>
       )}
-      {turn.error && (
-        <Problem data-testid="assistant-error">
-          {turn.error === "refused" ? t("assistant.refused") : turn.error}
-        </Problem>
-      )}
+      {turn.error && <Problem data-testid="assistant-error">{errorMessage(turn.error)}</Problem>}
       {(turn.stopped || turn.capped) && (
         <p className="text-muted-foreground">{t(turn.stopped ? "assistant.stopped" : "assistant.capped")}</p>
       )}

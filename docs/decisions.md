@@ -3126,6 +3126,9 @@ gives advice. Design: `docs/superpowers/specs/2026-11-22-assistant-design.md`; s
   `;`) correctly at 1–2 cents per first question. Refusals go to the fallback model (`fallbacks: "default"`).
 - Limits are the same for everyone, keys included: 20 requests a minute, 400,000 tokens a day per key or
   account, 4,000,000 a day for the server (about $10 at Sonnet prices).
+- One call in flight per key or account and at most four on the server, in their own threads; one model
+  attempt of at most 100 s, so the server answers before nginx cuts the request at 150 s (final review of
+  the branch).
 - The assistant only advises: it does not edit, build, run or press buttons.
 - The key file is written by `fpgasim-admin assistant key` from standard input; the spend report is
   `fpgasim-admin assistant usage`.

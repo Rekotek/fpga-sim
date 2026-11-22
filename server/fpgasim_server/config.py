@@ -76,6 +76,8 @@ class Limits:
     assistant_requests_per_minute: int = 20
     assistant_tokens_per_day: int = 400_000  # one key or account per UTC day, all token kinds
     assistant_tokens_per_day_total: int = 4_000_000  # the whole server per UTC day
+    # Model calls in flight on the whole server; one per key or account. They run in their own threads.
+    assistant_calls_at_once: int = 4
 
 
 @dataclass(frozen=True)

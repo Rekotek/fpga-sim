@@ -464,6 +464,8 @@
   "assistant.stopped": "Stopped. You can ask the next question.",
   "assistant.capped": "The assistant took too many steps and stopped. Make the question more specific.",
   "assistant.refused": "The assistant declined to answer this question.",
+  "assistant.cutoff": "The assistant did not finish the answer. Ask a shorter or more specific question.",
+  "assistant.noAnswer": "The assistant did not answer in time. Ask again in a minute.",
   "assistant.noServer": "No connection to the server: sign in again.",
   "testbench.file": "File",
   "testbench.run": "Run",

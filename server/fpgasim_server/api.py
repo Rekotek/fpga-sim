@@ -18,6 +18,7 @@ import sys
 import time
 from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from typing import Any, Literal
 
@@ -221,6 +222,10 @@ class Service:
         # The assistant (decision 175): None when it is off or has no key; tests put a fake model here.
         self.model: Model | None = make_model(settings.assistant)
         self.usage = UsageStore(settings.data_dir / "assistant" / "usage.db", lambda: self.accounts.clock())
+        # Model calls wait on the network for up to 100 s: their own threads keep the shared pool free for
+        # logins and builds. Owners with a call in flight: one call each, the daily check sees its result.
+        self.assistant_pool = ThreadPoolExecutor(settings.limits.assistant_calls_at_once, "assistant")
+        self.assistant_owners: set[str] = set()
 
     # --- Request checks -------------------------------------------------------------
 
@@ -1026,11 +1031,20 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
             model = service.model
             if model is None:
                 raise ApiError(503, "ASSISTANT_OFF", "Помощник на сервере выключен")
-            service.assistant_allowed(principal.limit_id)
+            owner = principal.limit_id
+            service.assistant_allowed(owner)
+            if owner in service.assistant_owners:
+                raise ApiError(429, "RATE_LIMITED", "Дождитесь ответа помощника на предыдущий вопрос")
+            if len(service.assistant_owners) >= settings.limits.assistant_calls_at_once:
+                raise ApiError(503, "BUSY", "Помощник занят другими вопросами, повторите через минуту")
+            service.assistant_owners.add(owner)
             try:
-                reply = await asyncio.to_thread(model.call, messages, language)
+                loop = asyncio.get_running_loop()
+                reply = await loop.run_in_executor(service.assistant_pool, model.call, messages, language)
             except ModelFailed as e:
                 raise ApiError(502, "ASSISTANT_FAILED", f"Помощник не ответил: {e}") from None
+            finally:
+                service.assistant_owners.discard(owner)
             service.usage.add(principal.limit_id, reply.model, reply.usage)
             usage: Usage = reply.usage
             record.update(

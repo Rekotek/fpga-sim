@@ -294,3 +294,69 @@ def test_ключ_помощника_из_ввода(
     out = capsys.readouterr()
     assert "secret" not in out.out + out.err
     assert str(key_file) in out.out
+
+
+# --- Calls in flight (final review I2, I3) and the upstream time bound (I4) ---------
+
+import threading  # noqa: E402
+
+from fpgasim_server.assistant import Reply  # noqa: E402
+
+
+class SlowModel:
+    """Holds every call until released."""
+
+    name = "slow"
+
+    def __init__(self) -> None:
+        self.entered = threading.Semaphore(0)
+        self.release = threading.Event()
+
+    def call(self, messages: list[dict[str, Any]], language: str) -> Reply:
+        self.entered.release()
+        self.release.wait(10)
+        return Reply([{"type": "text", "text": "ok"}], "end_turn", Usage(1, 1, 0, 0), "slow")
+
+
+def in_flight(env: Any, headers: dict[str, str]) -> tuple[threading.Thread, list[Any]]:  # noqa: ANN401
+    answers: list[Any] = []
+    thread = threading.Thread(target=lambda: answers.append(ask(env, QUESTION, headers)))
+    thread.start()
+    assert env.service.model.entered.acquire(timeout=10)
+    return thread, answers
+
+
+def test_один_вопрос_за_раз_от_владельца(make_env: Any) -> None:  # noqa: ANN401
+    env = make_env()
+    env.service.model = SlowModel()
+    thread, answers = in_flight(env, env.auth)
+    second = ask(env, QUESTION)
+    assert second.status_code == 429
+    assert second.json()["error"]["code"] == "RATE_LIMITED"
+    env.service.model.release.set()
+    thread.join(10)
+    assert answers[0].status_code == 200
+    assert ask(env, QUESTION).status_code == 200  # the slot is free again
+
+
+def test_общий_предел_одновременных_вызовов(make_env: Any) -> None:  # noqa: ANN401
+    env = make_env(assistant_calls_at_once=1)
+    env.service.model = SlowModel()
+    thread, _ = in_flight(env, env.auth)
+    password = env.add_user("ann")
+    busy = ask(env, QUESTION, env.login("ann", password))
+    assert busy.status_code == 503
+    assert busy.json()["error"]["code"] == "BUSY"
+    env.service.model.release.set()
+    thread.join(10)
+
+
+def test_вызов_модели_короче_прокси(tmp_path: Path) -> None:
+    key = tmp_path / "k"
+    key.write_text("sk-ant-test")
+    model = make_model(AssistantSettings(enabled=True, key_file=key))
+    client = model.client  # type: ignore[union-attr]
+    # nginx cuts a request at 150 s: the server answers with its own text before that.
+    assert client.max_retries == 0
+    assert client.timeout <= 100
+    assert Limits().assistant_calls_at_once == 4

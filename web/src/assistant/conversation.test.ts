@@ -1,5 +1,6 @@
 // The assistant's conversation (decision 175): the tool loop, stop, the call cap and a reset mid-answer.
 import { beforeEach, describe, expect, test } from "vitest";
+import { ServerError } from "../build/client";
 import type { AssistantBlock, AssistantMessage, AssistantReply } from "../build/types";
 import { ask, MAX_CALLS, resetConversation, stop, useConversation, type AskDeps } from "./conversation";
 import type { ToolSource } from "./tools";
@@ -120,9 +121,38 @@ describe("разговор с помощником", () => {
     expect(state.history.map((m) => m.role)).toEqual(["user", "assistant"]);
   });
 
-  test("отказ модели", async () => {
-    const { deps } = server([reply([], "refusal")]);
+  test("отказ модели до ответа не ломает разговор", async () => {
+    const { sent, deps } = server([reply([], "refusal"), reply([{ type: "text", text: "Да" }], "end_turn")]);
     await ask("?", deps);
     expect(useConversation.getState().turns[0]?.error).toBe("refused");
+    expect(useConversation.getState().history).toEqual([]);
+    await ask("второй", deps);
+    expect(sent[1]).toEqual([{ role: "user", content: "второй" }]);
+  });
+
+  test("обрыв по max_tokens внутри вызова инструмента: ошибка и откат", async () => {
+    const cut = reply([{ type: "thinking", thinking: "", signature: "s" }, toolUse("a", "list_files")], "max_tokens");
+    const { deps } = server([cut]);
+    await ask("?", deps);
+    const state = useConversation.getState();
+    expect(state.turns[0]?.error).toBe("cutoff");
+    expect(state.turns[0]?.tools).toEqual([]);
+    expect(state.history).toEqual([]);
+  });
+
+  test("обрыв по max_tokens с текстом: ответ остаётся, вызовы закрыты", async () => {
+    const { deps } = server([reply([{ type: "text", text: "Частично" }, toolUse("a", "list_files")], "max_tokens")]);
+    await ask("?", deps);
+    const state = useConversation.getState();
+    expect(state.turns[0]).toMatchObject({ answer: "Частично", error: null });
+    expect(closed(state.history)).toBe(true);
+    expect(state.history.at(-1)?.role).toBe("user");
+  });
+
+  test("пустой текст ошибки и обрыв сети показываются как «нет ответа»", async () => {
+    const { deps } = server([new ServerError(504, "HTTP_504", ""), new ServerError(0, "NETWORK", "TimeoutError")]);
+    await ask("первый", deps);
+    await ask("второй", deps);
+    expect(useConversation.getState().turns.map((t) => t.error)).toEqual(["noAnswer", "noAnswer"]);
   });
 });

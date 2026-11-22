@@ -2,6 +2,7 @@
 // server, runs the tools the model asks for on the live project and sends the results back, at most MAX_CALLS
 // times per question. The conversation belongs to the open project and lives in memory only.
 import { create } from "zustand";
+import { ServerError } from "../build/client";
 import type { AssistantBlock, AssistantMessage, AssistantReply } from "../build/types";
 import { runTool, type ToolSource } from "./tools";
 
@@ -12,7 +13,7 @@ export interface Turn {
   answer: string;
   tools: string[];
   tokens: number;
-  error: string | null; // the server text; "refused" when the model declined
+  error: string | null; // the server text, or "refused", "cutoff", "noAnswer" (the panel names them)
   stopped: boolean;
   capped: boolean;
 }
@@ -63,6 +64,13 @@ function withQuestion(history: AssistantMessage[], question: string): AssistantM
   return [...history.slice(0, -1), { role: "user", content: [...blocks, { type: "text", text: question }] }];
 }
 
+// The server text of a failure; "noAnswer" when there is none (a proxy timeout, no network).
+function errorText(e: unknown): string {
+  if (e instanceof ServerError && e.code === "NETWORK") return "noAnswer";
+  const text = e instanceof Error ? e.message.trim() : "";
+  return text || "noAnswer";
+}
+
 const toolUses = (content: AssistantBlock[]): AssistantBlock[] => content.filter((b) => b.type === "tool_use");
 
 export async function ask(question: string, deps: AskDeps): Promise<void> {
@@ -91,9 +99,24 @@ export async function ask(question: string, deps: AskDeps): Promise<void> {
       history = [...history, { role: "assistant", content: reply.content }];
       const text = reply.content.filter((b) => b.type === "text").map((b) => String(b.text));
       if (text.length > 0) turn.answer = text.join("\n\n");
-      if (reply.stop_reason === "refusal") turn.error = "refused";
       const pending = toolUses(reply.content);
-      if (reply.stop_reason !== "tool_use" || pending.length === 0) break;
+      if (reply.stop_reason !== "tool_use" || pending.length === 0) {
+        if (text.length === 0) {
+          // Refused or cut off before any answer: the turn leaves no trace, the conversation stays valid.
+          turn.error = reply.stop_reason === "refusal" ? "refused" : "cutoff";
+          history = start.history;
+        } else if (pending.length > 0) {
+          // Cut off inside a tool call after some text: the calls are closed so that the roles stay valid.
+          const closing = pending.map((b) => ({
+            type: "tool_result",
+            tool_use_id: b.id,
+            content: "answer cut off",
+            is_error: true,
+          }));
+          history = [...history, { role: "user", content: closing }];
+        }
+        break;
+      }
       turn.stopped = stopping();
       turn.capped = !turn.stopped && calls >= MAX_CALLS;
       const results = pending.map((b) => {
@@ -120,7 +143,7 @@ export async function ask(question: string, deps: AskDeps): Promise<void> {
   } catch (e) {
     if (!current()) return;
     // The failed turn leaves no trace in the conversation: the next question starts from the last good state.
-    turn.error = e instanceof Error ? e.message : String(e);
+    turn.error = errorText(e);
     history = start.history;
   }
   if (!current()) return;

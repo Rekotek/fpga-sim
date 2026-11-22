@@ -168,7 +168,8 @@ class AnthropicModel:
         self.settings = settings
         self.name = settings.model
         self.anthropic = anthropic
-        self.client = anthropic.Anthropic(api_key=key, timeout=120, max_retries=2)
+        # nginx cuts a request at 150 s: one attempt of at most 100 s lets the server answer with its own text.
+        self.client = anthropic.Anthropic(api_key=key, timeout=100, max_retries=0)
 
     def call(self, messages: list[dict[str, Any]], language: str) -> Reply:
         errors = self.anthropic
