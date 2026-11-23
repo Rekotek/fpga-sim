@@ -85,6 +85,9 @@ the older detailed stage entries: `git show c1740f0:docs/progress.md` (version 1
   answer; the tab raises a low bottom panel; the end-to-end test covers all five tools. The author checked
   the assistant on the production URL on 2026-11-23 after the deployment: it works. Not checked: the shape
   of `usage.iterations` on a real fallback (no refusal happened).
+- **2026-11-23.** The local service test image has a tag per repository directory,
+  `fpgasim-api:dev-<number>` from `tools/dev/api-image.sh` (decision 181): `make image-api` in one worktree no
+  longer replaces the image under a `make check` in another. Nothing to deploy.
 
 ## Deployments
 
@@ -161,14 +164,6 @@ English language (decision 168):
   them to text per language.
 - The explanation of `BOARD_UNKNOWN` in `spec/diagnostics.json` says "this version has one board" —
   there are already two boards (in both languages).
-
-Test rig:
-
-- The service image `fpgasim-api:dev` is one per machine. A session on another branch that ran
-  `make image-api` replaces it in the middle of someone else's `make check`: on 2026-11-22 the
-  end-to-end test of the English interface failed against the server from `main`. The workaround is
-  its own tag and the variable `FPGASIM_API_IMAGE` for `e2e/run.sh`. The fix is a tag per branch or
-  directory in the `Makefile`.
 
 The 9K board:
 

@@ -8,7 +8,10 @@ import { modelChanges } from "../../web/src/wave/model";
 import { parseVcd } from "../../web/src/wave/vcd";
 import { build, choose, createFromExample, openSettings, openWithKey, sim, simWith } from "./stand";
 
-const API_IMAGE = process.env.FPGASIM_API_IMAGE ?? "fpgasim-api:dev";
+// The service image of this directory (decision 181); e2e/run.sh passes it through tools/dev/server.sh.
+const API_IMAGE =
+  process.env.FPGASIM_API_IMAGE ??
+  execFileSync(fileURLToPath(new URL("../../tools/dev/api-image.sh", import.meta.url)), { encoding: "utf8" }).trim();
 const TOOLS = fileURLToPath(new URL("../../tools/wave", import.meta.url));
 const CLK_HZ = 27_000_000n;
 const HALF_PERIOD_PS = 18_519; // half cycle at 27 MHz, rounded up
