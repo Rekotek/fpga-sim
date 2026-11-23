@@ -229,6 +229,7 @@ starts with a pointer to a later decision.
 - 175. The assistant: own panel, the author's key on the server
 - 176. Assistant token counts in their own SQLite file
 - 177. A scripted model for the assistant tests
+- 178. The assistant tool step stays on the screen; the tools used under each answer
 
 ## 2026-11-18. Stage 0: measuring speed and build time
 
@@ -3146,3 +3147,18 @@ that is only a spend counter. The file is not in the database backups; losing it
 `list_files` and `get_board`, then answers "Тестовый ответ. Инструменты: list_files, get_board.";
 `#сбой` in the question makes it fail. `tools/dev/server.sh with` (the end-to-end bench) turns it on, so
 `make check` makes no paid calls. The real model is checked by hand with `e2e/manual/assistant-live.spec.ts`.
+
+### 178. The assistant tool step stays on the screen; the tools used under each answer
+
+2026-11-23. The live check found that the step in progress ("Reading a file…", spec section 9.3) was never on
+the screen: the tools are synchronous and take under a millisecond, so `ask()` set the step and cleared it
+before React rendered.
+
+- Before each tool, `ask()` shows the step and waits `pause` from its dependencies: 300 ms in the panel
+  (`STEP_MS` in `AssistantPanel.tsx`), one macrotask in the unit tests. One frame would let the browser render
+  the step, but a person cannot read a 16 ms line. A timer, not `requestAnimationFrame`: frames stop in a
+  background tab, timers only slow down. Ten tool calls add at most 3 s to an answer that takes seconds anyway.
+- After the wait, a reset drops the turn and "Stop" closes this and the remaining calls with a stop result.
+- Under each answer a line lists the tools used, in the order of first use, a repeated tool with its count
+  ("The assistant looked at: the file list, a file ×3"). The spec did not have it; the step alone vanishes
+  with the answer, and the list shows what the advice rests on.

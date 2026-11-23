@@ -18,6 +18,8 @@ test("помощник отвечает по инструментам, пока�
   await expect(page.getByTestId("assistant-notice")).toBeVisible();
 
   await askAssistant(page, "Почему мигает?");
+  // Each tool step stays on the screen before the tool runs (decision 178).
+  await expect(page.getByTestId("assistant-step")).toHaveText("Смотрю плату и выводы…");
   await expect
     .poll(() => sim(page, (api) => api.assistant()))
     .toEqual([
@@ -30,6 +32,7 @@ test("помощник отвечает по инструментам, пока�
       },
     ]);
   await expect(page.getByTestId("assistant-answer")).toHaveText(ANSWER);
+  await expect(page.getByTestId("assistant-tools")).toHaveText("Помощник посмотрел: список файлов, плату и выводы");
   await expect(page.getByTestId("assistant-turn")).toContainText("240");
 
   await askAssistant(page, "проверка #сбой");

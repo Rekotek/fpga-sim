@@ -5,10 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { serverClient } from "../app/actions";
 import { EmptyState, Problem, Toolbar } from "../app/kit";
-import { currentLanguage, t, tOr } from "../i18n";
+import { currentLanguage, t, tOr, type TextKey } from "../i18n";
 import { ask, resetConversation, stop, useConversation, type Turn } from "./conversation";
 import { liveSource } from "./live";
 import { Markdown } from "./Markdown";
+
+// How long a tool step stays on the screen before the tool runs: the tools take under a millisecond, and a
+// shorter step is not readable (decision 178).
+const STEP_MS = 300;
+
+const pause = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, STEP_MS);
+  });
 
 function send(question: string): void {
   const client = serverClient();
@@ -17,6 +26,7 @@ function send(question: string): void {
       client ? client.assistant(messages, language) : Promise.reject(new Error(t("assistant.noServer"))),
     source: liveSource(),
     language: currentLanguage(),
+    pause,
   });
 }
 
@@ -26,6 +36,17 @@ function errorMessage(error: string): string {
   if (error === "cutoff") return t("assistant.cutoff");
   if (error === "noAnswer") return t("assistant.noAnswer");
   return error;
+}
+
+// The tools of one answer in the order of first use; a repeated tool shows its count.
+function toolsUsed(tools: string[]): string {
+  const counts = new Map<string, number>();
+  for (const name of tools) counts.set(name, (counts.get(name) ?? 0) + 1);
+  const names = [...counts].map(([name, n]) => {
+    const label = tOr(`assistant.tool.${name}`, name as TextKey);
+    return n > 1 ? `${label} ×${String(n)}` : label;
+  });
+  return t("assistant.toolsUsed", { list: names.join(", ") });
 }
 
 function TurnView({ turn }: { turn: Turn }) {
@@ -40,6 +61,11 @@ function TurnView({ turn }: { turn: Turn }) {
       {turn.error && <Problem data-testid="assistant-error">{errorMessage(turn.error)}</Problem>}
       {(turn.stopped || turn.capped) && (
         <p className="text-muted-foreground">{t(turn.stopped ? "assistant.stopped" : "assistant.capped")}</p>
+      )}
+      {turn.tools.length > 0 && (
+        <p className="text-xs text-muted-foreground" data-testid="assistant-tools">
+          {toolsUsed(turn.tools)}
+        </p>
       )}
       {turn.tokens > 0 && (
         <p className="text-xs text-muted-foreground tabular-nums">{t("assistant.tokens", { count: turn.tokens })}</p>
