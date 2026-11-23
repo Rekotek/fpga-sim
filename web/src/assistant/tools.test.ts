@@ -1,6 +1,6 @@
 // The assistant's browser tools (decision 175): what each tool returns from the project state.
 import { describe, expect, test } from "vitest";
-import { MAX_RESULT_CHARS, runTool, type ToolSource } from "./tools";
+import { MAX_CHANGES, MAX_RESULT_CHARS, runTool, type ToolSource } from "./tools";
 
 function source(changes: Partial<ToolSource> = {}): ToolSource {
   return {
@@ -104,6 +104,12 @@ describe("инструменты помощника", () => {
       "pin:15": [{ t: "0", v: "pin:15:3" }],
       "top.q": "not recorded",
     });
+    const changes = (max_changes: unknown): unknown =>
+      (parse("get_waveform", { signals: ["pin:15"], max_changes }, recorded) as Record<string, unknown>)["pin:15"];
+    expect(changes(1e9)).toEqual([{ t: "0", v: `pin:15:${String(MAX_CHANGES)}` }]);
+    expect(changes(2.7)).toEqual([{ t: "0", v: "pin:15:2" }]);
+    expect(changes(-1)).toEqual([{ t: "0", v: "pin:15:50" }]);
+    expect(changes("9")).toEqual([{ t: "0", v: "pin:15:50" }]);
   });
 
   test("длинный результат обрезается с пометкой", () => {

@@ -1045,7 +1045,9 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
                 raise ApiError(502, "ASSISTANT_FAILED", f"Помощник не ответил: {e}") from None
             finally:
                 service.assistant_owners.discard(owner)
-            service.usage.add(principal.limit_id, reply.model, reply.usage)
+            # A refusal fallback runs two models in one call: each model's tokens go to its own row.
+            for model_name, spent in reply.spent or ((reply.model, reply.usage),):
+                service.usage.add(principal.limit_id, model_name, spent)
             usage: Usage = reply.usage
             record.update(
                 model=reply.model,

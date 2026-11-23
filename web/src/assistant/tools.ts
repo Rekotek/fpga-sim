@@ -3,6 +3,9 @@
 // inputs here match them.
 export const MAX_RESULT_CHARS = 60_000;
 const DEFAULT_CHANGES = 50;
+// The upper bound of max_changes, the same as "maximum" in the server tool definition: the model may ask for any
+// number, and the core would read the whole recording before the result is cut.
+export const MAX_CHANGES = 500;
 
 // Plain readers of the project state: the tests give a fixture, the interface gives liveSource().
 export interface ToolSource {
@@ -60,7 +63,8 @@ function waveform(input: Record<string, unknown>, source: ToolSource): ToolResul
     if (!wave || names.length === 0) return result({ recorded: false, available });
     return result({ recorded: true, from_ps: wave.fromPs, to_ps: wave.toPs, signals: names, available });
   }
-  const max = typeof input.max_changes === "number" && input.max_changes > 0 ? input.max_changes : DEFAULT_CHANGES;
+  const asked = typeof input.max_changes === "number" ? Math.floor(input.max_changes) : 0;
+  const max = asked > 0 ? Math.min(asked, MAX_CHANGES) : DEFAULT_CHANGES;
   return result(
     Object.fromEntries(wanted.map((n) => [n, names.includes(n) ? source.waveChanges(n, 0, max) : "not recorded"])),
   );

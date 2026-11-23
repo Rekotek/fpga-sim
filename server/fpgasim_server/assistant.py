@@ -14,6 +14,7 @@ from .usage import Usage
 
 MAX_MESSAGES = 60
 MAX_TOKENS = 16_000
+MAX_CHANGES = 500  # get_waveform; the browser clamps to the same bound (web/src/assistant/tools.ts)
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 LANGUAGES = {"ru": "Russian", "en": "English"}
 
@@ -101,7 +102,12 @@ TOOLS: list[dict[str, Any]] = [
             "type": "object",
             "properties": {
                 "signals": {"type": "array", "items": {"type": "string"}},
-                "max_changes": {"type": "integer", "description": "Per signal, default 50."},
+                "max_changes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": MAX_CHANGES,
+                    "description": f"Per signal, default 50, at most {MAX_CHANGES}.",
+                },
             },
             "additionalProperties": False,
         },
@@ -112,8 +118,10 @@ TOOLS: list[dict[str, Any]] = [
 class Reply(NamedTuple):
     content: list[dict[str, Any]]
     stop_reason: str
-    usage: Usage
+    usage: Usage  # all attempts of the call together
     model: str
+    # Tokens per model when more than one model ran (a refusal fallback); empty means all of `usage` is `model`'s.
+    spent: tuple[tuple[str, Usage], ...] = ()
 
 
 class ModelFailed(Exception):  # noqa: N818 — the name states what happened
@@ -218,15 +226,37 @@ class AnthropicModel:
             raise ModelFailed(f"сервис модели ответил {e.status_code}") from e
         except errors.APIConnectionError as e:
             raise ModelFailed("нет связи с сервисом модели") from e
-        u = response.usage
-        usage = Usage(
-            u.input_tokens or 0,
-            u.output_tokens or 0,
-            u.cache_read_input_tokens or 0,
-            u.cache_creation_input_tokens or 0,
-        )
+        except errors.AnthropicError as e:
+            # Any other failure of the SDK (a reply it cannot read) is the model service's, not the server's.
+            raise ModelFailed(f"ошибка клиента модели: {type(e).__name__}") from e
+        spent = attempts(response.usage, self.settings.model, response.model)
+        usage = Usage(*(sum(column) for column in zip(*(u for _, u in spent), strict=True)))
         content = [block.model_dump(mode="json", exclude_none=True) for block in response.content]
-        return Reply(content, response.stop_reason or "end_turn", usage, response.model)
+        return Reply(
+            content, response.stop_reason or "end_turn", usage, response.model, tuple(spent) if len(spent) > 1 else ()
+        )
+
+
+def attempts(usage: Any, primary: str, served: str) -> list[tuple[str, Usage]]:  # noqa: ANN401 — SDK usage
+    """Tokens of each model of one call, in the order of first use.
+
+    With a refusal fallback the top-level usage covers only the attempt that produced the message;
+    `usage.iterations` lists every attempt, the declined one included. An entry without a model is the
+    configured model's; without iterations, the whole usage is the model that answered.
+    """
+    entries = [e for e in (getattr(usage, "iterations", None) or []) if hasattr(e, "input_tokens")]
+    named = [(getattr(e, "model", None) or primary, e) for e in entries] or [(served, usage)]
+    by_model: dict[str, Usage] = {}
+    for name, e in named:
+        u = Usage(
+            e.input_tokens or 0,
+            e.output_tokens or 0,
+            getattr(e, "cache_read_input_tokens", 0) or 0,
+            getattr(e, "cache_creation_input_tokens", 0) or 0,
+        )
+        prev = by_model.get(name, Usage(0, 0, 0, 0))
+        by_model[name] = Usage(*(x + y for x, y in zip(prev, u, strict=True)))
+    return list(by_model.items())
 
 
 def make_model(settings: AssistantSettings) -> Model | None:
@@ -237,6 +267,7 @@ def make_model(settings: AssistantSettings) -> Model | None:
         return FakeModel()
     try:
         key = settings.key_file.read_text(encoding="utf-8").strip()
-    except OSError:
+    except (OSError, UnicodeDecodeError):
+        # A missing or broken key file turns the assistant off; it does not stop the server.
         return None
     return AnthropicModel(settings, key) if key else None
