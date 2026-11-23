@@ -194,6 +194,8 @@ export interface DebugApi {
   // The VCD text that the "Export VCD" button writes; null if there is no waveform.
   vcd(): string | null;
   command(message: Command): Promise<ReplyMessage>;
+  // The assistant's conversation (decision 175): questions, answers, tools used, tokens, error.
+  assistant(): { question: string; answer: string; tools: string[]; tokens: number; error: string | null }[];
   // The open file, the cursor position (from one) and message markers in that file.
   editor(): {
     path: string | null;

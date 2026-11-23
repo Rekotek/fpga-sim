@@ -18,6 +18,7 @@ import sys
 import time
 from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from typing import Any, Literal
 
@@ -39,6 +40,7 @@ from .accounts import (
     new_password,
     verify_login,
 )
+from .assistant import Model, ModelFailed, check_messages, make_model
 from .cache import ARTIFACTS, TB_DUMP, BuildCache, TestbenchStore
 from .config import Settings, load_settings
 from .diagnostics import Diagnostic, diag, has_errors, load_gowin_primitives, parse_iverilog, parse_verilator
@@ -46,6 +48,7 @@ from .jobs import Busy, JobOutcome, JobRunner
 from .keys import KeyStore
 from .projects import Change, ProjectStore
 from .resolve import CONFIG_FILE, DESIGN_EXT, Resolution, bind, resolve, resolve_testbench
+from .usage import Usage, UsageStore
 
 MAX_PATH_BYTES = 1024
 MAX_NAME_BYTES = 255  # limit of a file name in the server file system
@@ -57,6 +60,7 @@ HTTP_CODES = {
     405: "METHOD_NOT_ALLOWED",
 }
 MAX_SMALL_BODY = 64 * 1024  # body of login and user operation requests
+MAX_ASSISTANT_BODY = 1024 * 1024  # the conversation sent to the assistant (decision 175)
 MAINTENANCE_SECONDS = 3600  # how often the background task checks whether to clean the trash and back up the database
 BAD_CREDENTIALS = "Неверный логин или пароль"
 MAX_PASSWORD_QUEUE = 16  # one password check takes about 70 ms
@@ -215,6 +219,13 @@ class Service:
         self._recent: dict[str, deque[float]] = {}
         self._inflight: dict[str, asyncio.Future[dict[str, Any]]] = {}
         self._purged_day: str | None = None  # day (UTC) of the last trash cleanup
+        # The assistant (decision 175): None when it is off or has no key; tests put a fake model here.
+        self.model: Model | None = make_model(settings.assistant)
+        self.usage = UsageStore(settings.data_dir / "assistant" / "usage.db", lambda: self.accounts.clock())
+        # Model calls wait on the network for up to 100 s: their own threads keep the shared pool free for
+        # logins and builds. Owners with a call in flight: one call each, the daily check sees its result.
+        self.assistant_pool = ThreadPoolExecutor(settings.limits.assistant_calls_at_once, "assistant")
+        self.assistant_owners: set[str] = set()
 
     # --- Request checks -------------------------------------------------------------
 
@@ -262,6 +273,7 @@ class Service:
             "check": limits.checks_per_minute,
             "account": limits.account_requests_per_minute,
             "sync": limits.sync_requests_per_minute,
+            "assistant": limits.assistant_requests_per_minute,
         }.get(op, limits.builds_per_minute)
         now = time.monotonic()
         recent = self._recent.setdefault(f"{op}:{owner}", deque())
@@ -310,6 +322,36 @@ class Service:
             first = e.errors()[0]
             where = ".".join(str(p) for p in first["loc"]) or "тело"
             raise ApiError(400, "BAD_REQUEST", f"Запрос не разобран: {where}: {first['type']}") from None
+
+    async def read_assistant(self, request: Request) -> tuple[list[dict[str, Any]], str]:
+        """The conversation and the interface language of an assistant request."""
+        body = bytearray()
+        async for chunk in request.stream():
+            body += chunk
+            if len(body) > MAX_ASSISTANT_BODY:
+                raise ApiError(413, "ASSISTANT_TOO_LONG", "Разговор слишком длинный: начните новый")
+        try:
+            data = json.loads(bytes(body))
+        except ValueError:
+            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело не JSON") from None
+        if not isinstance(data, dict):
+            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело")
+        language = data.get("language")
+        try:
+            messages = check_messages(data.get("messages"))
+        except ValueError as e:
+            code, status = ("ASSISTANT_TOO_LONG", 413) if "длинн" in str(e) else ("BAD_REQUEST", 400)
+            raise ApiError(status, code, str(e)) from None
+        return messages, language if isinstance(language, str) else "ru"
+
+    def assistant_allowed(self, owner: str) -> None:
+        """Daily token limits: one key or account, then the whole server (UTC day)."""
+        limits = self.settings.limits
+        if (
+            self.usage.tokens_today(owner) >= limits.assistant_tokens_per_day
+            or self.usage.tokens_today_total() >= limits.assistant_tokens_per_day_total
+        ):
+            raise ApiError(429, "ASSISTANT_LIMIT", "Дневной лимит помощника исчерпан, он обновится в 00:00 UTC")
 
     async def read_sync(self, request: Request) -> tuple[SyncRequest, int]:
         """The body of a sync request and the size of the sent changes (the projectBytes field of the log).
@@ -729,6 +771,10 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
                 "owner": principal.owner,
                 "auth": principal.auth,
                 "user": user,
+                "assistant": {
+                    "enabled": service.model is not None,
+                    "model": service.model.name if service.model is not None else None,
+                },
             }
 
         return await logged(request, "info", handler)
@@ -973,6 +1019,54 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
             return service.response(res, meta)
 
         return await logged(request, "check", handler)
+
+    @app.post("/v1/assistant")
+    async def assistant(request: Request) -> JSONResponse:
+        """One model call of the assistant (decision 175); the browser runs the tool loop."""
+
+        async def handler(record: dict[str, Any], principal: Principal | None) -> dict[str, Any]:
+            assert principal is not None
+            service.rate_limit(principal.limit_id, "assistant")
+            messages, language = await service.read_assistant(request)
+            model = service.model
+            if model is None:
+                raise ApiError(503, "ASSISTANT_OFF", "Помощник на сервере выключен")
+            owner = principal.limit_id
+            service.assistant_allowed(owner)
+            if owner in service.assistant_owners:
+                raise ApiError(429, "RATE_LIMITED", "Дождитесь ответа помощника на предыдущий вопрос")
+            if len(service.assistant_owners) >= settings.limits.assistant_calls_at_once:
+                raise ApiError(503, "BUSY", "Помощник занят другими вопросами, повторите через минуту")
+            service.assistant_owners.add(owner)
+            try:
+                loop = asyncio.get_running_loop()
+                reply = await loop.run_in_executor(service.assistant_pool, model.call, messages, language)
+            except ModelFailed as e:
+                raise ApiError(502, "ASSISTANT_FAILED", f"Помощник не ответил: {e}") from None
+            finally:
+                service.assistant_owners.discard(owner)
+            service.usage.add(principal.limit_id, reply.model, reply.usage)
+            usage: Usage = reply.usage
+            record.update(
+                model=reply.model,
+                tokensIn=usage.input,
+                tokensOut=usage.output,
+                cacheRead=usage.cache_read,
+                cacheWrite=usage.cache_write,
+                stopReason=reply.stop_reason,
+            )
+            return {
+                "content": reply.content,
+                "stop_reason": reply.stop_reason,
+                "usage": {
+                    "input": usage.input,
+                    "output": usage.output,
+                    "cacheRead": usage.cache_read,
+                    "cacheWrite": usage.cache_write,
+                },
+            }
+
+        return await logged(request, "assistant", handler)
 
     @app.post("/v1/build")
     async def build(request: Request) -> JSONResponse:

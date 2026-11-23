@@ -1,6 +1,15 @@
 // Build server client (spec section 8.3). VITE_BUILD_URL sets the address (section 10.1).
 import type { RemoteProject, SyncAnswer, SyncRequest } from "../project/sync";
-import type { Account, BuildResponse, CheckResponse, InfoResponse, ProjectFile, TestbenchResponse } from "./types";
+import type {
+  Account,
+  AssistantMessage,
+  AssistantReply,
+  BuildResponse,
+  CheckResponse,
+  InfoResponse,
+  ProjectFile,
+  TestbenchResponse,
+} from "./types";
 
 const env = import.meta.env as Record<string, string | undefined>;
 export const BUILD_URL: string = (env.VITE_BUILD_URL ?? "http://localhost:8080").replace(/\/+$/, "");
@@ -80,6 +89,8 @@ export interface AdminProjectFiles {
 // Server client: token is an access key or a session token; the server tells them apart itself (accounts spec section 2.3).
 // A sync request holds the exchange queue of all projects and tabs: a hung request does not occupy it.
 const SYNC_TIMEOUT_MS = 30_000;
+// The model call with tools can take minutes; the server itself waits up to 120 s per attempt.
+const ASSISTANT_TIMEOUT_MS = 300_000;
 
 export class BuildClient {
   constructor(
@@ -193,6 +204,11 @@ export class BuildClient {
       body: JSON.stringify({ files, config, testbench }),
     });
     return (await response.json()) as TestbenchResponse;
+  }
+
+  // One model call of the assistant (decision 175): the conversation so far and the interface language.
+  assistant(messages: AssistantMessage[], language: string): Promise<AssistantReply> {
+    return this.call("POST", "/v1/assistant", { messages, language }, ASSISTANT_TIMEOUT_MS);
   }
 
   // A build file by the path from the artifacts field.

@@ -25,6 +25,7 @@ import { projectParts } from "../project/config";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 import { WavePanel } from "./WavePanel";
+import { AssistantPanel } from "../assistant/AssistantPanel";
 import { diagnosticLevel } from "./diagnostics";
 import { FolderBanner } from "./FolderBanner";
 import { SessionBanner } from "./SessionBanner";
@@ -148,10 +149,12 @@ function BottomPanel() {
   const config = useApp((s) => s.config);
   const board = useApp((s) => boardById(s.project?.board ?? ""));
   // One tab per enabled UART part, on the terminal tab (spec section 9.3).
+  const assistant = useApp((s) => s.assistant?.enabled === true);
   const uarts = board ? projectParts(board, config).filter((p) => p.type === "uart" && p.enabled) : [];
   const terminal = tab.startsWith("terminal:") ? uarts.find((p) => `terminal:${p.id}` === tab) : undefined;
   // The tab's part was removed or disabled: the messages show.
-  const fixed = tab === "nets" || tab === "signals" || tab === "waves" || tab === "testbench";
+  const fixed =
+    tab === "nets" || tab === "signals" || tab === "waves" || tab === "testbench" || (assistant && tab === "assistant");
   const shown: BottomTab = fixed || terminal ? tab : "messages";
   const tabs: { id: BottomTab; testid: string; label: ReactNode }[] = [
     {
@@ -180,6 +183,7 @@ function BottomPanel() {
     { id: "signals", testid: "tab-signals", label: t("signals.title") },
     { id: "waves", testid: "tab-waves", label: t("waves.title") },
     { id: "testbench", testid: "tab-testbench", label: t("testbench.title") },
+    ...(assistant ? [{ id: "assistant" as BottomTab, testid: "tab-assistant", label: t("assistant.title") }] : []),
     ...uarts.map((p) => ({
       id: `terminal:${p.id}` as BottomTab,
       testid: `tab-terminal-${p.id}`,
@@ -219,6 +223,8 @@ function BottomPanel() {
           <WavePanel />
         ) : shown === "testbench" ? (
           <TestbenchPanel />
+        ) : shown === "assistant" ? (
+          <AssistantPanel />
         ) : (
           <MessagesPanel />
         )}

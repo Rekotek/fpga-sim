@@ -505,6 +505,7 @@ def test_every_server_code_is_in_diagnostics_table() -> None:
     # Not message codes: request error codes (spec section 8.3), .cst words and environment variable names.
     other = {"BAD_REQUEST", "PROJECT_TOO_LARGE", "RATE_LIMITED", "NOT_FOUND", "METHOD_NOT_ALLOWED"}
     other |= {"BAD_CREDENTIALS", "LOGIN_LOCKED"}  # login error codes (accounts spec section 3, docs/tz-accounts.md)
+    other |= {"ASSISTANT_OFF", "ASSISTANT_LIMIT", "ASSISTANT_FAILED", "ASSISTANT_TOO_LONG"}  # decision 175
     other |= {"IO_LOC", "IO_PORT", "PULL_MODE", "IO_TYPE"}
     codes = {c for c in found if c not in other and not c.startswith("FPGASIM_")}
     assert len(codes) >= 30

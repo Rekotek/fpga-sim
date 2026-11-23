@@ -57,7 +57,7 @@ export type DialogState = { kind: "binding" } | { kind: "settings" } | { kind: "
 
 // Bottom panel tab: messages, nets, signals, waveforms, testbench or the terminal
 // of the UART part with this name.
-export type BottomTab = "messages" | "nets" | "signals" | "waves" | "testbench" | `terminal:${string}`;
+export type BottomTab = "messages" | "nets" | "signals" | "waves" | "testbench" | "assistant" | `terminal:${string}`;
 
 // The last testbench run (spec section 8.3). status: running — the request is in progress; ok, failed, timeout —
 // the server's answer; error — the server did not answer or refused.
@@ -144,6 +144,7 @@ export interface AppState {
   usersError: string | null; // refusal of the last read of the user list
   owner: string | null;
   serverOk: boolean | null;
+  assistant: { enabled: boolean; model: string | null } | null; // from /v1/info (decision 175); null: unknown
   projects: ProjectRecord[];
   project: ProjectRecord | null;
   files: FileEntry[];
@@ -211,6 +212,7 @@ export const useApp = create<AppState>(() => ({
   usersError: null,
   owner: null,
   serverOk: null,
+  assistant: null,
   projects: [],
   project: null,
   files: [],

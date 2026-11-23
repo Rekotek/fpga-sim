@@ -1,5 +1,6 @@
 // Interface actions: key, projects, files, build and run (spec sections 9.2 and 9.5).
 // Objects outside React live here: the store, the editor, the server client and the current simulation.
+import { resetConversation } from "../assistant/conversation";
 import { BuildClient, ServerError, login, serverHealthy } from "../build/client";
 import { forgetKey, forgetSession, loadKey, loadSession, saveKey, saveSession, takeKeyFromUrl } from "../build/key";
 import { BoardScene } from "../board/scene";
@@ -98,6 +99,11 @@ interface SessionFile {
 
 let store: ProjectStore | null = null;
 let client: BuildClient | null = null;
+
+// The server client of the current sign-in; null before the sign-in check (the assistant uses it).
+export function serverClient(): BuildClient | null {
+  return client;
+}
 let simulation: Simulation | null = null;
 let openSeq = 0; // number of the last project open: an earlier one is dropped
 let buildSeq = 0; // number of the last build: the reply to an earlier one is dropped
@@ -777,7 +783,7 @@ async function checkCredential(credential: Credential): Promise<void> {
       set({ access: { kind: "key", owner: info.owner }, pendingLogin: null });
       stopSync();
     }
-    set({ authStatus: "ok", owner: info.owner, serverOk: true });
+    set({ authStatus: "ok", owner: info.owner, serverOk: true, assistant: info.assistant ?? null });
   } catch (e) {
     client = null;
     if (e instanceof ServerError && e.status === 401) {
@@ -786,10 +792,17 @@ async function checkCredential(credential: Credential): Promise<void> {
       else forgetSession();
       // A key from the link that the server did not accept is named in the sign-in form (section 5.1).
       const problem = credential.kind === "key" && credential.linked ? "keyRejected" : null;
-      set({ authStatus: "missing", authProblem: problem, access: { kind: "none" }, owner: null, pendingLogin: null });
+      set({
+        authStatus: "missing",
+        authProblem: problem,
+        access: { kind: "none" },
+        owner: null,
+        pendingLogin: null,
+        assistant: null,
+      });
     } else {
       // The server did not answer: the sign-in data is not rejected, the saved data stays, the check can be repeated.
-      set({ authStatus: "unreachable", authProblem: "unreachable", owner: null, serverOk: false });
+      set({ authStatus: "unreachable", authProblem: "unreachable", owner: null, serverOk: false, assistant: null });
     }
   }
   await refreshProjects();
@@ -1086,6 +1099,7 @@ export async function deleteProject(id: string): Promise<void> {
 
 // ask — opening on a user click: the browser may ask for folder permission at once.
 export async function openProject(id: string, ask = false): Promise<void> {
+  resetConversation(); // the conversation belongs to one project (decision 175)
   const seq = ++openSeq;
   await flushDrafts();
   const database = await db();
@@ -1197,6 +1211,7 @@ export function setLayout(layout: Layout): void {
 
 export async function closeProject(): Promise<void> {
   openSeq += 1;
+  resetConversation();
   stopFolder();
   await flushDrafts();
   dropProjectHold();

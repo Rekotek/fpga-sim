@@ -85,9 +85,11 @@ case "${MODE}" in
         trap cleanup EXIT
         ensure_key "${DIR}"
         ensure_users "${DIR}"
+        # The assistant runs on the scripted test model (decision 177): no key and no paid calls.
+        printf '[assistant]\nenabled = true\nmodel = "fake"\n' > "${DIR}/config.toml"
         # End-to-end tests start the interface on a free port: the server must allow its address in CORS.
         if [ -n "${FPGASIM_CORS_ORIGIN:-}" ]; then
-            printf '[server]\ncors_origins = ["%s"]\n' "${FPGASIM_CORS_ORIGIN}" > "${DIR}/config.toml"
+            printf '[server]\ncors_origins = ["%s"]\n' "${FPGASIM_CORS_ORIGIN}" >> "${DIR}/config.toml"
         fi
         api "${NAME}" "${DIR}" -d -p 127.0.0.1::8080 -- > /dev/null
         PORT="$(docker port "${NAME}" 8080/tcp | head -n 1 | sed 's/.*://')"

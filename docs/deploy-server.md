@@ -217,6 +217,32 @@ The key `judges` gives hackathon judges access without an account (decision 171)
 form: `https://fpga-sim.scriptorium.cc/?lang=en#key=<key>`. After the judging ends (Cognizant:
 2027-01-18), disable the key: `key disable judges`.
 
+## Assistant
+
+The assistant (decision 175) is off until the key file exists and `[assistant] enabled = true` is set.
+The key is in the macOS keychain, service `fpgasim-anthropic`. It goes through standard input, so it
+appears neither on the screen nor in the shell history (not checked on the VPS yet):
+
+```
+security find-generic-password -s fpgasim-anthropic -w | ssh fpga-build '/opt/fpgasim/deploy/fpgasim-admin assistant key'
+```
+
+Then add to `/etc/fpgasim/config.toml`:
+
+```
+[assistant]
+enabled = true
+model = "claude-sonnet-5-5"
+effort = "medium"
+```
+
+and restart the service (`make deploy-server` does it). The model and the effort change the same way.
+`/v1/info` shows `assistant.enabled`. The spend for the last seven days:
+
+```
+ssh fpga-build '/opt/fpgasim/deploy/fpgasim-admin assistant usage'
+```
+
 ## Checking a build on the VPS
 
 The key is passed through an environment variable. It stays out of the shell history if the command
