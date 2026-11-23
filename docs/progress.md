@@ -82,9 +82,9 @@ the older detailed stage entries: `git show c1740f0:docs/progress.md` (version 1
   tools used are listed under each answer; Markdown code inside bold and list numbering; tab names in the
   language of the answer; the tokens of every model of a refusal fallback; 502 for any SDK failure;
   `max_changes` at most 500; a non-UTF-8 key file turns the assistant off; "New conversation" off during an
-  answer; the tab raises a low bottom panel; the end-to-end test covers all five tools. Not checked without
-  the real model: the API accepting `minimum`/`maximum` in the `get_waveform` schema, the model using the
-  Russian labels, the shape of `usage.iterations` on a real fallback.
+  answer; the tab raises a low bottom panel; the end-to-end test covers all five tools. The author checked
+  the assistant on the production URL on 2026-11-23 after the deployment: it works. Not checked: the shape
+  of `usage.iterations` on a real fallback (no refusal happened).
 
 ## Deployments
 
@@ -118,9 +118,6 @@ the Cloudflare panel. What was found on earlier deployments:
 
 Checks that an agent cannot do. None of them blocks work.
 
-- Ask the assistant one question on the production URL (it costs money, so only on the author's command):
-  the answer must come without an error (the API accepts the `get_waveform` schema with `minimum` and
-  `maximum`, decision 180) and must name the tabs in Russian ("Сигналы", "Осциллограммы").
 
 - Go through the remaining lessons 2–10 in the application (on 2026-11-19 the author went through
   some lessons, including `lesson07_ped` and `lesson10_rainbow`).
