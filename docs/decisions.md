@@ -232,6 +232,7 @@ starts with a pointer to a later decision.
 - 178. The assistant tool step stays on the screen; the tools used under each answer
 - 179. The "Assistant" tab raises a low bottom panel
 - 180. Assistant fixes after the live check: spend, limits, labels, reset
+- 181. A service test image per repository directory
 
 ## 2026-11-18. Stage 0: measuring speed and build time
 
@@ -863,7 +864,7 @@ Added after the automatic security review; each has a test.
 
 ### 39. Server tests, local server and development key
 
-- `make test-server` runs pytest in a container of the service image (`fpgasim-api:dev`, target `test`
+- `make test-server` runs pytest in a container of the service image (`fpgasim-api:dev-<number>` since decision 181, target `test`
   in `Dockerfile.api`) with the Docker socket; the repository is bound at its own path, because Docker binds
   the job folder by a path on the machine. For a quick edit the tests also run without a container:
   `cd server && uv run pytest`.
@@ -3196,3 +3197,23 @@ border. A height of its own for the tab was rejected: a jump of the panel on eve
   the answer first.
 - A key file that cannot be read as UTF-8 turns the assistant off, as a missing key does: `/v1/info` says
   `enabled: false`, and the server starts.
+
+### 181. A service test image per repository directory
+
+2026-11-23. The local service image (target `test` in `server/docker/Dockerfile.api`) had one tag per machine,
+`fpgasim-api:dev`. Several agents work on one machine in different worktrees: `make image-api` in one worktree
+replaced the image in the middle of a `make check` in another, and on 2026-11-22 the end-to-end test of the
+English interface ran against the server of another branch.
+
+The tag now depends on the repository directory: `fpgasim-api:dev-<cksum of the path>`. It is printed by
+`tools/dev/api-image.sh`; the `Makefile` (`image-api`, `test-server`), `tools/dev/server.sh` (`make dev`,
+`test-examples`, `e2e`) and `e2e/tests/stage8.spec.ts` take it from there. `FPGASIM_API_IMAGE` set in the
+environment still wins. A tag per branch was rejected: Git checks out a branch in one worktree at a time, so it gives the
+same separation, but a branch can be renamed or switched while the directory and its image stay.
+
+The `Makefile` does not export `FPGASIM_API_IMAGE`: `make deploy-server` would then carry a development name
+into the variable that names the production image in `deploy/compose.yaml`.
+
+Consequence: each worktree leaves its own image. The layers below the source copy are shared, so an extra
+image takes little space. List them with `docker image ls fpgasim-api`, remove one with
+`docker image rm fpgasim-api:dev-<number>`. The old `fpgasim-api:dev` is no longer used.

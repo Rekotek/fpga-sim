@@ -19,7 +19,9 @@ ROOT="${PWD}"
 MODE="${1:?режим: run или with}"
 shift
 BUILD_IMAGE="$(tools/bench/image.sh --name-full)"
-API_IMAGE="${FPGASIM_API_IMAGE:-fpgasim-api:dev}"
+# The command started by "with" gets the same image name (e2e/tests/stage8.spec.ts runs pyvcd in it).
+API_IMAGE="$(tools/dev/api-image.sh)"
+export FPGASIM_API_IMAGE="${API_IMAGE}"
 docker image inspect "${BUILD_IMAGE}" > /dev/null 2>&1 || { echo "нет образа ${BUILD_IMAGE}: выполните make image" >&2; exit 1; }
 docker image inspect "${API_IMAGE}" > /dev/null 2>&1 || { echo "нет образа ${API_IMAGE}: выполните make image-api" >&2; exit 1; }
 

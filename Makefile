@@ -10,7 +10,8 @@ IMAGE      := fpgasim-tools:$(TAG)
 # Build image: tools, runtime library and job script (spec section 8.2).
 # The server uses it. The tag includes the runtime version.
 IMAGE_FULL := fpgasim-build:$(TAG)-rt$(shell head -n 1 core/VERSION)
-API_IMAGE  := fpgasim-api:dev
+# Service image of this repository directory: each worktree has its own tag (decision 181).
+API_IMAGE  := $(shell tools/dev/api-image.sh)
 # Number of parallel jobs for the Verilator build in the image.
 IMAGE_JOBS ?= 8
 # Host names are in the site settings (decision 173, deploy/site.env.example); the scripts read them
