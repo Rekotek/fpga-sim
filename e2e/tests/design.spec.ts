@@ -1,5 +1,5 @@
-// Interface design (decisions 111-115): build label, "Run" with a build, one run and pause button,
-// theme, pinned help heading, project menu and file rows.
+// Interface design (decisions 111-115, 182): build label, "Run" with a build, one run and pause button,
+// theme, pinned help heading, project menu and file rows, the tab icon.
 import { expect, test } from "@playwright/test";
 import { build, createFromExample, fileAction, openProjectMenu, openWithKey, sim } from "./stand";
 
@@ -131,4 +131,14 @@ test("меню проекта: переименование; меню строк
   await page.getByRole("menuitem").filter({ hasText: "Удалить" }).click();
   await page.getByTestId("file-delete-confirm").click();
   await expect.poll(names).toEqual(["top.cst", "top.v"]);
+});
+
+test("у вкладки есть иконка FPGA SIM", async ({ page, request }) => {
+  await page.goto("/");
+  const href = await page.locator('link[rel="icon"]').getAttribute("href");
+  expect(href).toBe("/favicon.svg");
+  const icon = await request.get(href!);
+  expect(icon.ok()).toBe(true);
+  expect(icon.headers()["content-type"]).toContain("image/svg+xml");
+  expect(await icon.text()).toContain("<svg");
 });
