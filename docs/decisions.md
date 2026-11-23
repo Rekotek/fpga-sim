@@ -3113,8 +3113,8 @@ variables (forks would talk to the author's server by default).
 ### 175. The assistant: own panel, the author's key on the server
 
 2026-11-22. The author asked for an assistant that reads the code, the messages and the board state and
-gives advice. Design: `docs/superpowers/specs/2026-11-22-assistant-design.md`; spike: branch
-`spike/assistant`.
+gives advice. Design: `docs/superpowers/specs/2026-11-22-assistant-design.md`. The spike was
+throwaway code outside git; it was removed after the merge.
 
 - Approach: an own "Assistant" tab, not the agentic-web runtime of the hackathon (the assistant is wanted
   regardless of it), and the author's Anthropic key on the server, not a key of each user (students should

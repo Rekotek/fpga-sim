@@ -219,25 +219,25 @@ form: `https://fpga-sim.scriptorium.cc/?lang=en#key=<key>`. After the judging en
 
 ## Assistant
 
-The assistant (decision 175) is off until the key file exists and `[assistant] enabled = true` is set.
-The key is in the macOS keychain, service `fpgasim-anthropic`. It goes through standard input, so it
-appears neither on the screen nor in the shell history (not checked on the VPS yet):
+The assistant (decision 175) works when the key file exists and `[assistant] enabled = true` is set.
+Enabled on production since 2026-11-23. The key is in the macOS keychain, service `fpgasim-anthropic`.
+It goes through standard input, so it appears neither on the screen nor in the shell history:
 
 ```
 security find-generic-password -s fpgasim-anthropic -w | ssh fpga-build '/opt/fpgasim/deploy/fpgasim-admin assistant key'
 ```
 
-Then add to `/etc/fpgasim/config.toml`:
+`/etc/fpgasim` belongs to root and the VPS user has no sudo without a password, so `config.toml` is written
+from inside the service container. On 2026-11-23 the file did not exist; it was created with:
 
 ```
-[assistant]
-enabled = true
-model = "claude-sonnet-5-5"
-effort = "medium"
+ssh fpga-build 'cd /opt/fpgasim && docker compose --env-file /var/lib/fpgasim/deploy/compose.env -f deploy/compose.yaml exec -T api sh -c "printf \"[assistant]\nenabled = true\n\" > /etc/fpgasim/config.toml"'
+ssh fpga-build 'cd /opt/fpgasim && docker compose --env-file /var/lib/fpgasim/deploy/compose.env -f deploy/compose.yaml up -d --force-recreate api'
 ```
 
-and restart the service (`make deploy-server` does it). The model and the effort change the same way.
-`/v1/info` shows `assistant.enabled`. The spend for the last seven days:
+The model and the effort are the keys `model` and `effort` of the same section (defaults
+`claude-sonnet-5-5` and `medium`); the file is read at start, so restart as above. `/v1/info` shows
+`assistant.enabled`. The spend for the last seven days:
 
 ```
 ssh fpga-build '/opt/fpgasim/deploy/fpgasim-admin assistant usage'

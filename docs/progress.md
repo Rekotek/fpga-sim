@@ -3,7 +3,7 @@
 The first section says where we are now. Format of a new entry: the date, what was done, what was
 postponed and why, which decisions were made (details are in `docs/decisions.md`).
 
-## Where we are now (2026-11-22)
+## Where we are now (2026-11-23)
 
 What runs on the production URLs: section "Deployments".
 Latest work: accounts and projects on the server (2026-11-20, `docs/tz-accounts.md`), the
@@ -12,7 +12,8 @@ queue (decision 165), dragging files into an open project and changing the board
 (2026-11-22, decisions 166–167), tests for dragging onto the projects screen, `TB_DISK_LIMIT`,
 `$stop` and `$fatal`, undo before save, the English interface language (2026-11-22, decision 168),
 `fpgasim.json` for lessons 02, 03, 06, 07 (decision 169), the English README (decision 170), the
-access key for the hackathon judges (decision 171). The list is in section "After acceptance".
+access key for the hackathon judges (decision 171), the "Assistant" tab (2026-11-23, decisions 175–177, enabled
+on production). The list is in section "After acceptance".
 
 **Version 1 is complete.** All stages of spec section 12 (0–11) are done and merged into `main`.
 There are no further stages in the spec: new work follows the author's task, and its entry is
@@ -250,12 +251,18 @@ version 2 is spec section 15.2: do not start it without the author's command.
   account and for the server per UTC day; `fpgasim-admin assistant key` and `assistant usage`. Tests: server
   with a fake model, Vitest for the tools, the loop and Markdown, one end-to-end scenario on the fake model;
   the real model is checked by hand (`e2e/manual/assistant-live.spec.ts`). Not done: storing conversations,
-  a spend screen in the interface. Needs `make deploy-server`, `make deploy-web`, the key file and
-  `enabled = true` on the VPS.
+  a spend screen in the interface. Deployed and enabled on 2026-11-23 (section "Deployments").
 
 ## Deployments
 
-Now (2026-11-22): build server `20261122-1407-1b51331` (English interface language, decision 168),
+Now (2026-11-23): build server `20261123-0703-7df404f` and static files `20261123-0704-7df404f` (the
+assistant, decisions 175–177). The assistant is enabled: `/etc/fpgasim/config.toml` holds only
+`[assistant] enabled = true`, the key is `/etc/fpgasim/anthropic.key`; `/v1/info` answers
+`{"enabled": true, "model": "claude-sonnet-5-5"}` and a test question through `/v1/assistant` got an
+answer. `make e2e-prod` before and after enabling: 36 passed, 2 skipped (the two `accounts.spec.ts`
+tests skip without `FPGASIM_USER_LOGIN` and `FPGASIM_USER_PASSWORD` in the environment).
+
+Before (2026-11-22): build server `20261122-1407-1b51331` (English interface language, decision 168),
 static files `20261122-1519-cf5fab8` (`fpgasim.json` for lessons 02, 03, 06, 07, decision 169).
 `make e2e-prod` against this pair: 38 of 38 on the first run. The previous static files
 `20261122-1407-1b51331` with the same server also gave 38 of 38. On the production URL a browser
