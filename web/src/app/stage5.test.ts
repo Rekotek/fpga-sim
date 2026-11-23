@@ -6,7 +6,7 @@ import { ButtonWidget } from "../parts/button";
 import { ledBrightness, ledLevel, smoothBrightness } from "../parts/led";
 import { boardById, diagnosticCodes, diagnosticEntry, listExamples, partDescription } from "../project/assets";
 import type { LiveNet } from "../sim/host";
-import { DEFAULT_LAYOUT, parseLayout, resizeLayout, toggleArea } from "./layout";
+import { assistantLayout, DEFAULT_LAYOUT, parseLayout, resizeLayout, toggleArea } from "./layout";
 import { SPEEDS, filePathProblem, parseSpeed, speedLabel, stepCommand } from "./speed";
 
 // Codes of the table in spec section 7.6 that have a short text (levels "important" and "notice").
@@ -99,6 +99,15 @@ describe("раскладка рабочего места", () => {
     expect(collapsed.collapsed.editor).toBe(true);
     expect(toggleArea(collapsed, "editor")).toEqual(DEFAULT_LAYOUT);
     expect(parseLayout(JSON.stringify(collapsed))).toEqual(collapsed);
+  });
+
+  test("вкладка «Помощник» поднимает низкую нижнюю панель", () => {
+    expect(assistantLayout(DEFAULT_LAYOUT, { width: 1400, height: 840 }).bottom).toBe(378);
+    expect(assistantLayout(DEFAULT_LAYOUT, { width: 1400, height: 720 }).bottom).toBe(324);
+    // The panel only grows: a higher panel stays, and so does the panel of a low window.
+    const high = { ...DEFAULT_LAYOUT, bottom: 500 };
+    expect(assistantLayout(high, { width: 1400, height: 840 })).toBe(high);
+    expect(assistantLayout(DEFAULT_LAYOUT, { width: 1400, height: 400 })).toBe(DEFAULT_LAYOUT);
   });
 });
 

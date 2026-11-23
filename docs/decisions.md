@@ -230,6 +230,7 @@ starts with a pointer to a later decision.
 - 176. Assistant token counts in their own SQLite file
 - 177. A scripted model for the assistant tests
 - 178. The assistant tool step stays on the screen; the tools used under each answer
+- 179. The "Assistant" tab raises a low bottom panel
 
 ## 2026-11-18. Stage 0: measuring speed and build time
 
@@ -3145,7 +3146,9 @@ that is only a spend counter. The file is not in the database backups; losing it
 
 2026-11-22. `model = "fake"` in `[assistant]` gives a model without a key or network: it asks for
 `list_files` and `get_board`, then answers "Тестовый ответ. Инструменты: list_files, get_board.";
-`#сбой` in the question makes it fail. `tools/dev/server.sh with` (the end-to-end bench) turns it on, so
+`#сбой` in the question makes it fail. `#все` (added 2026-11-23) makes it call all five tools, `read_file` with
+`top.v`, and answer with the names of the tools whose results were errors ("Ошибки: нет." when none): the
+end-to-end test runs every tool on a live project. `tools/dev/server.sh with` (the end-to-end bench) turns it on, so
 `make check` makes no paid calls. The real model is checked by hand with `e2e/manual/assistant-live.spec.ts`.
 
 ### 178. The assistant tool step stays on the screen; the tools used under each answer
@@ -3162,3 +3165,11 @@ before React rendered.
 - Under each answer a line lists the tools used, in the order of first use, a repeated tool with its count
   ("The assistant looked at: the file list, a file ×3"). The spec did not have it; the step alone vanishes
   with the answer, and the list shows what the advice rests on.
+
+### 179. The "Assistant" tab raises a low bottom panel
+
+2026-11-23. The live check found that at a window height of 840 px the bottom panel (210 px by default, one
+height for all tabs) shows one or two lines of an answer. Opening the "Assistant" tab raises the panel to 45 % of
+the window height (`ASSISTANT_SHARE` in `web/src/app/layout.ts`) when it is lower; the panel never shrinks, and
+the editor keeps the usual 240 px. The height is the shared one: other tabs keep it until the user drags the
+border. A height of its own for the tab was rejected: a jump of the panel on every tab switch moves the editor.

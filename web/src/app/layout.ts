@@ -42,6 +42,15 @@ export function resizeLayout(
   return { ...layout, [edge]: clamp(size, [low, high]) };
 }
 
+// The share of the window height the bottom panel takes when the "Assistant" tab opens (decision 179): the
+// default 210 px leaves one or two lines of an answer. A higher panel stays as it is.
+export const ASSISTANT_SHARE = 0.45;
+
+export function assistantLayout(layout: Layout, viewport: { width: number; height: number }): Layout {
+  const grown = resizeLayout(layout, "bottom", viewport.height * ASSISTANT_SHARE, viewport);
+  return grown.bottom > layout.bottom ? grown : layout;
+}
+
 export function toggleArea(layout: Layout, area: Area): Layout {
   return { ...layout, collapsed: { ...layout.collapsed, [area]: !layout.collapsed[area] } };
 }

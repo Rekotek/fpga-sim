@@ -175,6 +175,16 @@ def last_text(messages: list[dict[str, Any]]) -> str | None:
     return "\n".join(texts) if texts else None
 
 
+# "#все" in a question makes the scripted model call all five tools (the end-to-end test of every tool).
+ALL_TOOLS: list[tuple[str, dict[str, Any]]] = [
+    ("list_files", {}),
+    ("read_file", {"path": "top.v"}),
+    ("get_messages", {}),
+    ("get_board", {}),
+    ("get_waveform", {}),
+]
+
+
 class FakeModel:
     """The scripted model of the tests (decision 177): no key, no network, no cost."""
 
@@ -185,12 +195,25 @@ class FakeModel:
         usage = Usage(100, 20, 0, 0)
         if question is not None and "#сбой" in question:
             raise ModelFailed("тестовый сбой")
+        if question is not None and "#все" in question:
+            content = [
+                {"type": "tool_use", "id": f"fake_{name}", "name": name, "input": tool_input}
+                for name, tool_input in ALL_TOOLS
+            ]
+            return Reply(content, "tool_use", usage, "fake")
         if question is not None:
             content = [
                 {"type": "tool_use", "id": "fake_1", "name": "list_files", "input": {}},
                 {"type": "tool_use", "id": "fake_2", "name": "get_board", "input": {}},
             ]
             return Reply(content, "tool_use", usage, "fake")
+        results = [b for b in messages[-1]["content"] if b.get("type") == "tool_result"]
+        if len(results) == len(ALL_TOOLS):
+            # The answer names the tools whose results came back as errors.
+            failed = [str(b["tool_use_id"]).removeprefix("fake_") for b in results if b.get("is_error")]
+            names = ", ".join(name for name, _ in ALL_TOOLS)
+            text = f"Тестовый ответ. Инструменты: {names}. Ошибки: {', '.join(failed) or 'нет'}."
+            return Reply([{"type": "text", "text": text}], "end_turn", usage, "fake")
         text = "Тестовый ответ. Инструменты: list_files, get_board."
         return Reply([{"type": "text", "text": text}], "end_turn", usage, "fake")
 

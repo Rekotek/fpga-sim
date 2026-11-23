@@ -99,7 +99,8 @@ export function AssistantPanel() {
           variant="ghost"
           className="ml-auto"
           onClick={resetConversation}
-          disabled={turns.length === 0}
+          // During an answer "Stop" ends it; a reset then would drop the turn without a trace.
+          disabled={turns.length === 0 || busy}
           data-testid="assistant-reset"
         >
           {t("assistant.reset")}

@@ -1,5 +1,6 @@
 // The assistant (decision 175) on the local bench. The server runs the scripted test model (decision 177): it asks
-// for list_files and get_board, then answers with a fixed text; "#сбой" in the question makes it fail.
+// for list_files and get_board, then answers with a fixed text; "#все" makes it call all five tools and name the ones
+// that failed; "#сбой" in the question makes it fail.
 import { expect, test, type Page } from "@playwright/test";
 import { build, createFromExample, openWithKey, sim } from "./stand";
 
@@ -14,8 +15,11 @@ test("помощник отвечает по инструментам, пока�
   await openWithKey(page);
   await createFromExample(page, "blink3");
   expect(await build(page)).toBe("ok");
+  const before = await sim(page, (api) => api.layout().bottom);
   await page.getByTestId("tab-assistant").click();
   await expect(page.getByTestId("assistant-notice")).toBeVisible();
+  // The tab raises a low bottom panel so that an answer has room (decision 179).
+  expect(await sim(page, (api) => api.layout().bottom)).toBeGreaterThan(before);
 
   await askAssistant(page, "Почему мигает?");
   // Each tool step stays on the screen before the tool runs (decision 178).
@@ -34,6 +38,14 @@ test("помощник отвечает по инструментам, пока�
   await expect(page.getByTestId("assistant-answer")).toHaveText(ANSWER);
   await expect(page.getByTestId("assistant-tools")).toHaveText("Помощник посмотрел: список файлов, плату и выводы");
   await expect(page.getByTestId("assistant-turn")).toContainText("240");
+
+  // All five tools run on the live project without an error; "New conversation" waits for the answer.
+  await askAssistant(page, "Проверь всё #все");
+  await expect(page.getByTestId("assistant-reset")).toBeDisabled();
+  await expect
+    .poll(() => sim(page, (api) => api.assistant().at(-1)?.answer))
+    .toBe("Тестовый ответ. Инструменты: list_files, read_file, get_messages, get_board, get_waveform. Ошибки: нет.");
+  await expect(page.getByTestId("assistant-reset")).toBeEnabled();
 
   await askAssistant(page, "проверка #сбой");
   await expect.poll(() => sim(page, (api) => api.assistant().at(-1)?.error)).toBe("Помощник не ответил: тестовый сбой");

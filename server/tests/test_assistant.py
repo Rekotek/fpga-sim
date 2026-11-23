@@ -479,3 +479,22 @@ def test_предел_max_changes_в_схеме() -> None:
     bound = wave["input_schema"]["properties"]["max_changes"]
     assert bound["minimum"] == 1
     assert bound["maximum"] == MAX_CHANGES == 500
+
+
+def test_тестовая_модель_вызывает_все_инструменты() -> None:
+    from fpgasim_server.assistant import ALL_TOOLS
+
+    model = FakeModel()
+    first = model.call([{"role": "user", "content": "проверка #все"}], "ru")
+    assert [b["name"] for b in first.content] == [name for name, _ in ALL_TOOLS]
+    results = [
+        {"type": "tool_result", "tool_use_id": b["id"], "content": "{}", **({"is_error": True} if i == 1 else {})}
+        for i, b in enumerate(first.content)
+    ]
+    history = [
+        {"role": "user", "content": "проверка #все"},
+        {"role": "assistant", "content": first.content},
+        {"role": "user", "content": results},
+    ]
+    second = model.call(history, "ru")
+    assert second.content[0]["text"].endswith("Ошибки: read_file.")
