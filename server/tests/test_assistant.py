@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fpgasim_server.assistant import UI_LABELS, system_prompt
 from fpgasim_server.config import AssistantSettings, Limits, load_settings
 from fpgasim_server.usage import Usage, UsageStore
 
@@ -360,3 +361,32 @@ def test_вызов_модели_короче_прокси(tmp_path: Path) -> No
     assert client.max_retries == 0
     assert client.timeout <= 100
     assert Limits().assistant_calls_at_once == 4
+
+
+I18N = Path(__file__).resolve().parents[2] / "web" / "src" / "i18n"
+LABEL_KEYS = {
+    "signals": "signals.title",
+    "to_record": "signals.toRecord",
+    "waves": "waves.title",
+    "start": "waves.start",
+    "stop": "waves.stop",
+}
+
+
+@pytest.mark.parametrize("language", ["ru", "en"])
+def test_подписи_в_промпте_совпадают_со_словарём(language: str) -> None:
+    import json
+
+    words = json.loads((I18N / f"{language}.json").read_text(encoding="utf-8"))
+    assert UI_LABELS[language] == {name: words[key] for name, key in LABEL_KEYS.items()}
+    prompt = system_prompt(language)
+    for label in UI_LABELS[language].values():
+        assert label in prompt
+
+
+def test_русский_промпт_называет_вкладки_по_русски() -> None:
+    prompt = system_prompt("ru")
+    assert "the Сигналы tab" in prompt
+    assert "Signals" not in prompt and "Waveforms" not in prompt
+    assert "Answer in Russian." in prompt
+    assert "Signals" in system_prompt("xx")

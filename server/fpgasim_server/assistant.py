@@ -28,11 +28,39 @@ description and the live state of the pins. Do not guess what the code says.
 on-board part. activeLevel 0 means the part is active when the pin is 0 (an LED lights at 0); a button with \
 activeLevel 1 drives 1 while pressed. Mention the pull settings from the binding when inputs are involved.
 - If you need signal history, call get_waveform. If nothing was recorded, tell the user how to record \
-(the Signals tab: "Record" on a signal; then the Waveforms tab: Record, then Stop) instead of inventing values.
+(the {signals} tab: "{to_record}" on a signal; then the {waves} tab: "{start}", then "{stop}") instead of \
+inventing values.
+- Name tabs and buttons exactly as written here: these are the labels of the user's interface.
 - You only advise. You cannot edit files, build, run or press buttons. Show the exact lines to change.
 - Be short: the cause first, then the fix, then one sentence on why. Use Markdown with code blocks for \
 Verilog and .cst lines.
 - Answer in {language}."""
+
+# The interface labels the prompt names, from web/src/i18n/<language>.json (keys in the comments); a test keeps
+# them equal to the dictionaries. The model would otherwise name the tabs in English in a Russian interface.
+UI_LABELS: dict[str, dict[str, str]] = {
+    "ru": {
+        "signals": "Сигналы",  # signals.title
+        "to_record": "В запись",  # signals.toRecord
+        "waves": "Осциллограммы",  # waves.title
+        "start": "Записать",  # waves.start
+        "stop": "Стоп",  # waves.stop
+    },
+    "en": {
+        "signals": "Signals",
+        "to_record": "Record",
+        "waves": "Waveforms",
+        "start": "Record",
+        "stop": "Stop",
+    },
+}
+
+
+def system_prompt(language: str) -> str:
+    """The system prompt in the language of the answer; an unknown language gets the English labels."""
+    labels = UI_LABELS.get(language, UI_LABELS["en"])
+    return SYSTEM_PROMPT.format(language=LANGUAGES.get(language, "the language of the question"), **labels)
+
 
 NO_INPUT: dict[str, Any] = {"type": "object", "properties": {}, "additionalProperties": False}
 
@@ -177,7 +205,7 @@ class AnthropicModel:
             response = self.client.beta.messages.create(
                 model=self.settings.model,
                 max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT.format(language=LANGUAGES.get(language, "the language of the question")),
+                system=system_prompt(language),
                 tools=TOOLS,  # type: ignore[arg-type]
                 messages=messages,  # type: ignore[arg-type]
                 thinking={"type": "adaptive"},
