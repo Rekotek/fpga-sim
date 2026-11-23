@@ -19,7 +19,7 @@ DAY_MS = 24 * 3600 * 1000
 
 # USD per million tokens: input, output, cache read, cache write (5 minutes). Only for the spend report.
 # The refusal fallbacks (claude-sonnet-5 for Sonnet 5.5, Opus 5 and 4.8 for Opus 5.5) are here too: their
-# tokens are counted under their own names.
+# tokens are counted under their own names. Their cache prices are estimates (decision 180).
 PRICES: dict[str, tuple[float, float, float, float]] = {
     "claude-sonnet-5-5": (2.0, 10.0, 0.10, 2.5),
     "claude-sonnet-5": (2.0, 10.0, 0.20, 2.5),

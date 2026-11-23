@@ -231,6 +231,7 @@ starts with a pointer to a later decision.
 - 177. A scripted model for the assistant tests
 - 178. The assistant tool step stays on the screen; the tools used under each answer
 - 179. The "Assistant" tab raises a low bottom panel
+- 180. Assistant fixes after the live check: spend, limits, labels, reset
 
 ## 2026-11-18. Stage 0: measuring speed and build time
 
@@ -3160,7 +3161,8 @@ before React rendered.
 - Before each tool, `ask()` shows the step and waits `pause` from its dependencies: 300 ms in the panel
   (`STEP_MS` in `AssistantPanel.tsx`), one macrotask in the unit tests. One frame would let the browser render
   the step, but a person cannot read a 16 ms line. A timer, not `requestAnimationFrame`: frames stop in a
-  background tab, timers only slow down. Ten tool calls add at most 3 s to an answer that takes seconds anyway.
+  background tab, timers only slow down. Each tool call of an answer adds 300 ms; a typical answer makes two to
+five, against model calls of several seconds each.
 - After the wait, a reset drops the turn and "Stop" closes this and the remaining calls with a stop result.
 - Under each answer a line lists the tools used, in the order of first use, a repeated tool with its count
   ("The assistant looked at: the file list, a file ×3"). The spec did not have it; the step alone vanishes
@@ -3173,3 +3175,24 @@ height for all tabs) shows one or two lines of an answer. Opening the "Assistant
 the window height (`ASSISTANT_SHARE` in `web/src/app/layout.ts`) when it is lower; the panel never shrinks, and
 the editor keeps the usual 240 px. The height is the shared one: other tabs keep it until the user drags the
 border. A height of its own for the tab was rejected: a jump of the panel on every tab switch moves the editor.
+
+### 180. Assistant fixes after the live check: spend, limits, labels, reset
+
+2026-11-23. The smaller choices of the fixes of the "Assistant" deferred items.
+
+- A refusal fallback runs two models in one call. The top-level `usage` of the reply covers only the
+  attempt that produced the message; `usage.iterations` lists every attempt, the declined one included. The
+  server counts all attempts: each model's tokens go to its own row of `usage.db`, and the sum counts toward
+  the daily limits and the tokens shown under the answer. The declined attempt is paid, so it spends the limit.
+- The spend report has prices for the fallback models (`claude-sonnet-5`, `claude-opus-5`, `claude-opus-4-8`).
+  Their cache prices are estimates (cache read 0.1 of input, cache write 1.25 of input): the source at hand
+  gave input and output only. The day's total names models without a price instead of looking complete.
+- `max_changes` of `get_waveform` is at most 500: `minimum` and `maximum` in the server tool definition, and
+  the browser clamps to the same bound, because the model may ignore the schema.
+- The interface labels in the system prompt are written in `assistant.py`, not read from
+  `web/src/i18n/*.json`: the server image does not contain `web/`. A test compares them with both
+  dictionaries.
+- "New conversation" is off while an answer runs: a reset then dropped the turn without a trace; "Stop" ends
+  the answer first.
+- A key file that cannot be read as UTF-8 turns the assistant off, as a missing key does: `/v1/info` says
+  `enabled: false`, and the server starts.

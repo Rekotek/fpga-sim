@@ -13,7 +13,7 @@ queue (decision 165), dragging files into an open project and changing the board
 `$stop` and `$fatal`, undo before save, the English interface language (2026-11-22, decision 168),
 `fpgasim.json` for lessons 02, 03, 06, 07 (decision 169), the English README (decision 170), the
 access key for the hackathon judges (decision 171), the "Assistant" tab (2026-11-23, decisions 175–177, enabled
-on production) and its fixes after the live check (decisions 178–179, not deployed yet). The list is in
+on production) and its fixes after the live check (decisions 178–180, not deployed yet). The list is in
 section "After acceptance".
 
 **Version 1 is complete.** All stages of spec section 12 (0–11) are done and merged into `main`.
@@ -262,7 +262,7 @@ version 2 is spec section 15.2: do not start it without the author's command.
   backticks, the model names tabs in English in the Russian interface (section "Open: deferred"). The
   model doubted that the pin snapshot was fresh (three snapshots in the same phase); `__fpgasim.pins()`
   in the same project went through the whole cycle in 20 s, so the defect is not confirmed.
-- **2026-11-23. Assistant fixes after the live check** (decisions 178–179, branch `fix/assistant-deferred`).
+- **2026-11-23. Assistant fixes after the live check** (decisions 178–180, branch `fix/assistant-deferred`).
   All items of the "Assistant" subsection of "Open: deferred" are done. The tool step stays on the screen
   300 ms before each tool, and a line under each answer lists the tools used (decision 178). Markdown: inline
   code inside bold is parsed, a numbered list after a break keeps its numbers. The system prompt names tabs and
@@ -277,9 +277,14 @@ version 2 is spec section 15.2: do not start it without the author's command.
   height and "New conversation". Live check on `make dev` (Chromium, 1400×840, `blink3`, scripted model): the
   panel went from 210 to 378 px, the steps "Looking at the project files…" and "Looking at the board and
   pins…" were on the screen 300 ms each, "New conversation" was off during the answer, all five tools
-  returned without an error. Not checked by eye: Markdown of a real answer (the scripted model has none; the
-  unit test renders the bold-with-code case) and the fallback spend on production (no refusal happened).
-  Needs `make deploy-server` and `make deploy-web`.
+  returned without an error. Markdown on the same stand (an answer put into the conversation store):
+  ``**Pin 73 (`ped_r`):**`` shows the code without backticks, a numbered list after a paragraph goes on
+  from 2. `make check` parts all passed (the end-to-end run after the test fix: 109 passed, 1 skipped as
+  before). Not checked without the real model (no paid calls in `make check`): that the
+  Messages API accepts `minimum` and `maximum` in the `get_waveform` schema, that the model uses the Russian
+  labels, and the shape of `usage.iterations` on a real fallback. The first two need a paid check on the
+  author's command: `e2e/manual/assistant-live.spec.ts` on the dev stand with the real key (four questions),
+  or one question on the production URL after `make deploy-server` and `make deploy-web`.
 
 ## Deployments
 
