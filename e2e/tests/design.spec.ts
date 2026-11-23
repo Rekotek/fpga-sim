@@ -135,9 +135,8 @@ test("меню проекта: переименование; меню строк
 
 test("у вкладки есть иконка FPGA SIM", async ({ page, request }) => {
   await page.goto("/");
-  const href = await page.locator('link[rel="icon"]').getAttribute("href");
-  expect(href).toBe("/favicon.svg");
-  const icon = await request.get(href!);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/favicon.svg");
+  const icon = await request.get("/favicon.svg");
   expect(icon.ok()).toBe(true);
   expect(icon.headers()["content-type"]).toContain("image/svg+xml");
   expect(await icon.text()).toContain("<svg");
