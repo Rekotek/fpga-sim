@@ -252,6 +252,15 @@ version 2 is spec section 15.2: do not start it without the author's command.
   with a fake model, Vitest for the tools, the loop and Markdown, one end-to-end scenario on the fake model;
   the real model is checked by hand (`e2e/manual/assistant-live.spec.ts`). Not done: storing conversations,
   a spend screen in the interface. Deployed and enabled on 2026-11-23 (section "Deployments").
+- **2026-11-23. Live check of the assistant on the production URL** (the author's Chrome, signed in).
+  `lesson07_ped`, build from the cache, run at 1×, three questions in one conversation: why the pedestrian
+  red LED is on and when the green one comes on; the levels of pins 73 and 74; the state of `state`. All
+  three got answers in Russian with references to `top.v`, the pins and the simulation time (13 434,
+  18 809 and 21 664 tokens); on the third the model said `state` was not recorded and told how to record
+  it instead of guessing. Found: the tool step is never shown, inline code inside bold keeps its
+  backticks, the model names tabs in English in the Russian interface (section "Open: deferred"). The
+  model doubted that the pin snapshot was fresh (three snapshots in the same phase); `__fpgasim.pins()`
+  in the same project went through the whole cycle in 20 s, so the defect is not confirmed.
 
 ## Deployments
 
@@ -374,6 +383,25 @@ Interface:
 - An evaluation of embedding Surfer (an optional task of stage 8).
 - A third visibility mode "ports and selected signals" (the author's idea, `docs/v1-report.md`,
   section 7).
+
+Assistant (decisions 175–177; from the branch review and the live check of 2026-11-23):
+
+- The tool step ("Reading a file…", spec section 9.3, "Assistant" tab) is never on the screen:
+  the tools run synchronously in `ask()` (`web/src/assistant/conversation.ts`), so the step is set and
+  cleared before a render. Only "Assistant is thinking…" is visible. Either let the browser paint
+  between tools or show the list of tools used under each answer (`turn.tools` is already kept).
+- Markdown: inline code inside bold is not parsed (`**Pin 73 (`ped_r`):**` shows the backticks); a
+  numbered list starts again from 1 after a break.
+- The model names tabs and buttons in English ("Signals", "Waveforms", "Record") in the Russian
+  interface: the system prompt names them in English only (`server/fpgasim_server/assistant.py`).
+- The bottom panel is low: at a window height of 840 px only one or two lines of the answer are
+  visible; at 720 px it is worse.
+- "New conversation" is available while an answer is running.
+- The spend of the fallback model is not counted in full; the daily total skips models without a price.
+- Other SDK exceptions give 500 instead of 502.
+- `max_changes` of the waveform tool has no upper limit.
+- A key file that is not UTF-8 stops the server at start.
+- The end-to-end scenario covers 2 of the 5 tools.
 
 Server and core:
 
