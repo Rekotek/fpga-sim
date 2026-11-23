@@ -1319,7 +1319,7 @@ The mark "changed since build" is set when the project files or the design setti
 | Waveforms | The panel from section 9.6 |
 | UART terminal | One tab for each UART part |
 | Testbench | File choice, "Run", text output, the "Show waveform" button |
-| Assistant | Shown when `/v1/info` says the assistant is on (decision 175). A line that the question and the project files go to Anthropic; the conversation with answers in Markdown and the tokens of each answer; the step in progress ("Reading a file…"); "Stop", "New conversation". The conversation lives in memory and belongs to the open project: closing or opening a project and reloading the page clear it |
+| Assistant | Shown when `/v1/info` says the assistant is on (decision 175). A line that the question and the project files go to Anthropic; the conversation with answers in Markdown and the tokens of each answer; the step in progress ("Reading a file…") and the tools used under each answer (decision 178); "Stop", "New conversation". The conversation lives in memory and belongs to the open project: closing or opening a project and reloading the page clear it |
 | Status bar | The simulation state, simulation time, clock cycle number, build result, a permanent note about the limitations with a link to the explanation |
 
 **Screen 3. Users.** For the administrator only, opened from the account menu: a table of accounts and actions on them (section 5.6 of `docs/tz-accounts.md`, decision 133).

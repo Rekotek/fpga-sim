@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fpgasim_server.assistant import UI_LABELS, system_prompt
 from fpgasim_server.config import AssistantSettings, Limits, load_settings
 from fpgasim_server.usage import Usage, UsageStore
 
@@ -137,6 +138,8 @@ def test_нет_ключа_нет_модели(tmp_path: Path) -> None:
     key.write_text("sk-ant-test\n")
     assert make_model(AssistantSettings(enabled=False, key_file=key)) is None
     assert make_model(AssistantSettings(enabled=True, key_file=key)) is not None
+    key.write_bytes(b"\xff\xfesk-ant")  # not UTF-8: the assistant is off, the server starts
+    assert make_model(AssistantSettings(enabled=True, key_file=key)) is None
     assert isinstance(make_model(AssistantSettings(enabled=True, model="fake")), FakeModel)
     assert make_model(AssistantSettings(enabled=False, model="fake")) is None
 
@@ -270,7 +273,8 @@ def test_отчёт_о_расходе(tmp_path: Path, monkeypatch: pytest.Monkey
     today = store.day()
     assert f"{today}\tkey:judges\tmystery\t10\t20\t30\t40\t—" in lines
     assert f"{today}\tsession:ann\tclaude-sonnet-5-5\t1000000\t0\t0\t0\t$2.0000" in lines
-    assert lines[-1] == f"{today}\tитого\t\t1000010\t20\t30\t40\t$2.0000"
+    # The model without a price is named in the total: the sum does not look complete.
+    assert lines[-1] == f"{today}\tитого\t\t1000010\t20\t30\t40\t$2.0000 + без цены: mystery"
 
 
 def test_ключ_помощника_из_ввода(
@@ -360,3 +364,137 @@ def test_вызов_модели_короче_прокси(tmp_path: Path) -> No
     assert client.max_retries == 0
     assert client.timeout <= 100
     assert Limits().assistant_calls_at_once == 4
+
+
+I18N = Path(__file__).resolve().parents[2] / "web" / "src" / "i18n"
+LABEL_KEYS = {
+    "signals": "signals.title",
+    "to_record": "signals.toRecord",
+    "waves": "waves.title",
+    "start": "waves.start",
+    "stop": "waves.stop",
+}
+
+
+@pytest.mark.parametrize("language", ["ru", "en"])
+def test_подписи_в_промпте_совпадают_со_словарём(language: str) -> None:
+    import json
+
+    words = json.loads((I18N / f"{language}.json").read_text(encoding="utf-8"))
+    assert UI_LABELS[language] == {name: words[key] for name, key in LABEL_KEYS.items()}
+    prompt = system_prompt(language)
+    for label in UI_LABELS[language].values():
+        assert label in prompt
+
+
+def test_русский_промпт_называет_вкладки_по_русски() -> None:
+    prompt = system_prompt("ru")
+    assert "the Сигналы tab" in prompt
+    assert "Signals" not in prompt and "Waveforms" not in prompt
+    assert "Answer in Russian." in prompt
+    assert "Signals" in system_prompt("xx")
+
+
+# --- Deferred items of the live check (2026-11-23) -------------------------------------
+
+from types import SimpleNamespace  # noqa: E402
+
+
+def sdk_usage(i: int, o: int, r: int = 0, w: int = 0, **extra: Any) -> SimpleNamespace:  # noqa: ANN401
+    return SimpleNamespace(
+        input_tokens=i, output_tokens=o, cache_read_input_tokens=r, cache_creation_input_tokens=w, **extra
+    )
+
+
+def test_расход_запасной_модели_учитывается_полностью() -> None:
+    from fpgasim_server.assistant import attempts
+
+    plain = sdk_usage(10, 2, 3, 4)
+    assert attempts(plain, "claude-sonnet-5-5", "claude-sonnet-5-5") == [("claude-sonnet-5-5", Usage(10, 2, 3, 4))]
+    # The declined attempt has no model in its entry; the top-level usage is only the fallback's.
+    fallback = sdk_usage(
+        20,
+        5,
+        iterations=[
+            SimpleNamespace(type="message", model=None, **vars(sdk_usage(100, 0, 50, 7))),
+            SimpleNamespace(type="fallback_message", model="claude-sonnet-5", **vars(sdk_usage(20, 5))),
+        ],
+    )
+    assert attempts(fallback, "claude-sonnet-5-5", "claude-sonnet-5") == [
+        ("claude-sonnet-5-5", Usage(100, 0, 50, 7)),
+        ("claude-sonnet-5", Usage(20, 5, 0, 0)),
+    ]
+
+
+class FallbackModel:
+    name = "claude-sonnet-5-5"
+
+    def call(self, messages: list[dict[str, Any]], language: str) -> Reply:
+        spent = (("claude-sonnet-5-5", Usage(100, 0, 0, 0)), ("claude-sonnet-5", Usage(20, 5, 0, 0)))
+        return Reply([{"type": "text", "text": "ok"}], "end_turn", Usage(120, 5, 0, 0), "claude-sonnet-5", spent)
+
+
+def test_две_модели_одного_вызова_в_своих_строках(make_env: Any) -> None:  # noqa: ANN401
+    env = make_env()
+    env.service.model = FallbackModel()
+    answer = ask(env, QUESTION)
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["usage"]["input"] == 120
+    rows = {r["model"]: r for r in env.service.usage.report(1)}
+    assert rows["claude-sonnet-5-5"]["input"] == 100
+    assert rows["claude-sonnet-5"]["output"] == 5
+    assert env.service.usage.tokens_today("key:tester") == 125
+
+
+def test_цены_запасных_моделей_есть() -> None:
+    from fpgasim_server.usage import cost
+
+    for model in ("claude-sonnet-5", "claude-opus-5", "claude-opus-4-8"):
+        assert cost(model, Usage(1, 1, 1, 1)) is not None
+
+
+def test_прочая_ошибка_клиента_модели_даёт_502(make_env: Any, tmp_path: Path) -> None:  # noqa: ANN401
+    import anthropic
+
+    key = tmp_path / "k"
+    key.write_text("sk-ant-test")
+    model = make_model(AssistantSettings(enabled=True, key_file=key))
+    assert model is not None
+
+    def broken(**_: Any) -> Any:  # noqa: ANN401
+        raise anthropic.AnthropicError("непонятный ответ")
+
+    model.client.beta.messages.create = broken  # type: ignore[attr-defined, method-assign]
+    env = make_env()
+    env.service.model = model
+    answer = ask(env, QUESTION)
+    assert answer.status_code == 502
+    assert answer.json()["error"]["code"] == "ASSISTANT_FAILED"
+
+
+def test_предел_max_changes_в_схеме() -> None:
+    from fpgasim_server.assistant import MAX_CHANGES, TOOLS
+
+    wave = next(t for t in TOOLS if t["name"] == "get_waveform")
+    bound = wave["input_schema"]["properties"]["max_changes"]
+    assert bound["minimum"] == 1
+    assert bound["maximum"] == MAX_CHANGES == 500
+
+
+def test_тестовая_модель_вызывает_все_инструменты() -> None:
+    from fpgasim_server.assistant import ALL_TOOLS
+
+    model = FakeModel()
+    first = model.call([{"role": "user", "content": "проверка #все"}], "ru")
+    assert [b["name"] for b in first.content] == [name for name, _ in ALL_TOOLS]
+    results = [
+        {"type": "tool_result", "tool_use_id": b["id"], "content": "{}", **({"is_error": True} if i == 1 else {})}
+        for i, b in enumerate(first.content)
+    ]
+    history = [
+        {"role": "user", "content": "проверка #все"},
+        {"role": "assistant", "content": first.content},
+        {"role": "user", "content": results},
+    ]
+    second = model.call(history, "ru")
+    assert second.content[0]["text"].endswith("Ошибки: read_file.")

@@ -149,6 +149,90 @@ describe("разговор с помощником", () => {
     expect(state.history.at(-1)?.role).toBe("user");
   });
 
+  test("шаг инструмента на экране до запуска инструмента", async () => {
+    const seen: (string | null)[] = [];
+    const reads: (string | null)[] = [];
+    let paused: string | null = null;
+    const watched = {
+      ...source,
+      files: () => {
+        reads.push(paused);
+        return source.files();
+      },
+    };
+    const { deps } = server([reply([toolUse("a", "list_files")]), reply([{ type: "text", text: "Ок" }], "end_turn")]);
+    const unsubscribe = useConversation.subscribe((s) => seen.push(s.step));
+    await ask("?", {
+      ...deps,
+      source: watched,
+      pause: () => {
+        paused = useConversation.getState().step;
+        return Promise.resolve();
+      },
+    });
+    unsubscribe();
+    // The pause began with the step shown and before the tool read anything.
+    expect(reads).toEqual(["list_files"]);
+    expect(seen).toContain("list_files");
+    expect(useConversation.getState().step).toBeNull();
+  });
+
+  test("без паузы инструмент не запускается в том же такте, что и шаг", async () => {
+    let shownAt = -1;
+    let readAt = -1;
+    let task = 0;
+    const timer = setInterval(() => {
+      task++;
+    }, 0);
+    const watched = {
+      ...source,
+      files: () => {
+        readAt = task;
+        return source.files();
+      },
+    };
+    const unsubscribe = useConversation.subscribe((s) => {
+      if (s.step === "list_files" && shownAt < 0) shownAt = task;
+    });
+    const { deps } = server([reply([toolUse("a", "list_files")]), reply([{ type: "text", text: "Ок" }], "end_turn")]);
+    await ask("?", { ...deps, source: watched });
+    unsubscribe();
+    clearInterval(timer);
+    // A macrotask passed between the step and the tool: the browser could render the step.
+    expect(readAt).toBeGreaterThan(shownAt);
+    expect(shownAt).toBeGreaterThanOrEqual(0);
+  });
+
+  test("стоп во время показа шага: инструмент не запускается, вызовы закрыты", async () => {
+    const { sent, deps } = server([reply([toolUse("a", "list_files"), toolUse("b", "get_board")])]);
+    await ask("?", {
+      ...deps,
+      pause: () => {
+        stop();
+        return Promise.resolve();
+      },
+    });
+    const state = useConversation.getState();
+    expect(sent).toHaveLength(1);
+    expect(state.turns[0]).toMatchObject({ stopped: true, tools: [] });
+    expect(closed(state.history)).toBe(true);
+    expect(state.busy).toBe(false);
+  });
+
+  test("сброс во время показа шага: ход не возвращается", async () => {
+    const { sent, deps } = server([reply([toolUse("a", "list_files")])]);
+    await ask("?", {
+      ...deps,
+      pause: () => {
+        resetConversation();
+        return Promise.resolve();
+      },
+    });
+    expect(sent).toHaveLength(1);
+    expect(useConversation.getState().turns).toEqual([]);
+    expect(useConversation.getState().history).toEqual([]);
+  });
+
   test("пустой текст ошибки и обрыв сети показываются как «нет ответа»", async () => {
     const { deps } = server([new ServerError(504, "HTTP_504", ""), new ServerError(0, "NETWORK", "TimeoutError")]);
     await ask("первый", deps);

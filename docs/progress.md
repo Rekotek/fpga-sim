@@ -13,7 +13,8 @@ queue (decision 165), dragging files into an open project and changing the board
 `$stop` and `$fatal`, undo before save, the English interface language (2026-11-22, decision 168),
 `fpgasim.json` for lessons 02, 03, 06, 07 (decision 169), the English README (decision 170), the
 access key for the hackathon judges (decision 171), the "Assistant" tab (2026-11-23, decisions 175–177, enabled
-on production). The list is in section "After acceptance".
+on production) and its fixes after the live check (decisions 178–180, not deployed yet). The list is in
+section "After acceptance".
 
 **Version 1 is complete.** All stages of spec section 12 (0–11) are done and merged into `main`.
 There are no further stages in the spec: new work follows the author's task, and its entry is
@@ -261,6 +262,29 @@ version 2 is spec section 15.2: do not start it without the author's command.
   backticks, the model names tabs in English in the Russian interface (section "Open: deferred"). The
   model doubted that the pin snapshot was fresh (three snapshots in the same phase); `__fpgasim.pins()`
   in the same project went through the whole cycle in 20 s, so the defect is not confirmed.
+- **2026-11-23. Assistant fixes after the live check** (decisions 178–180, branch `fix/assistant-deferred`).
+  All items of the "Assistant" subsection of "Open: deferred" are done. The tool step stays on the screen
+  300 ms before each tool, and a line under each answer lists the tools used (decision 178). Markdown: inline
+  code inside bold is parsed, a numbered list after a break keeps its numbers. The system prompt names tabs and
+  buttons in the language of the answer ("Сигналы", "В запись", "Осциллограммы", "Записать", "Стоп"); a test
+  keeps them equal to `ru.json` and `en.json`. The server counts the tokens of every model of a call (the
+  declined attempt and the fallback model, from `usage.iterations`), the spend report has prices for the
+  fallback models and names models without a price in the day's total; any other SDK failure gives 502;
+  `max_changes` is at most 500 in the schema and in the browser; a key file that is not UTF-8 turns the
+  assistant off instead of stopping the server. "New conversation" is off while an answer runs. The
+  "Assistant" tab raises a low bottom panel to 45 % of the window height (decision 179). The scripted model
+  calls all five tools on `#все`, and the end-to-end scenario checks them, the step, the tool line, the panel
+  height and "New conversation". Live check on `make dev` (Chromium, 1400×840, `blink3`, scripted model): the
+  panel went from 210 to 378 px, the steps "Looking at the project files…" and "Looking at the board and
+  pins…" were on the screen 300 ms each, "New conversation" was off during the answer, all five tools
+  returned without an error. Markdown on the same stand (an answer put into the conversation store):
+  ``**Pin 73 (`ped_r`):**`` shows the code without backticks, a numbered list after a paragraph goes on
+  from 2. `make check` parts all passed (the end-to-end run after the test fix: 109 passed, 1 skipped as
+  before). Not checked without the real model (no paid calls in `make check`): that the
+  Messages API accepts `minimum` and `maximum` in the `get_waveform` schema, that the model uses the Russian
+  labels, and the shape of `usage.iterations` on a real fallback. The first two need a paid check on the
+  author's command: `e2e/manual/assistant-live.spec.ts` on the dev stand with the real key (four questions),
+  or one question on the production URL after `make deploy-server` and `make deploy-web`.
 
 ## Deployments
 
@@ -383,25 +407,6 @@ Interface:
 - An evaluation of embedding Surfer (an optional task of stage 8).
 - A third visibility mode "ports and selected signals" (the author's idea, `docs/v1-report.md`,
   section 7).
-
-Assistant (decisions 175–177; from the branch review and the live check of 2026-11-23):
-
-- The tool step ("Reading a file…", spec section 9.3, "Assistant" tab) is never on the screen:
-  the tools run synchronously in `ask()` (`web/src/assistant/conversation.ts`), so the step is set and
-  cleared before a render. Only "Assistant is thinking…" is visible. Either let the browser paint
-  between tools or show the list of tools used under each answer (`turn.tools` is already kept).
-- Markdown: inline code inside bold is not parsed (`**Pin 73 (`ped_r`):**` shows the backticks); a
-  numbered list starts again from 1 after a break.
-- The model names tabs and buttons in English ("Signals", "Waveforms", "Record") in the Russian
-  interface: the system prompt names them in English only (`server/fpgasim_server/assistant.py`).
-- The bottom panel is low: at a window height of 840 px only one or two lines of the answer are
-  visible; at 720 px it is worse.
-- "New conversation" is available while an answer is running.
-- The spend of the fallback model is not counted in full; the daily total skips models without a price.
-- Other SDK exceptions give 500 instead of 502.
-- `max_changes` of the waveform tool has no upper limit.
-- A key file that is not UTF-8 stops the server at start.
-- The end-to-end scenario covers 2 of the 5 tools.
 
 Server and core:
 

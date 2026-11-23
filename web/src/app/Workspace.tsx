@@ -11,7 +11,7 @@ import { build, editor, save, setLayout, uploadFiles } from "./actions";
 import { BindingDialog } from "./BindingDialog";
 import { FileActions, FileList } from "./FileList";
 import { IconButton, Tip } from "./kit";
-import { resizeLayout, toggleArea, type Area, type Edge } from "./layout";
+import { assistantLayout, resizeLayout, toggleArea, type Area, type Edge } from "./layout";
 import { MessagesPanel } from "./MessagesPanel";
 import { NetsTable } from "./NetsTable";
 import { PartDialog } from "./PartDialog";
@@ -205,6 +205,9 @@ function BottomPanel() {
             )}
             onClick={() => {
               useApp.setState({ bottomTab: item.id });
+              if (item.id === "assistant") {
+                setLayout(assistantLayout(useApp.getState().layout, { width: innerWidth, height: innerHeight }));
+              }
             }}
             data-testid={item.testid}
           >

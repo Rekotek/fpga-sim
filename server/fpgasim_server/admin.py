@@ -136,13 +136,18 @@ def assistant_command(args: argparse.Namespace) -> int:
     for day in sorted({r["day"] for r in rows}):
         total = [0, 0, 0, 0]
         spent = 0.0
+        unpriced: set[str] = set()
         for r in (r for r in rows if r["day"] == day):
             usage = Usage(r["input"], r["output"], r["cacheRead"], r["cacheWrite"])
             total = [a + b for a, b in zip(total, usage, strict=True)]
             price = cost(r["model"], usage)
             spent += price or 0.0
+            if price is None:
+                unpriced.add(r["model"])
             print("\t".join([day, r["owner"], r["model"], *map(str, usage), money(price)]))
-        print("\t".join([day, "итого", "", *map(str, total), money(spent)]))
+        # A model without a price is not in the sum: the total says so instead of looking complete.
+        note = f" + без цены: {', '.join(sorted(unpriced))}" if unpriced else ""
+        print("\t".join([day, "итого", "", *map(str, total), money(spent) + note]))
     return 0
 
 

@@ -30,7 +30,15 @@ export interface AskDeps {
   call: (messages: AssistantMessage[], language: string) => Promise<AssistantReply>;
   source: ToolSource;
   language: string;
+  // Waits after a tool step is shown and before the tool runs: the tools are synchronous, so without the wait the
+  // step is set and cleared before a render (decision 178). The tests wait for one macrotask.
+  pause?: () => Promise<void>;
 }
+
+const nextTask = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
 
 export const useConversation = create<ConversationState>(() => ({
   turns: [],
@@ -119,14 +127,24 @@ export async function ask(question: string, deps: AskDeps): Promise<void> {
       }
       turn.stopped = stopping();
       turn.capped = !turn.stopped && calls >= MAX_CALLS;
-      const results = pending.map((b) => {
+      const results: AssistantBlock[] = [];
+      for (const b of pending) {
         if (turn.stopped || turn.capped) {
           const why = turn.stopped ? "stopped by the user" : "call limit reached";
-          return { type: "tool_result", tool_use_id: b.id, content: why, is_error: true };
+          results.push({ type: "tool_result", tool_use_id: b.id, content: why, is_error: true });
+          continue;
         }
         const name = String(b.name);
-        turn.tools.push(name);
         show(true, name);
+        await (deps.pause ?? nextTask)();
+        if (!current()) return;
+        if (stopping()) {
+          // Stopped while the step was on the screen: this and the remaining calls get a stop result.
+          turn.stopped = true;
+          results.push({ type: "tool_result", tool_use_id: b.id, content: "stopped by the user", is_error: true });
+          continue;
+        }
+        turn.tools.push(name);
         let out: { text: string; error: boolean };
         try {
           out = runTool(name, (b.input ?? {}) as Record<string, unknown>, deps.source);
@@ -134,8 +152,13 @@ export async function ask(question: string, deps: AskDeps): Promise<void> {
           // A failed reader does not end the answer: the model gets the error and can go on.
           out = { text: `tool failed: ${e instanceof Error ? e.message : String(e)}`, error: true };
         }
-        return { type: "tool_result", tool_use_id: b.id, content: out.text, ...(out.error ? { is_error: true } : {}) };
-      });
+        results.push({
+          type: "tool_result",
+          tool_use_id: b.id,
+          content: out.text,
+          ...(out.error ? { is_error: true } : {}),
+        });
+      }
       history = [...history, { role: "user", content: results }];
       if (turn.stopped || turn.capped) break;
       show(true);
