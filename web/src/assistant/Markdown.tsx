@@ -2,7 +2,8 @@
 // Headings (#–###), lists (- and 1.), **bold**, `inline code` and fenced code blocks; the rest is plain text.
 import type { ReactNode } from "react";
 
-function inline(text: string): ReactNode[] {
+// Bold text is parsed again: the model writes inline code inside bold ("**Pin 73 (`ped_r`):**").
+export function inline(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   const re = /`([^`]+)`|\*\*([^*]+)\*\*/g;
   let last = 0;
@@ -14,7 +15,7 @@ function inline(text: string): ReactNode[] {
           {m[1]}
         </code>,
       );
-    else nodes.push(<strong key={m.index}>{m[2]}</strong>);
+    else nodes.push(<strong key={m.index}>{inline(m[2] ?? "")}</strong>);
     last = m.index + m[0].length;
   }
   if (last < text.length) nodes.push(text.slice(last));
@@ -24,11 +25,11 @@ function inline(text: string): ReactNode[] {
 type Block =
   | { kind: "code"; text: string }
   | { kind: "heading"; text: string }
-  | { kind: "list"; ordered: boolean; items: string[] }
+  | { kind: "list"; ordered: boolean; start: number; items: string[] }
   | { kind: "text"; lines: string[] };
 
 const BULLET = /^\s*[-*]\s+(.*)$/;
-const NUMBER = /^\s*\d+[.)]\s+(.*)$/;
+const NUMBER = /^\s*(\d+)[.)]\s+(.*)$/;
 
 export function blocks(text: string): Block[] {
   const out: Block[] = [];
@@ -46,12 +47,18 @@ export function blocks(text: string): Block[] {
       out.push({ kind: "heading", text: heading[1] ?? "" });
       continue;
     }
-    const item = BULLET.exec(line) ?? NUMBER.exec(line);
-    if (item) {
-      const ordered = NUMBER.test(line);
+    const bullet = BULLET.exec(line);
+    const number = bullet ? null : NUMBER.exec(line);
+    if (bullet || number) {
+      const ordered = number !== null;
+      const text = (bullet ? bullet[1] : number?.[2]) ?? "";
+      // Blank lines between the items of one list do not split it.
+      const gap = out.at(-1);
+      if (gap?.kind === "text" && gap.lines.length === 0 && out.at(-2)?.kind === "list") out.pop();
       const prev = out.at(-1);
-      if (prev?.kind === "list" && prev.ordered === ordered) prev.items.push(item[1] ?? "");
-      else out.push({ kind: "list", ordered, items: [item[1] ?? ""] });
+      if (prev?.kind === "list" && prev.ordered === ordered) prev.items.push(text);
+      // A numbered list after a break goes on from its own first number, not from 1.
+      else out.push({ kind: "list", ordered, start: number ? Number(number[1]) : 1, items: [text] });
       continue;
     }
     if (!line.trim()) {
@@ -87,7 +94,7 @@ export function Markdown({ text }: { text: string }) {
         if (block.kind === "list") {
           const items = block.items.map((item, j) => <li key={j}>{inline(item)}</li>);
           return block.ordered ? (
-            <ol key={i} className="list-decimal space-y-0.5 pl-5">
+            <ol key={i} start={block.start} className="list-decimal space-y-0.5 pl-5">
               {items}
             </ol>
           ) : (
