@@ -21,9 +21,15 @@ test("помощник отвечает по инструментам, пока�
   // The tab raises a low bottom panel so that an answer has room (decision 179).
   expect(await sim(page, (api) => api.layout().bottom)).toBeGreaterThan(before);
 
+  // Each tool step stays on the screen before the tool runs (decision 178). The wait checks every frame and
+  // starts before the question: a step lasts 300 ms, between the polls of an ordinary assertion.
+  const step = page.waitForFunction(
+    (text) => document.querySelector('[data-testid="assistant-step"]')?.textContent === text,
+    "Смотрю плату и выводы…",
+    { polling: "raf" },
+  );
   await askAssistant(page, "Почему мигает?");
-  // Each tool step stays on the screen before the tool runs (decision 178).
-  await expect(page.getByTestId("assistant-step")).toHaveText("Смотрю плату и выводы…");
+  await step;
   await expect
     .poll(() => sim(page, (api) => api.assistant()))
     .toEqual([
