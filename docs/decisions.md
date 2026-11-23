@@ -234,6 +234,10 @@ starts with a pointer to a later decision.
 - 180. Assistant fixes after the live check: spend, limits, labels, reset
 - 181. A service test image per repository directory
 
+**2026-11-23. Author's tasks**
+
+- 182. Tab icon: a white chip on the primary blue
+
 ## 2026-11-18. Stage 0: measuring speed and build time
 
 Numbers and tables are in `docs/stage0-report.md` and `bench/results.json`.
@@ -3217,3 +3221,19 @@ into the variable that names the production image in `deploy/compose.yaml`.
 Consequence: each worktree leaves its own image. The layers below the source copy are shared, so an extra
 image takes little space. List them with `docker image ls fpgasim-api`, remove one with
 `docker image rm fpgasim-api:dev-<number>`. The old `fpgasim-api:dev` is no longer used.
+
+## 2026-11-23. Author's tasks
+
+### 182. Tab icon: a white chip on the primary blue
+
+2026-11-23. The site had no icon: the browser tab showed its blank placeholder, and the tab was hard to find
+among others. The author chose from six drawn variants (chip, 3×3 LEDs, clock wave, AND gate, the letter F
+from cells, a single LED) shown at 16 px in light and dark browser tab bars: the chip.
+
+The icon is one SVG file, `web/public/favicon.svg` (32×32 view box): a white chip with three pins on each
+side and a blue dot in its middle, on a rounded square of `#1d5fd1`, the `--primary` color of the light
+theme. The color is written in the file: a favicon does not see the page's theme variables, and the blue
+reads on both light and dark tab bars. `web/index.html` links it with `<link rel="icon" type="image/svg+xml">`.
+No PNG or ICO copies: the supported browsers take an SVG icon. `img-src 'self'` in `web/public/_headers`
+already allows the file. The end-to-end test "у вкладки есть иконка FPGA SIM" (`e2e/tests/design.spec.ts`)
+checks the link and that the file is served as SVG.

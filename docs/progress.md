@@ -88,6 +88,8 @@ the older detailed stage entries: `git show c1740f0:docs/progress.md` (version 1
 - **2026-11-23.** The local service test image has a tag per repository directory,
   `fpgasim-api:dev-<number>` from `tools/dev/api-image.sh` (decision 181): `make image-api` in one worktree no
   longer replaces the image under a `make check` in another. Nothing to deploy.
+- **2026-11-23.** The tab icon: a white chip on the primary blue, `web/public/favicon.svg` (decision 182).
+  Reaches the production URL after `make deploy-web`.
 
 ## Deployments
 
