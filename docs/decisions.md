@@ -2952,8 +2952,8 @@ settings.
 
 2026-11-22. The author is preparing a submission to international hackathons: the judges read
 English. The spec named Latvian as the second language. English is added first, by the same path
-(spec section 9.1). The design is `docs/superpowers/specs/2026-11-22-i18n-en-design.md`, the plan
-is `docs/superpowers/plans/2026-11-22-i18n-en.md`.
+(spec section 9.1). The design is `docs/superpowers/specs/2026-11-22-i18n-en-design.md`; the plan
+was removed after the work: `git show 5fc1666:docs/superpowers/plans/2026-11-22-i18n-en.md`.
 
 - The languages are `ru` and `en`. The dictionary `web/src/i18n/en.json` has the same keys and
   substitutions as `ru.json`. If a key is missing in the dictionary of a language, the string is
