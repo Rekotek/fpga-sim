@@ -272,6 +272,7 @@ def test_project_over_2mb_after_changes_gives_413_and_writes_nothing(acc: Env, m
     # A file over 512 KB and more than 200 files give 413 too.
     too_big = sync_response(acc, misha, pid, {"since": 0, "changes": [change("huge.v", "x" * (512 * 1024 + 1))]})
     assert too_big.status_code == 413 and "huge.v" in too_big.json()["error"]["text"]
+    assert too_big.json()["error"]["args"] == {"reason": "fileTooLarge", "path": "huge.v", "kilobytes": 512}
 
 
 def test_too_many_files_gives_413(make_env: Any) -> None:  # noqa: ANN401
@@ -290,6 +291,7 @@ def test_101st_project_gives_413(acc: Env, misha: dict[str, str]) -> None:
     response = sync_response(acc, misha, new_id(), {"since": 0, "meta": META, "changes": []})
     assert (response.status_code, response.json()["error"]["code"]) == (413, "PROJECT_TOO_LARGE")
     assert "100" in response.json()["error"]["text"]
+    assert response.json()["error"]["args"] == {"reason": "tooManyProjects", "limit": 100}
     # A project in the trash does not count toward the number.
     assert acc.client.delete(f"/v1/projects/{ids[0]}", headers=misha).status_code == 200
     assert sync_response(acc, misha, new_id(), {"since": 0, "meta": META, "changes": []}).status_code == 200
