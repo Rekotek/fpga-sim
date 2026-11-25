@@ -538,7 +538,8 @@ Refusal Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
         const std::string where = "деталь " + *id;
         const bool idOk =
             std::all_of(id->begin(), id->end(), [](unsigned char c) { return std::isalnum(c) || c == '_'; });
-        if (!idOk) return {where + ": в id допустимы латиница, цифры и _", Json{{"reason", "partIdBad"}, {"part", *id}}};
+        if (!idOk)
+            return {where + ": в id допустимы латиница, цифры и _", Json{{"reason", "partIdBad"}, {"part", *id}}};
         for (const auto& other : cfg.slots) {
             if (other->id == *id) return {where + " указана дважды", Json{{"reason", "partTwice"}, {"part", *id}}};
         }
@@ -571,8 +572,9 @@ Refusal Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
                     net = static_cast<int>(i);
             }
             if (net < 0)
-                return {where + ": вывода " + pinValue.dump() + " нет в списке nets",
-                        Json{{"reason", "partPinMissing"}, {"part", *id}, {"role", roleName}, {"pin", pinValue.dump()}}};
+                return {
+                    where + ": вывода " + pinValue.dump() + " нет в списке nets",
+                    Json{{"reason", "partPinMissing"}, {"part", *id}, {"role", roleName}, {"pin", pinValue.dump()}}};
             slot->roleNet[role] = net;
             if (type->pins[role].out) {
                 cfg.nets[net].drivers.push_back({slot->index, role, false, false});

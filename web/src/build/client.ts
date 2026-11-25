@@ -1,5 +1,6 @@
 // Build server client (spec section 8.3). VITE_BUILD_URL sets the address (section 10.1).
 import type { RemoteProject, SyncAnswer, SyncRequest } from "../project/sync";
+import { refusalArgs, type RefusalArgs } from "../i18n/refusal";
 import type {
   Account,
   AssistantMessage,
@@ -20,6 +21,7 @@ export class ServerError extends Error {
     readonly status: number,
     readonly code: string,
     text: string,
+    readonly args: RefusalArgs | null = null, // the cause for the interface string (decision 183)
   ) {
     super(text);
   }
@@ -43,14 +45,16 @@ async function checked(response: Response): Promise<Response> {
   if (response.ok) return response;
   let code = `HTTP_${String(response.status)}`;
   let text = response.statusText;
+  let args: RefusalArgs | null = null;
   try {
-    const body = (await response.json()) as { error?: { code?: string; text?: string } };
+    const body = (await response.json()) as { error?: { code?: string; text?: string; args?: unknown } };
     code = body.error?.code ?? code;
     text = body.error?.text ?? text;
+    args = refusalArgs(body.error?.args);
   } catch {
     // The body is not JSON (for example, an nginx response): the code from the HTTP status stays.
   }
-  throw new ServerError(response.status, code, text);
+  throw new ServerError(response.status, code, text, args);
 }
 
 const json = (body: unknown): RequestInit => ({

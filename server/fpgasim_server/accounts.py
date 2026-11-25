@@ -190,26 +190,35 @@ def verify_login(password: str, stored: str | None) -> bool:
 
 def check_login(login: str) -> str:
     if not isinstance(login, str) or not LOGIN_RE.fullmatch(login):
-        raise AccountsError(400, "BAD_REQUEST", "Логин: от 1 до 32 знаков, строчная латиница, цифры, _ и -", "loginInvalid")
+        raise AccountsError(
+            400, "BAD_REQUEST", "Логин: от 1 до 32 знаков, строчная латиница, цифры, _ и -", reason="loginInvalid"
+        )
     return login
 
 
 def check_name(name: str) -> str:
     name = name.strip() if isinstance(name, str) else ""
     if not 1 <= len(name) <= MAX_NAME or any(ord(c) < 32 or ord(c) == 127 for c in name):
-        raise AccountsError(400, "BAD_REQUEST", f"Имя: от 1 до {MAX_NAME} знаков", "nameInvalid", max=MAX_NAME)
+        raise AccountsError(400, "BAD_REQUEST", f"Имя: от 1 до {MAX_NAME} знаков", reason="nameInvalid", max=MAX_NAME)
     return name
 
 
 def check_role(role: str) -> str:
     if role not in ROLES:
-        raise AccountsError(400, "BAD_REQUEST", "Роль: admin или user", "roleInvalid")
+        raise AccountsError(400, "BAD_REQUEST", "Роль: admin или user", reason="roleInvalid")
     return role
 
 
 def check_password(password: str) -> str:
     if not isinstance(password, str) or not MIN_PASSWORD <= len(password) <= MAX_PASSWORD:
-        raise AccountsError(400, "BAD_REQUEST", f"Пароль: от {MIN_PASSWORD} до {MAX_PASSWORD} знаков", "passwordInvalid", min=MIN_PASSWORD, max=MAX_PASSWORD)
+        raise AccountsError(
+            400,
+            "BAD_REQUEST",
+            f"Пароль: от {MIN_PASSWORD} до {MAX_PASSWORD} знаков",
+            reason="passwordInvalid",
+            min=MIN_PASSWORD,
+            max=MAX_PASSWORD,
+        )
     return password
 
 
@@ -435,7 +444,7 @@ class AccountStore:
         """A new password hash; the account's sessions are deleted, except keep_session (SHA-256 of the token)."""
         with self._db() as conn, transaction(conn):
             if conn.execute("UPDATE users SET password = ? WHERE login = ?", (password_hash, login)).rowcount == 0:
-                raise AccountsError(404, "NOT_FOUND", f"Пользователя {login} нет", "userMissing", login=login)
+                raise AccountsError(404, "NOT_FOUND", f"Пользователя {login} нет", reason="userMissing", login=login)
             conn.execute("DELETE FROM sessions WHERE login = ? AND token_sha256 IS NOT ?", (login, keep_session))
 
     def add_user(self, login: str, name: str, role: str, password_hash: str) -> dict[str, Any]:
@@ -444,7 +453,7 @@ class AccountStore:
         check_role(role)
         with self._db() as conn, transaction(conn):
             if conn.execute("SELECT 1 FROM users WHERE login = ?", (login,)).fetchone():
-                raise AccountsError(409, "EXISTS", f"Логин {login} уже занят", "loginTaken", login=login)
+                raise AccountsError(409, "EXISTS", f"Логин {login} уже занят", reason="loginTaken", login=login)
             conn.execute(
                 "INSERT INTO users (login, name, role, password, enabled, created) VALUES (?, ?, ?, ?, 1, ?)",
                 (login, name, role, password_hash, self.clock()),
@@ -465,16 +474,23 @@ class AccountStore:
             values["role"] = check_role(changes["role"])
         if "enabled" in changes:
             if not isinstance(changes["enabled"], bool):
-                raise AccountsError(400, "BAD_REQUEST", "Поле enabled: true или false", "enabledInvalid")
+                raise AccountsError(400, "BAD_REQUEST", "Поле enabled: true или false", reason="enabledInvalid")
             values["enabled"] = 1 if changes["enabled"] else 0
         with self._db() as conn, transaction(conn):
             row = conn.execute("SELECT role, enabled FROM users WHERE login = ?", (login,)).fetchone()
             if row is None:
-                raise AccountsError(404, "NOT_FOUND", f"Пользователя {login} нет", "userMissing", login=login)
+                raise AccountsError(404, "NOT_FOUND", f"Пользователя {login} нет", reason="userMissing", login=login)
             disabling = values.get("enabled") == 0 and row["enabled"]
             demoting = values.get("role") == "user" and row["role"] == "admin"
             if disabling or demoting:
-                self._check_admin_kept(conn, actor, login, row, "Disable" if disabling else "Demote")
+                if disabling:
+                    self._check_admin_kept(
+                        conn, actor, login, row, "отключить", self_reason="selfDisable", last_reason="lastAdminDisable"
+                    )
+                else:
+                    self._check_admin_kept(
+                        conn, actor, login, row, "понизить", self_reason="selfDemote", last_reason="lastAdminDemote"
+                    )
             if values:
                 assignments = ", ".join(f"{column} = ?" for column in values)
                 conn.execute(f"UPDATE users SET {assignments} WHERE login = ?", (*values.values(), login))
@@ -487,21 +503,30 @@ class AccountStore:
         with self._db() as conn, transaction(conn):
             row = conn.execute("SELECT role, enabled FROM users WHERE login = ?", (login,)).fetchone()
             if row is None:
-                raise AccountsError(404, "NOT_FOUND", f"Пользователя {login} нет", "userMissing", login=login)
-            self._check_admin_kept(conn, actor, login, row, "Delete")
+                raise AccountsError(404, "NOT_FOUND", f"Пользователя {login} нет", reason="userMissing", login=login)
+            self._check_admin_kept(
+                conn, actor, login, row, "удалить", self_reason="selfDelete", last_reason="lastAdminDelete"
+            )
             conn.execute("DELETE FROM users WHERE login = ?", (login,))
 
     @staticmethod
-    def _check_admin_kept(conn: sqlite3.Connection, actor: str | None, login: str, row: sqlite3.Row, action: str) -> None:
-        """action is Disable, Demote or Delete: the end of the interface reason."""
-        verb = {"Disable": "отключить", "Demote": "понизить", "Delete": "удалить"}[action]
+    def _check_admin_kept(  # noqa: PLR0913 — the two reasons name the interface strings of the action
+        conn: sqlite3.Connection,
+        actor: str | None,
+        login: str,
+        row: sqlite3.Row,
+        verb: str,
+        *,
+        self_reason: str,
+        last_reason: str,
+    ) -> None:
         if actor == login:
-            raise AccountsError(400, "BAD_REQUEST", f"Нельзя {verb} свою учётную запись", f"self{action}")
+            raise AccountsError(400, "BAD_REQUEST", f"Нельзя {verb} свою учётную запись", reason=self_reason)
         if row["role"] == "admin" and row["enabled"]:
             admins = conn.execute("SELECT count(*) FROM users WHERE role = 'admin' AND enabled = 1").fetchone()[0]
             if admins <= 1:
                 raise AccountsError(
-                    400, "BAD_REQUEST", f"Нельзя {verb} последнего включённого администратора", f"lastAdmin{action}"
+                    400, "BAD_REQUEST", f"Нельзя {verb} последнего включённого администратора", reason=last_reason
                 )
 
 

@@ -3,7 +3,7 @@
 // frame, bypassing React.
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { t, tOr } from "../i18n";
+import { t } from "../i18n";
 import { currentSimulation } from "./actions";
 import { formatInteger, formatSeconds, simSeconds } from "./format";
 import { LimitsButton } from "./LimitsDialog";
@@ -23,10 +23,9 @@ function buildText(build: BuildState, now: number): string {
         : t("status.build.ok", { seconds: formatSeconds(build.durationMs ?? 0) });
     case "failed":
       return t("status.build.failed");
-    case "error": {
-      const args = { code: build.errorCode, text: build.errorText };
-      return t("status.build.error", { text: tOr(`error.${build.errorCode ?? ""}`, "error.UNKNOWN", args) });
-    }
+    case "error":
+      // errorText is already in the interface language (failureText, decision 183).
+      return t("status.build.error", { text: build.errorText ?? "" });
   }
 }
 

@@ -3,6 +3,7 @@
 // times per question. The conversation belongs to the open project and lives in memory only.
 import { create } from "zustand";
 import { ServerError } from "../build/client";
+import { failureText } from "../i18n/refusal";
 import type { AssistantBlock, AssistantMessage, AssistantReply } from "../build/types";
 import { runTool, type ToolSource } from "./tools";
 
@@ -72,10 +73,10 @@ function withQuestion(history: AssistantMessage[], question: string): AssistantM
   return [...history.slice(0, -1), { role: "user", content: [...blocks, { type: "text", text: question }] }];
 }
 
-// The server text of a failure; "noAnswer" when there is none (a proxy timeout, no network).
+// The text of a failure in the interface language; "noAnswer" when there is none (a proxy timeout, no network).
 function errorText(e: unknown): string {
   if (e instanceof ServerError && e.code === "NETWORK") return "noAnswer";
-  const text = e instanceof Error ? e.message.trim() : "";
+  const text = e instanceof Error && e.message.trim() ? failureText(e).trim() : "";
   return text || "noAnswer";
 }
 

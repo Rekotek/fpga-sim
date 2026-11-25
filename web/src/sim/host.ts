@@ -21,6 +21,7 @@ import {
   type PartData,
   type Trace,
 } from "./protocol";
+import { refusalArgs, type RefusalArgs } from "../i18n/refusal";
 import type { TraceInfo } from "../wave/model";
 import { Terminal } from "./terminal";
 
@@ -67,6 +68,7 @@ export class CoreError extends Error {
   constructor(
     readonly code: string,
     text: string,
+    readonly args: RefusalArgs | null = null, // the cause for the interface string (decision 183)
   ) {
     super(text);
   }
@@ -261,7 +263,7 @@ export class Simulation {
         }
         waiting?.resolve(reply);
       } else {
-        waiting?.reject(new CoreError(reply.code ?? "ERROR", reply.text ?? ""));
+        waiting?.reject(new CoreError(reply.code ?? "ERROR", reply.text ?? "", refusalArgs(reply.args)));
       }
       return;
     }

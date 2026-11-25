@@ -15,8 +15,8 @@ struct Refusal {
     Json args;  // null, or an object with "reason" and the values the interface string substitutes
 
     Refusal() = default;
-    Refusal(const char* t) : text(t) {}                                 // NOLINT(google-explicit-constructor)
-    Refusal(std::string t) : text(std::move(t)) {}                      // NOLINT(google-explicit-constructor)
+    Refusal(const char* t) : text(t) {}             // NOLINT(google-explicit-constructor)
+    Refusal(std::string t) : text(std::move(t)) {}  // NOLINT(google-explicit-constructor)
     Refusal(std::string t, Json a) : text(std::move(t)), args(std::move(a)) {}
 
     bool failed() const { return !text.empty(); }

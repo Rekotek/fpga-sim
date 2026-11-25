@@ -121,7 +121,8 @@ TEST_CASE("отказы по ошибке в fpgasim.json несут причи�
         return reply.value("args", Json());
     };
     CHECK(args("/parts/0/type", "teapot") == Json{{"reason", "partTypeUnknown"}, {"part", "led0"}, {"type", "teapot"}});
-    CHECK(args("/parts/0/pins", Json{{"anode", 15}}) == Json{{"reason", "partRoleUnknown"}, {"part", "led0"}, {"role", "anode"}});
+    CHECK(args("/parts/0/pins", Json{{"anode", 15}}) ==
+          Json{{"reason", "partRoleUnknown"}, {"part", "led0"}, {"role", "anode"}});
     CHECK(args("/parts/0/pins", Json{{"in", 99}}) ==
           Json{{"reason", "partPinMissing"}, {"part", "led0"}, {"role", "in"}, {"pin", "99"}});
     CHECK(args("/parts/1/id", "s-1") == Json{{"reason", "partIdBad"}, {"part", "s-1"}});
@@ -132,7 +133,8 @@ TEST_CASE("отказы по ошибке в fpgasim.json несут причи�
     // A refusal that only a defect of the interface causes has no args: the interface shows it by the code.
     CHECK_FALSE(args("/clock/hz", 0).is_object());
 
-    const Json settings = sim.cmd(Json{{"t", "partSettings"}, {"part", "led0"}, {"settings", Json{{"activeLevel", "x"}}}});
+    const Json settings =
+        sim.cmd(Json{{"t", "partSettings"}, {"part", "led0"}, {"settings", Json{{"activeLevel", "x"}}}});
     CHECK(errorCode(settings) == "SETTINGS_INVALID");
     CHECK(settings["args"]["part"] == "led0");
     CHECK(settings["args"]["setting"] == "activeLevel");
@@ -140,11 +142,13 @@ TEST_CASE("отказы по ошибке в fpgasim.json несут причи�
     Json withSwitch = defaultConfigure();
     withSwitch["parts"][2] = Json{{"id", "sw"}, {"type", "switch"}, {"pins", Json{{"out", 87}}}};
     REQUIRE(isOk(sim.cmd(withSwitch)));
-    CHECK(sim.part("s1", "toggle")["args"] == Json{{"reason", "commandUnknown"}, {"command", "toggle"}, {"part", "s1"}});
+    CHECK(sim.part("s1", "toggle")["args"] ==
+          Json{{"reason", "commandUnknown"}, {"command", "toggle"}, {"part", "s1"}});
     const Json missing = sim.part("sw", "set");
     CHECK(missing["args"] == Json{{"reason", "argMissing"}, {"command", "set"}, {"arg", "on"}, {"part", "sw"}});
     const Json type = sim.part("sw", "set", Json{{"on", 1}});
-    CHECK(type["args"] == Json{{"reason", "argType"}, {"kind", "boolean"}, {"command", "set"}, {"arg", "on"}, {"part", "sw"}});
+    CHECK(type["args"] ==
+          Json{{"reason", "argType"}, {"kind", "boolean"}, {"command", "set"}, {"arg", "on"}, {"part", "sw"}});
 }
 
 TEST_CASE("configure: порт inout к сети не подключается и даёт предупреждение", "[commands]") {
