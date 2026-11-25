@@ -3,14 +3,14 @@
 The first section says where we are now. Format of a new entry: the date, what was done, what was
 postponed and why, which decisions were made (details are in `docs/decisions.md`).
 
-## Where we are now (2026-11-23)
+## Where we are now (2026-11-26)
 
 **Version 1 is complete.** All stages of spec section 12 (0–11) are done and merged into `main`; the
 summary is `docs/v1-report.md`. New work follows the author's task, and its entry is appended to section
 "After acceptance". What runs on the production URLs: section "Deployments".
 
-Latest work: the "Assistant" tab (decisions 175–177) and its fixes after the live check on production
-(decisions 178–180), both deployed on 2026-11-23.
+Latest work: server and core refusals and core notices in the interface language (decision 183),
+deployed on 2026-11-26.
 
 ## Next tasks
 
@@ -89,28 +89,28 @@ the older detailed stage entries: `git show c1740f0:docs/progress.md` (version 1
   `fpgasim-api:dev-<number>` from `tools/dev/api-image.sh` (decision 181): `make image-api` in one worktree no
   longer replaces the image under a `make check` in another. Nothing to deploy.
 - **2026-11-23.** The tab icon: a white chip on the primary blue, `web/public/favicon.svg` (decision 182).
-  Reaches the production URL after `make deploy-web`.
+  Deployed with static files `20261125-2019-85df444`.
 - **2026-11-25.** The explanation of `BOARD_UNKNOWN` in `spec/diagnostics.json` names both boards,
   `tang-nano-20k` and `tang-nano-9k`, in both languages. Deployed: static files `20261125-2019-85df444`.
 - **2026-11-25.** Server and core refusals and core notices in the interface language (decision 183): the
   core and the server add the optional field `args` (`reason` and values) to a refusal, the interface takes
   its own string by the reason, core notices by the code. The Russian `text` stays for the log and
-  `fpgasim-admin`; the output of Verilator and Icarus stays as it is. Core 0.2.2. Reaches the production URL
-  after `make deploy-server` and `make deploy-web`.
+  `fpgasim-admin`; the output of Verilator and Icarus stays as it is. Core 0.2.2. Deployed: server
+  `20261125-2244-028f6f8`, static files `20261125-2258-028f6f8`.
 
 ## Deployments
 
-Now (2026-11-25): build server `20261123-1604-5fc1666` (the assistant fixes, decisions 178–180) and
-static files `20261125-2019-85df444` (the tab icon and the `BOARD_UNKNOWN` explanation); after it
-`make e2e-prod` gave 38 of 38 with `FPGASIM_USER_LOGIN` and `FPGASIM_USER_PASSWORD` set. The assistant is enabled: `/etc/fpgasim/config.toml` holds only
-`[assistant] enabled = true`, the key is `/etc/fpgasim/anthropic.key`; `/v1/info` answers
+Now (2026-11-26): build server `20261125-2244-028f6f8` and static files `20261125-2258-028f6f8` (refusals in
+the interface language, decision 183, core 0.2.2); after them `make e2e-prod` gave 38 of 38 with
+`FPGASIM_USER_LOGIN` and `FPGASIM_USER_PASSWORD` set (10 minutes: the new core version rebuilds every lesson
+without the cache). The previous server is `20261123-1604-5fc1666` (the assistant fixes, decisions 178–180).
+The assistant is enabled: `/etc/fpgasim/config.toml` holds only `[assistant] enabled = true`, the key is `/etc/fpgasim/anthropic.key`; `/v1/info` answers
 `{"enabled": true, "model": "claude-sonnet-5-5"}`. Without `FPGASIM_USER_LOGIN` and
 `FPGASIM_USER_PASSWORD` in the environment the two `accounts.spec.ts` tests skip; the login is `e2e`, the
 password is the keychain service `fpgasim-e2e-prod-user`.
-The previous server is `20261123-0703-7df404f` (the assistant, decisions 175–177).
 
-The database copy in R2 (decision 160) runs daily from cron at 03:50 UTC; on 2026-11-23 the log
-(`/var/lib/fpgasim/deploy/offsite-r2.log`) says object `fpgasim/accounts-20261123.db`, matches, "сбоев: 0".
+The database copy in R2 (decision 160) runs daily from cron at 03:50 UTC; on 2026-11-25 the log
+(`/var/lib/fpgasim/deploy/offsite-r2.log`) says object `fpgasim/accounts-20261125.db`, matches, "сбоев: 0".
 Restore from R2 was checked on 2026-11-20 (`docs/deploy-server.md`, section "Copy in R2").
 
 Accounts on the production server: `taras` (administrator), `e2e` (acceptance tests) and user
