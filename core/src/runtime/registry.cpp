@@ -1,6 +1,7 @@
 #include "registry.h"
 
 #include <map>
+#include <utility>
 
 namespace fpgasim {
 
@@ -22,7 +23,8 @@ PartType& entry(std::string_view type) {
 }
 
 // Checks a value against its description: type, enum, minimum, maximum, maxLength, items.
-std::string checkValue(const Json& spec, const Json& value) {
+// args.reason is the end of the interface reason: the caller puts "setting" or "arg" before it.
+Refusal checkValue(const Json& spec, const Json& value) {
     const std::string kind = spec.value("type", "");
     bool typeOk = true;
     if (kind == "integer") {
@@ -36,32 +38,39 @@ std::string checkValue(const Json& spec, const Json& value) {
     } else if (kind == "array") {
         typeOk = value.is_array();
     }
-    if (!typeOk) return "ожидается значение вида " + kind;
+    if (!typeOk) return {"ожидается значение вида " + kind, Json{{"reason", "Type"}, {"kind", kind}}};
     if (const auto it = spec.find("enum"); it != spec.end() && it->is_array()) {
         bool found = false;
         for (const Json& option : *it) found = found || option == value;
-        if (!found) return "значение не входит в список допустимых";
+        if (!found) return {"значение не входит в список допустимых", Json{{"reason", "Enum"}}};
     }
     if (value.is_number()) {
         const double v = value.get<double>();
         if (const auto it = spec.find("minimum"); it != spec.end() && it->is_number() && v < it->get<double>())
-            return "значение меньше допустимого";
+            return {"значение меньше допустимого", Json{{"reason", "Minimum"}, {"limit", *it}}};
         if (const auto it = spec.find("maximum"); it != spec.end() && it->is_number() && v > it->get<double>())
-            return "значение больше допустимого";
+            return {"значение больше допустимого", Json{{"reason", "Maximum"}, {"limit", *it}}};
     }
     if (value.is_string()) {
         if (const auto it = spec.find("maxLength"); it != spec.end() && it->is_number_unsigned() &&
                                                     value.get_ref<const std::string&>().size() > it->get<size_t>())
-            return "строка длиннее допустимого";
+            return {"строка длиннее допустимого", Json{{"reason", "MaxLength"}, {"limit", *it}}};
     }
     if (value.is_array()) {
         if (const auto it = spec.find("items"); it != spec.end() && it->is_object()) {
             for (const Json& item : value) {
-                if (std::string err = checkValue(*it, item); !err.empty()) return "элемент массива: " + err;
+                if (Refusal err = checkValue(*it, item); err.failed())
+                    return {"элемент массива: " + err.text, std::move(err.args)};
             }
         }
     }
     return {};
+}
+
+// The reason of a value check with a prefix: "setting" + "Maximum" = "settingMaximum".
+Json prefixed(const char* prefix, Json args) {
+    args["reason"] = prefix + args["reason"].get<std::string>();
+    return args;
 }
 
 }  // namespace
@@ -96,7 +105,7 @@ std::vector<std::string> partTypeNames() {
     return names;
 }
 
-std::string resolveSettings(const PartType& type, const Json& given, Json& merged) {
+Refusal resolveSettings(const PartType& type, const Json& given, Json& merged) {
     static const Json kEmpty = Json::object();
     const auto specsIt = type.desc.find("settings");
     const Json& specs = specsIt != type.desc.end() && specsIt->is_object() ? *specsIt : kEmpty;
@@ -105,38 +114,54 @@ std::string resolveSettings(const PartType& type, const Json& given, Json& merge
         if (spec.is_object() && spec.contains("default")) merged[name] = spec["default"];
     }
     if (given.is_null()) return {};
-    if (!given.is_object()) return "настройки должны быть объектом";
+    if (!given.is_object()) return {"настройки должны быть объектом", Json{{"reason", "settingsNotObject"}}};
     for (const auto& [name, value] : given.items()) {
         const auto spec = specs.find(name);
-        if (spec == specs.end()) return "неизвестная настройка \"" + name + "\"";
-        if (std::string err = checkValue(*spec, value); !err.empty()) return "настройка \"" + name + "\": " + err;
+        if (spec == specs.end())
+            return {"неизвестная настройка \"" + name + "\"", Json{{"reason", "settingUnknown"}, {"setting", name}}};
+        if (Refusal err = checkValue(*spec, value); err.failed()) {
+            Json args = prefixed("setting", std::move(err.args));
+            args["setting"] = name;
+            return {"настройка \"" + name + "\": " + err.text, std::move(args)};
+        }
         merged[name] = value;
     }
     return {};
 }
 
-std::string checkCommand(const PartType& type, std::string_view cmd, const Json& args) {
+Refusal checkCommand(const PartType& type, std::string_view cmd, const Json& args) {
+    const std::string command(cmd);
     const auto commands = type.desc.find("commands");
-    if (commands == type.desc.end() || !commands->is_array()) return "у детали нет команд";
-    for (const Json& command : *commands) {
-        if (!command.is_object() || command.value("name", "") != cmd) continue;
+    if (commands == type.desc.end() || !commands->is_array())
+        return {"у детали нет команд", Json{{"reason", "commandUnknown"}, {"command", command}}};
+    for (const Json& entry : *commands) {
+        if (!entry.is_object() || entry.value("name", "") != cmd) continue;
         static const Json kEmpty = Json::object();
-        const auto specsIt = command.find("args");
-        const Json& specs = specsIt != command.end() && specsIt->is_object() ? *specsIt : kEmpty;
-        if (!args.is_null() && !args.is_object()) return "аргументы должны быть объектом";
+        const auto specsIt = entry.find("args");
+        const Json& specs = specsIt != entry.end() && specsIt->is_object() ? *specsIt : kEmpty;
+        if (!args.is_null() && !args.is_object())
+            return {"аргументы должны быть объектом", Json{{"reason", "argsNotObject"}, {"command", command}}};
         for (const auto& [name, spec] : specs.items()) {
-            if (args.is_null() || !args.contains(name)) return "нет аргумента \"" + name + "\"";
-            if (std::string err = checkValue(spec, args[name]); !err.empty())
-                return "аргумент \"" + name + "\": " + err;
+            if (args.is_null() || !args.contains(name))
+                return {"нет аргумента \"" + name + "\"",
+                        Json{{"reason", "argMissing"}, {"command", command}, {"arg", name}}};
+            if (Refusal err = checkValue(spec, args[name]); err.failed()) {
+                Json found = prefixed("arg", std::move(err.args));
+                found["command"] = command;
+                found["arg"] = name;
+                return {"аргумент \"" + name + "\": " + err.text, std::move(found)};
+            }
         }
         if (args.is_object()) {
             for (const auto& [name, value] : args.items()) {
-                if (!specs.contains(name)) return "неизвестный аргумент \"" + name + "\"";
+                if (!specs.contains(name))
+                    return {"неизвестный аргумент \"" + name + "\"",
+                            Json{{"reason", "argUnknown"}, {"command", command}, {"arg", name}}};
             }
         }
         return {};
     }
-    return "у детали нет команды \"" + std::string(cmd) + "\"";
+    return {"у детали нет команды \"" + command + "\"", Json{{"reason", "commandUnknown"}, {"command", command}}};
 }
 
 }  // namespace fpgasim

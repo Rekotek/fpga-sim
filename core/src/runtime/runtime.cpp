@@ -235,10 +235,16 @@ private:
         extra["id"] = *id;
         send(extra);
     }
-    void fail(const Id& id, const char* code, const std::string& text) {
+    void fail(const Id& id, const char* code, const std::string& text, const Json& args = Json()) {
         Json msg{{"t", "error"}, {"code", code}, {"text", text}};
         if (id) msg["id"] = *id;
+        if (args.is_object()) msg["args"] = args;
         send(msg);
+    }
+    // A part refusal: the text names the part, and args gets the part id.
+    void failPart(const Id& id, const char* code, const std::string& partId, Refusal err) {
+        if (err.args.is_object()) err.args["part"] = partId;
+        fail(id, code, "деталь " + partId + ": " + err.text, err.args);
     }
     void notice(const char* code, const std::string& text, int pin = 0) {
         Json msg{{"t", "notice"}, {"code", code}, {"text", text}, {"time", timeToString(now_)}};
@@ -273,7 +279,7 @@ private:
     void onRecordStop(const Id& id);
     void onRecordFetch(const Json& msg, const Id& id);
 
-    std::string buildConfig(const Json& msg, Config& cfg);
+    Refusal buildConfig(const Json& msg, Config& cfg);
     std::string checkWatch(const Json& list, std::vector<uint32_t>& out) const;
     bool parseSpeed(const Json& value, bool& isMax, double& speed) const;
     bool recordItem(const Json& ref, Recorder::Item& item, std::string& err) const;
@@ -448,7 +454,7 @@ std::string Runtime::Impl::checkWatch(const Json& list, std::vector<uint32_t>& o
     return {};
 }
 
-std::string Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
+Refusal Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
     const std::vector<PortInfo>& ports = engine_->ports();
     const auto findPort = [&](const std::string& name) {
         for (size_t i = 0; i < ports.size(); ++i) {
@@ -532,12 +538,14 @@ std::string Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
         const std::string where = "деталь " + *id;
         const bool idOk =
             std::all_of(id->begin(), id->end(), [](unsigned char c) { return std::isalnum(c) || c == '_'; });
-        if (!idOk) return where + ": в id допустимы латиница, цифры и _";
+        if (!idOk) return {where + ": в id допустимы латиница, цифры и _", Json{{"reason", "partIdBad"}, {"part", *id}}};
         for (const auto& other : cfg.slots) {
-            if (other->id == *id) return where + " указана дважды";
+            if (other->id == *id) return {where + " указана дважды", Json{{"reason", "partTwice"}, {"part", *id}}};
         }
         const PartType* type = findPartType(*typeName);
-        if (!type) return where + ": тип детали \"" + *typeName + "\" неизвестен";
+        if (!type)
+            return {where + ": тип детали \"" + *typeName + "\" неизвестен",
+                    Json{{"reason", "partTypeUnknown"}, {"part", *id}, {"type", *typeName}}};
         auto slot = std::make_unique<Slot>();
         slot->rt = this;
         slot->index = static_cast<int>(cfg.slots.size());
@@ -545,20 +553,26 @@ std::string Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
         slot->type = type;
         slot->roleNet.assign(type->pins.size(), -1);
         const Json* settings = field(item, "settings");
-        if (std::string err = resolveSettings(*type, settings ? *settings : Json(), slot->settings); !err.empty())
-            return where + ": " + err;
+        if (Refusal err = resolveSettings(*type, settings ? *settings : Json(), slot->settings); err.failed()) {
+            err.args["part"] = *id;
+            return {where + ": " + err.text, std::move(err.args)};
+        }
         for (const auto& [roleName, pinValue] : pins->items()) {
             int role = -1;
             for (size_t i = 0; i < type->pins.size(); ++i) {
                 if (type->pins[i].role == roleName) role = static_cast<int>(i);
             }
-            if (role < 0) return where + ": роли вывода \"" + roleName + "\" не существует";
+            if (role < 0)
+                return {where + ": роли вывода \"" + roleName + "\" не существует",
+                        Json{{"reason", "partRoleUnknown"}, {"part", *id}, {"role", roleName}}};
             int net = -1;
             for (size_t i = 0; i < cfg.nets.size(); ++i) {
                 if (pinValue.is_number_integer() && cfg.nets[i].pin == pinValue.get<int64_t>())
                     net = static_cast<int>(i);
             }
-            if (net < 0) return where + ": вывода " + pinValue.dump() + " нет в списке nets";
+            if (net < 0)
+                return {where + ": вывода " + pinValue.dump() + " нет в списке nets",
+                        Json{{"reason", "partPinMissing"}, {"part", *id}, {"role", roleName}, {"pin", pinValue.dump()}}};
             slot->roleNet[role] = net;
             if (type->pins[role].out) {
                 cfg.nets[net].drivers.push_back({slot->index, role, false, false});
@@ -577,7 +591,7 @@ std::string Runtime::Impl::buildConfig(const Json& msg, Config& cfg) {
 
 void Runtime::Impl::onConfigure(const Json& msg, const Id& id) {
     Config cfg;
-    if (std::string err = buildConfig(msg, cfg); !err.empty()) return fail(id, "CONFIG_INVALID", err);
+    if (Refusal err = buildConfig(msg, cfg); err.failed()) return fail(id, "CONFIG_INVALID", err.text, err.args);
     clocked_ = cfg.clocked;
     clockPort_ = cfg.clockPort;
     clocks_.clear();
@@ -718,8 +732,8 @@ void Runtime::Impl::onPart(const Json& msg, const Id& id) {
     if (!slot) return fail(id, "UNKNOWN_PART", "детали \"" + *partId + "\" нет");
     const Json* given = field(msg, "args");
     const Json args = given ? *given : Json::object();
-    if (std::string err = checkCommand(*slot->type, *cmd, args); !err.empty())
-        return fail(id, "PART_COMMAND_INVALID", "деталь " + *partId + ": " + err);
+    if (Refusal err = checkCommand(*slot->type, *cmd, args); err.failed())
+        return failPart(id, "PART_COMMAND_INVALID", *partId, std::move(err));
     slot->part->onCommand(*cmd, args);
     settleAll();
     flushRecorder();
@@ -736,8 +750,8 @@ void Runtime::Impl::onPartSettings(const Json& msg, const Id& id) {
     Json wanted = slot->settings;
     wanted.update(*given);
     Json merged;
-    if (std::string err = resolveSettings(*slot->type, wanted, merged); !err.empty())
-        return fail(id, "SETTINGS_INVALID", "деталь " + *partId + ": " + err);
+    if (Refusal err = resolveSettings(*slot->type, wanted, merged); err.failed())
+        return failPart(id, "SETTINGS_INVALID", *partId, std::move(err));
     slot->settings = std::move(merged);
     slot->part->onSettings(slot->settings);
     settleAll();
@@ -820,14 +834,14 @@ void Runtime::Impl::onRecordStart(const Json& msg, const Id& id) {
         }
         opt.hasTrigger = true;
     }
-    err = recorder_.start(std::move(opt), now_, [this](const Recorder::Item& item, uint32_t* words) {
+    Refusal refused = recorder_.start(std::move(opt), now_, [this](const Recorder::Item& item, uint32_t* words) {
         if (item.isNet) {
             words[0] = nets_[item.ref].level ? 1 : 0;
         } else {
             engine_->readSignal(item.ref, words);
         }
     });
-    if (!err.empty()) return fail(id, "RECORD_INVALID", err);
+    if (refused.failed()) return fail(id, "RECORD_INVALID", refused.text, refused.args);
     ok(id, Json{{"record", recorder_.id()}});
     flushRecorder();
 }

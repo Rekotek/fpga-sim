@@ -304,6 +304,8 @@ TEST_CASE("во время записи состояние приходит не
         return sim.cmd(Json{
             {"t", "recordStart"}, {"signals", Json::array({FakeEngine::kHuge})}, {"mode", "ring"}, {"depth", depth}});
     };
-    CHECK(errorCode(huge(2'000'000)) == "RECORD_INVALID");
+    const Json tooBig = huge(2'000'000);
+    CHECK(errorCode(tooBig) == "RECORD_INVALID");
+    CHECK(tooBig["args"] == Json{{"reason", "recordMemory"}, {"megabytes", 64}});
     CHECK(isOk(huge(100'000)));
 }

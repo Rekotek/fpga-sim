@@ -21,6 +21,26 @@
     },
     "text": {
       "type": "string"
+    },
+    "args": {
+      "description": "Для интерфейса: reason выбирает строку словаря, остальные поля подставляются в неё (решение 183). Отказы, которые вызывает только дефект интерфейса, идут без args.",
+      "type": "object",
+      "required": [
+        "reason"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z]*$"
+        }
+      },
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean"
+        ]
+      }
     }
   }
 }
