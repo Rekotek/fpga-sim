@@ -238,6 +238,10 @@ starts with a pointer to a later decision.
 
 - 182. Tab icon: a white chip on the primary blue
 
+**2026-11-25. Author's tasks**
+
+- 183. Server and core refusals in the interface language
+
 ## 2026-11-18. Stage 0: measuring speed and build time
 
 Numbers and tables are in `docs/stage0-report.md` and `bench/results.json`.
@@ -3237,3 +3241,47 @@ reads on both light and dark tab bars. `web/index.html` links it with `<link rel
 No PNG or ICO copies: the supported browsers take an SVG icon. `img-src 'self'` in `web/public/_headers`
 already allows the file. The end-to-end test "у вкладки есть иконка FPGA SIM" (`e2e/tests/design.spec.ts`)
 checks the link and that the file is served as SVG.
+
+## 2026-11-25. Author's tasks
+
+### 183. Server and core refusals in the interface language
+
+2026-11-25. The author's rule: everything a user of the interface reads is in the interface language. With
+the English interface, the student still saw Russian in four places: the core notices on the "Messages" tab
+(`INPUT_FLOATING`, `NET_CONFLICT`, `MODEL_FINISH`, `RECORD_OVERFLOW`, `SLOW`: the panel showed the core
+text), core refusals after a hand edit of `fpgasim.json` (part settings, type, pins), the recording refusal
+over 64 MB, and server refusals in the sync status, the sign-in form, the users dialog and the assistant.
+Two kinds of text stay as they are, by the author's word: the output of Verilator and Icarus (compiler
+output in English; our explanations of their codes already exist in both languages), and the server log
+and the `fpgasim-admin` command (Russian, only the author reads them).
+
+- The server and the core keep the Russian `text`: the log, `fpgasim-admin` (it shares the account
+  checks with the API), the native runner and the tests read it. Where one code has several causes, the
+  refusal gets the optional field `args`: `reason` names the cause, the other fields are the values to
+  substitute. The field is in the core `error` message (`spec/protocol/error.schema.json`) and in the
+  server error body `{ "error": { "code", "text", "args" } }`. The protocol version did not change: the
+  field is optional, and an interface without it reads only `code` and `text`.
+- The interface (`web/src/i18n/refusal.ts`) takes the string `refusal.<reason>` and fills it with
+  `args`; without `args` or with an unknown reason, `error.<code>`; a code unknown to the dictionary
+  shows as "code: text", as before. Core notices take `notice.<code>`, otherwise the core text. So an
+  interface deployed before the server, and a cached build with the old core, still show text.
+- Only refusals a user can cause get a reason: part settings and part commands (the setting or argument
+  value checks of the part description), the parts of `configure` from `fpgasim.json` (name, repeat,
+  type, pin role, unconnected pin), the 64 MB recording limit, and every server refusal with variants.
+  Refusals that only an interface defect causes (`BAD_MESSAGE`, `HELLO_REQUIRED`, the structure of
+  `configure`, the shape of `recordStart`) get one string per code with the advice to reload the page.
+- A value check in the core returns the end of the reason (`Type`, `Enum`, `Minimum`, `Maximum`,
+  `MaxLength`); the caller puts `setting` or `arg` before it. The core type `Refusal`
+  (`core/src/runtime/refusal.h`) carries the text and `args`. The core version is 0.2.2.
+- In the server, a reason is the keyword argument `reason=` of `ApiError` and `AccountsError`. The test
+  `web/src/i18n/refusal.test.ts` finds every reason in the server and core sources and every core notice
+  code and checks the strings in both dictionaries, and checks a string for every core `error` code of
+  spec section 4.3.
+- The build status and the testbench status now store the text already in the interface language; the
+  status bar no longer looks it up by the code.
+- A refusal text starts with a capital letter: the `error.<code>` strings start in lower case for
+  "Build failed: …", but a refusal also shows on its own (the assistant panel, the sync status, dialogs).
+  The assistant failure now shows the interface string of `ASSISTANT_FAILED` without the server detail
+  ("тестовый сбой", "сервис модели ответил 500"): the detail stays in the server log.
+- The item "Icarus summary arrives as text" of `docs/progress.md` was wrong: the summary comes from the
+  Verilator parser with the code `DIAGNOSTICS_TRUNCATED`, and the table already translated it.

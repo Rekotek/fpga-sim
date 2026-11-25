@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Diagnostic } from "../build/types";
 import { t } from "../i18n";
+import { noticeText } from "../i18n/refusal";
 import { chooseTop, gotoDiagnostic } from "./actions";
 import { diagnosticExplain, diagnosticLevel, diagnosticText, visibleDiagnostics } from "./diagnostics";
 import { simSeconds } from "./format";
@@ -166,7 +167,7 @@ export function MessagesPanel() {
                 {t("messages.notice", { seconds: simSeconds(n.time) })}
               </span>
               <span className={CODE}>{n.code}</span>
-              <span className="min-w-0 break-words">{n.text}</span>
+              <span className="min-w-0 break-words">{noticeText(n.code, n.text)}</span>
             </li>
           ))}
         </ul>

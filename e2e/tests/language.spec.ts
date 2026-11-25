@@ -1,7 +1,7 @@
 // English interface (decision 168): choice by address and by browser, the switch, saving an edit
 // before a reload, translation of build messages and of the board device label.
 import { expect, test, type Page } from "@playwright/test";
-import { build, createFromExample, openWithKey, replaceEditorText, sim, KEY } from "./stand";
+import { ADMIN, build, createFromExample, openAs, openWithKey, replaceEditorText, sim, KEY } from "./stand";
 
 const CYRILLIC = /[А-Яа-яЁё]/;
 
@@ -51,6 +51,30 @@ test.describe("браузер на английском", () => {
     expect(device?.text).toContain("TF card");
     for (const m of messages) expect(`${m.text} ${m.explain ?? ""}`).not.toMatch(CYRILLIC);
     expect(await visibleText(page)).not.toMatch(CYRILLIC);
+  });
+
+  test("замечание ядра на вкладке сообщений по-английски (решение 183)", async ({ page }) => {
+    await openWithKey(page);
+    // Without PULL_MODE a released button leaves the input floating: the core sends INPUT_FLOATING in Russian.
+    await createFromExample(page, "buttons_nopull");
+    expect(await build(page)).toBe("ok");
+    const notice = page.getByTestId("notice").filter({ hasText: "INPUT_FLOATING" }).first();
+    await expect(notice).toContainText("the FPGA input is not connected and not pulled");
+    expect(await notice.innerText()).not.toMatch(CYRILLIC);
+  });
+
+  test("отказ сервера по-английски: логин уже занят (решение 183)", async ({ page }) => {
+    test.skip(!ADMIN.password, "стенд не завёл учётные записи (e2e/run.sh)");
+    await openAs(page, ADMIN);
+    await page.getByTestId("account-menu").click();
+    await page.getByTestId("account-users").click();
+    await expect(page.getByTestId("users-page")).toBeVisible();
+    await page.getByTestId("user-add").click();
+    await page.getByTestId("user-add-login").fill(ADMIN.login);
+    await page.getByTestId("user-add-name").fill("Copy");
+    await page.getByTestId("user-add-submit").click();
+    // The server sends the Russian text and args {reason: "loginTaken", login}: the interface shows its own string.
+    await expect(page.getByTestId("user-problem")).toHaveText(`Login ${ADMIN.login} is already taken`);
   });
 });
 

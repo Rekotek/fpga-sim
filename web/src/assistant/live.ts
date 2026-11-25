@@ -3,6 +3,7 @@
 import { projectFiles } from "../app/actions";
 import { useApp } from "../app/state";
 import { api } from "../debug/fpgasim";
+import { noticeText } from "../i18n/refusal";
 import { boardById } from "../project/assets";
 import { projectParts } from "../project/config";
 import type { ToolSource } from "./tools";
@@ -15,7 +16,13 @@ export function liveSource(): ToolSource {
     build: () => api.state().build,
     messages: () => api.messages(),
     notices: () =>
-      useApp.getState().notices.map((n) => ({ code: n.code, text: n.text, net: n.net, part: n.part, time: n.time })),
+      useApp.getState().notices.map((n) => ({
+        code: n.code,
+        text: noticeText(n.code, n.text),
+        net: n.net,
+        part: n.part,
+        time: n.time,
+      })),
     board: () => useApp.getState().project?.board ?? null,
     parts: () => {
       const app = useApp.getState();

@@ -2,6 +2,7 @@
 // Here is the exchange order: what to send, how to parse a response and a failure, when to retry. Storage fields
 // and parsing a response in one transaction are in store.ts; display and calls from the workspace are in app/actions.ts.
 import { ServerError } from "../build/client";
+import { failureText } from "../i18n/refusal";
 import {
   unsavedWork,
   unsentWork,
@@ -243,7 +244,7 @@ export class ProjectSync {
         if (this.live()) this.hooks.unauthorized();
       } else if (e instanceof ServerError && e.status !== 0 && e.status < 500 && e.status !== 429) {
         // The server rejected (413, 400): a retry after the next change of the project.
-        this.trouble.set(id, { state: "error", error: e.message });
+        this.trouble.set(id, { state: "error", error: failureText(e) });
         this.blocked.add(id);
       } else {
         // No network, 5xx or too frequent requests: a retry in 5, 15, 60 s, then every 60 s.

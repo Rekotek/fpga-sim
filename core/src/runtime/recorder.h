@@ -9,6 +9,7 @@
 #include "fpgasim/clock.h"
 #include "fpgasim/json.h"
 #include "fpgasim/protocol.h"
+#include "refusal.h"
 
 namespace fpgasim {
 
@@ -41,7 +42,7 @@ public:
     static constexpr size_t kMemoryLimit = 64u << 20;  // recording memory limit
 
     // Starts a new recording in place of the previous one. Returns the error text or an empty string.
-    std::string start(Options options, Time now, Reader reader);
+    Refusal start(Options options, Time now, Reader reader);
     void clear();         // the recording is erased (reset, configure)
     void stop(Time now);  // stop on command
 

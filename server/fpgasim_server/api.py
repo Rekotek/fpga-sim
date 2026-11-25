@@ -69,11 +69,13 @@ LOGIN_LOCKED = "Слишком много неудачных попыток вх
 
 
 class ApiError(Exception):
-    def __init__(self, status: int, code: str, text: str) -> None:
+    def __init__(self, status: int, code: str, text: str, reason: str | None = None, **values: str | int) -> None:
         super().__init__(text)
         self.status = status
         self.code = code
         self.text = text
+        # The response field args (decision 183): the interface picks its string by reason and substitutes values.
+        self.values: dict[str, str | int] | None = {"reason": reason, **values} if reason else None
 
 
 class FileIn(BaseModel):
@@ -161,8 +163,11 @@ class Principal:
         return f"{self.auth}:{self.owner}"
 
 
-def error_response(status: int, code: str, text: str) -> JSONResponse:
-    return JSONResponse({"error": {"code": code, "text": text}}, status_code=status)
+def error_response(status: int, code: str, text: str, values: dict[str, str | int] | None = None) -> JSONResponse:
+    error: dict[str, Any] = {"code": code, "text": text}
+    if values:
+        error["args"] = values
+    return JSONResponse({"error": error}, status_code=status)
 
 
 def valid_path(path: str) -> bool:
@@ -259,7 +264,7 @@ class Service:
         """Operations of accounts spec section 3.4 (docs/tz-accounts.md): only a session with the admin role."""
         user = self.accounts.user(principal.owner) if principal.auth == "session" else None
         if user is None or user["role"] != "admin":
-            raise ApiError(403, "FORBIDDEN", "Операция доступна только администратору")
+            raise ApiError(403, "FORBIDDEN", "Операция доступна только администратору", reason="adminOnly")
 
     def rate_limit(self, owner: str, op: str) -> None:
         """At most the set number of requests per minute from one key or account.
@@ -314,14 +319,20 @@ class Service:
         async for chunk in request.stream():
             body += chunk
             if len(body) > MAX_SMALL_BODY:
-                raise ApiError(400, "BAD_REQUEST", "Тело запроса слишком велико")
+                raise ApiError(400, "BAD_REQUEST", "Тело запроса слишком велико", reason="bodyTooLarge")
         try:
             return model.model_validate_json(bytes(body or b"{}"))
         except ValidationError as e:
             # The field value does not go into the error text: the field may hold a password.
             first = e.errors()[0]
             where = ".".join(str(p) for p in first["loc"]) or "тело"
-            raise ApiError(400, "BAD_REQUEST", f"Запрос не разобран: {where}: {first['type']}") from None
+            raise ApiError(
+                400,
+                "BAD_REQUEST",
+                f"Запрос не разобран: {where}: {first['type']}",
+                reason="requestNotParsed",
+                field=where if where not in ("", "тело") else "body",
+            ) from None
 
     async def read_assistant(self, request: Request) -> tuple[list[dict[str, Any]], str]:
         """The conversation and the interface language of an assistant request."""
@@ -333,15 +344,19 @@ class Service:
         try:
             data = json.loads(bytes(body))
         except ValueError:
-            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело не JSON") from None
+            raise ApiError(
+                400, "BAD_REQUEST", "Запрос не разобран: тело не JSON", reason="requestNotParsed", field="body"
+            ) from None
         if not isinstance(data, dict):
-            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело")
+            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело", reason="requestNotParsed", field="body")
         language = data.get("language")
         try:
             messages = check_messages(data.get("messages"))
         except ValueError as e:
             code, status = ("ASSISTANT_TOO_LONG", 413) if "длинн" in str(e) else ("BAD_REQUEST", 400)
-            raise ApiError(status, code, str(e)) from None
+            raise ApiError(
+                status, code, str(e), reason="conversationInvalid" if code == "BAD_REQUEST" else None
+            ) from None
         return messages, language if isinstance(language, str) else "ru"
 
     def assistant_allowed(self, owner: str) -> None:
@@ -375,14 +390,28 @@ class Service:
             # The field value does not go into the error text: it may be file content.
             first = e.errors()[0]
             where = ".".join(str(p) for p in first["loc"]) or "тело"
-            raise ApiError(400, "BAD_REQUEST", f"Запрос не разобран: {where}: {first['type']}") from None
+            raise ApiError(
+                400,
+                "BAD_REQUEST",
+                f"Запрос не разобран: {where}: {first['type']}",
+                reason="requestNotParsed",
+                field=where if where not in ("", "тело") else "body",
+            ) from None
         seen: set[str] = set()
         total = 0
         for change in req.changes:
             if not valid_path(change.path):
-                raise ApiError(400, "BAD_REQUEST", f"Недопустимый путь файла: {change.path[:80]!r}")
+                raise ApiError(
+                    400,
+                    "BAD_REQUEST",
+                    f"Недопустимый путь файла: {change.path[:80]!r}",
+                    reason="pathInvalid",
+                    path=change.path[:80],
+                )
             if change.path in seen:
-                raise ApiError(400, "BAD_REQUEST", f"Файл {change.path} указан дважды")
+                raise ApiError(
+                    400, "BAD_REQUEST", f"Файл {change.path} указан дважды", reason="pathTwice", path=change.path
+                )
             seen.add(change.path)
             total += len(change.content.encode("utf-8")) if change.content is not None else 0
         return req, total
@@ -436,21 +465,52 @@ class Service:
         except ValidationError as e:
             first = e.errors()[0]
             where = ".".join(str(p) for p in first["loc"])
-            raise ApiError(400, "BAD_REQUEST", f"Запрос не разобран: {where}: {first['msg']}") from None
+            raise ApiError(
+                400,
+                "BAD_REQUEST",
+                f"Запрос не разобран: {where}: {first['msg']}",
+                reason="requestNotParsed",
+                field=where if where not in ("", "тело") else "body",
+            ) from None
         if len(req.files) > limits.max_files:
-            raise ApiError(413, "PROJECT_TOO_LARGE", f"В проекте больше {limits.max_files} файлов")
+            raise ApiError(
+                413,
+                "PROJECT_TOO_LARGE",
+                f"В проекте больше {limits.max_files} файлов",
+                reason="tooManyFiles",
+                limit=limits.max_files,
+            )
         files: dict[str, str] = {}
         total = 0
         for f in req.files:
             if not valid_path(f.path):
-                raise ApiError(400, "BAD_REQUEST", f"Недопустимый путь файла: {f.path[:80]!r}")
+                raise ApiError(
+                    400,
+                    "BAD_REQUEST",
+                    f"Недопустимый путь файла: {f.path[:80]!r}",
+                    reason="pathInvalid",
+                    path=f.path[:80],
+                )
             if f.path in files:
-                raise ApiError(400, "BAD_REQUEST", f"Файл {f.path} указан дважды")
+                raise ApiError(400, "BAD_REQUEST", f"Файл {f.path} указан дважды", reason="pathTwice", path=f.path)
             if f.path == CONFIG_FILE:
-                raise ApiError(400, "BAD_REQUEST", f"{CONFIG_FILE} передаётся полем config, а не файлом")
+                raise ApiError(
+                    400,
+                    "BAD_REQUEST",
+                    f"{CONFIG_FILE} передаётся полем config, а не файлом",
+                    reason="configAsFile",
+                    path=f.path,
+                )
             size = len(f.content.encode("utf-8"))
             if size > limits.max_file_bytes:
-                raise ApiError(413, "PROJECT_TOO_LARGE", f"Файл {f.path} больше {limits.max_file_bytes // 1024} КБ")
+                raise ApiError(
+                    413,
+                    "PROJECT_TOO_LARGE",
+                    f"Файл {f.path} больше {limits.max_file_bytes // 1024} КБ",
+                    reason="fileTooLarge",
+                    path=f.path,
+                    kilobytes=limits.max_file_bytes // 1024,
+                )
             total += size
             files[f.path] = f.content
         for path in files:
@@ -458,15 +518,34 @@ class Service:
             parts = path.split("/")
             for i in range(1, len(parts)):
                 if "/".join(parts[:i]) in files:
-                    raise ApiError(400, "BAD_REQUEST", f"Путь {'/'.join(parts[:i])} назван и файлом, и папкой")
+                    raise ApiError(
+                        400,
+                        "BAD_REQUEST",
+                        f"Путь {'/'.join(parts[:i])} назван и файлом, и папкой",
+                        reason="pathFileAndFolder",
+                        path="/".join(parts[:i]),
+                    )
         if req.config is not None:
             # The settings are also a project file (fpgasim.json): the same limits apply to them.
             size = len(json.dumps(req.config, ensure_ascii=False).encode("utf-8"))
             if size > limits.max_file_bytes:
-                raise ApiError(413, "PROJECT_TOO_LARGE", f"{CONFIG_FILE} больше {limits.max_file_bytes // 1024} КБ")
+                raise ApiError(
+                    413,
+                    "PROJECT_TOO_LARGE",
+                    f"{CONFIG_FILE} больше {limits.max_file_bytes // 1024} КБ",
+                    reason="fileTooLarge",
+                    path=CONFIG_FILE,
+                    kilobytes=limits.max_file_bytes // 1024,
+                )
             total += size
         if total > limits.max_project_bytes:
-            raise ApiError(413, "PROJECT_TOO_LARGE", f"Проект больше {limits.max_project_bytes // (1024 * 1024)} МБ")
+            raise ApiError(
+                413,
+                "PROJECT_TOO_LARGE",
+                f"Проект больше {limits.max_project_bytes // (1024 * 1024)} МБ",
+                reason="projectTooLarge",
+                megabytes=limits.max_project_bytes // (1024 * 1024),
+            )
         return req, files, total
 
     async def resolve(self, req: BuildRequest, files: dict[str, str]) -> Resolution:
@@ -581,7 +660,11 @@ class Service:
         limits = self.settings.limits
         if req.testbench not in files or not req.testbench.lower().endswith(tuple(DESIGN_EXT)):
             raise ApiError(
-                400, "BAD_REQUEST", f"Файла тестбенча {req.testbench[:80]!r} нет среди файлов Verilog проекта"
+                400,
+                "BAD_REQUEST",
+                f"Файла тестбенча {req.testbench[:80]!r} нет среди файлов Verilog проекта",
+                reason="testbenchMissing",
+                path=req.testbench[:80],
             )
         res = await asyncio.to_thread(
             resolve_testbench, files, req.config, req.testbench, share_dir=self.settings.share_dir
@@ -695,7 +778,7 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
 
     @app.exception_handler(ApiError)
     async def api_error(request: Request, e: ApiError) -> JSONResponse:
-        return error_response(e.status, e.code, e.text)
+        return error_response(e.status, e.code, e.text, e.values)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request: Request, e: StarletteHTTPException) -> JSONResponse:
@@ -734,16 +817,16 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
             response = JSONResponse(body)
         except AccountsError as e:
             record["result"] = e.code
-            response = error_response(e.status, e.code, e.text)
+            response = error_response(e.status, e.code, e.text, e.values)
         except ApiError as e:
             record["result"] = e.code
-            response = error_response(e.status, e.code, e.text)
+            response = error_response(e.status, e.code, e.text, e.values)
         except Busy:
             record["result"] = "BUSY"
             response = error_response(503, "BUSY", "Сервер занят, повторите позже")
         except ClientDisconnect:
             record["result"] = "DISCONNECTED"
-            response = error_response(400, "BAD_REQUEST", "Запрос оборван")
+            response = error_response(400, "BAD_REQUEST", "Запрос оборван", {"reason": "requestCut"})
         except Exception as e:  # noqa: BLE001
             # An unexpected failure: a response in the general shape of section 8.3,
             # the cause goes to the log, not to the client.
@@ -785,7 +868,9 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
         """Operations on the own account: a key is not allowed to use them."""
         assert principal is not None
         if principal.auth != "session":
-            raise ApiError(403, "FORBIDDEN", "Операция доступна только после входа по логину и паролю")
+            raise ApiError(
+                403, "FORBIDDEN", "Операция доступна только после входа по логину и паролю", reason="passwordSignIn"
+            )
         service.rate_limit(principal.limit_id, "account")
         return principal
 
@@ -935,7 +1020,9 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
         async def handler(record: dict[str, Any], principal: Principal | None) -> dict[str, Any]:
             assert principal is not None
             if principal.auth != "session":
-                raise ApiError(403, "FORBIDDEN", "Операция доступна только после входа по логину и паролю")
+                raise ApiError(
+                    403, "FORBIDDEN", "Операция доступна только после входа по логину и паролю", reason="passwordSignIn"
+                )
             service.rate_limit(principal.limit_id, "sync")
             own_project(record, project_id)
             req, record["projectBytes"] = await service.read_sync(request)
@@ -945,7 +1032,9 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
             if req.generation is None and (req.since or any(c.base_rev for c in changes)):
                 # Revisions apply only within their database generation:
                 # without it there is nothing to compare them with.
-                raise ApiError(400, "BAD_REQUEST", "Запрос с ревизиями обязан нести поле generation")
+                raise ApiError(
+                    400, "BAD_REQUEST", "Запрос с ревизиями обязан нести поле generation", reason="generationMissing"
+                )
             body = await asyncio.to_thread(
                 service.projects.sync, principal.owner, project_id, req.since, meta, changes, req.generation
             )
@@ -971,7 +1060,7 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
         async def handler(record: dict[str, Any], principal: Principal | None) -> dict[str, Any]:
             admin_of(principal, record, target)
             if service.accounts.user(target) is None:
-                raise ApiError(404, "NOT_FOUND", f"Пользователя {target} нет")
+                raise ApiError(404, "NOT_FOUND", f"Пользователя {target} нет", reason="userMissing", login=target)
             return service.projects.of_user(target, admin=True)
 
         return await logged(request, "admin-projects", handler)
@@ -1034,9 +1123,13 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
             owner = principal.limit_id
             service.assistant_allowed(owner)
             if owner in service.assistant_owners:
-                raise ApiError(429, "RATE_LIMITED", "Дождитесь ответа помощника на предыдущий вопрос")
+                raise ApiError(
+                    429, "RATE_LIMITED", "Дождитесь ответа помощника на предыдущий вопрос", reason="assistantPending"
+                )
             if len(service.assistant_owners) >= settings.limits.assistant_calls_at_once:
-                raise ApiError(503, "BUSY", "Помощник занят другими вопросами, повторите через минуту")
+                raise ApiError(
+                    503, "BUSY", "Помощник занят другими вопросами, повторите через минуту", reason="assistantBusy"
+                )
             service.assistant_owners.add(owner)
             try:
                 loop = asyncio.get_running_loop()
@@ -1121,12 +1214,12 @@ def create_app(settings: Settings | None = None, log: Callable[[dict[str, Any]],
                 path = await asyncio.to_thread(service.cache.artifact, build_id, name)
                 media_type, cache_control = ARTIFACTS.get(name, ""), "public, max-age=31536000, immutable"
             if path is None:
-                raise ApiError(404, "NOT_FOUND", "Такого файла сборки нет")
+                raise ApiError(404, "NOT_FOUND", "Такого файла сборки нет", reason="buildFileMissing")
             record["result"] = "ok"
             response = FileResponse(path, media_type=media_type, headers={"Cache-Control": cache_control})
         except ApiError as e:
             record["result"] = e.code
-            response = error_response(e.status, e.code, e.text)
+            response = error_response(e.status, e.code, e.text, e.values)
         record["durationMs"] = round((time.monotonic() - started) * 1000)
         service.log(record)
         return response

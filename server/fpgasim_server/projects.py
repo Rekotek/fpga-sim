@@ -27,15 +27,23 @@ BACKUP_RE = re.compile(r"accounts-(\d{8})\.db")
 
 def check_project_id(project_id: str) -> str:
     if not PROJECT_ID_RE.fullmatch(project_id):
-        raise AccountsError(400, "BAD_REQUEST", "Идентификатор проекта — не UUID")
+        raise AccountsError(400, "BAD_REQUEST", "Идентификатор проекта — не UUID", reason="projectIdInvalid")
     return project_id
 
 
 def check_meta(name: str, board: str) -> tuple[str, str]:
     if not 1 <= len(name) <= MAX_PROJECT_NAME or any(ord(c) < 32 or ord(c) == 127 for c in name):
-        raise AccountsError(400, "BAD_REQUEST", f"Имя проекта: от 1 до {MAX_PROJECT_NAME} знаков")
+        raise AccountsError(
+            400,
+            "BAD_REQUEST",
+            f"Имя проекта: от 1 до {MAX_PROJECT_NAME} знаков",
+            reason="projectNameInvalid",
+            max=MAX_PROJECT_NAME,
+        )
     if not BOARD_RE.fullmatch(board):
-        raise AccountsError(400, "BAD_REQUEST", "Плата: от 1 до 64 знаков, латиница, цифры, _ . -")
+        raise AccountsError(
+            400, "BAD_REQUEST", "Плата: от 1 до 64 знаков, латиница, цифры, _ . -", reason="boardIdInvalid"
+        )
     return name, board
 
 
@@ -129,12 +137,12 @@ class ProjectStore:
             # Step 1. A foreign project and a nonexistent one get the same answer.
             row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
             if row is not None and row["login"] != login:
-                raise AccountsError(404, "NOT_FOUND", "Проекта нет")
+                raise AccountsError(404, "NOT_FOUND", "Проекта нет", reason="projectMissing")
             if client_generation is not None and client_generation != gen:
                 return {"stale": True, "generation": gen}
             if row is None:
                 if meta is None:
-                    raise AccountsError(404, "NOT_FOUND", "Проекта нет")
+                    raise AccountsError(404, "NOT_FOUND", "Проекта нет", reason="projectMissing")
                 self._check_project_count(conn, login, adding=1)
                 conn.execute(
                     "INSERT INTO projects (id, login, name, board, rev, modified) VALUES (?, ?, ?, ?, 0, ?)",
@@ -209,7 +217,11 @@ class ProjectStore:
         ).fetchone()
         if count + adding > self.limits.max_projects:
             raise AccountsError(
-                413, "PROJECT_TOO_LARGE", f"Проектов на сервере больше {self.limits.max_projects}: удалите ненужные"
+                413,
+                "PROJECT_TOO_LARGE",
+                f"Проектов на сервере больше {self.limits.max_projects}: удалите ненужные",
+                reason="tooManyProjects",
+                limit=self.limits.max_projects,
             )
         # Rows of deleted projects stay forever: their number is limited too.
         if rows + adding > self.limits.max_project_rows:
@@ -217,6 +229,8 @@ class ProjectStore:
                 413,
                 "PROJECT_TOO_LARGE",
                 f"У записи больше {self.limits.max_project_rows} проектов, включая удалённые",
+                reason="tooManyProjectRows",
+                limit=self.limits.max_project_rows,
             )
 
     def _check_size(self, conn: sqlite3.Connection, project_id: str) -> None:
@@ -228,6 +242,8 @@ class ProjectStore:
                 413,
                 "PROJECT_TOO_LARGE",
                 f"В проекте больше {limits.max_file_rows} записей файлов, включая удалённые: создайте новый проект",
+                reason="tooManyFileRows",
+                limit=limits.max_file_rows,
             )
         count, total, largest = conn.execute(
             "SELECT count(*), coalesce(sum(length(CAST(content AS BLOB))), 0), "
@@ -235,16 +251,33 @@ class ProjectStore:
             (project_id,),
         ).fetchone()
         if count > limits.max_files:
-            raise AccountsError(413, "PROJECT_TOO_LARGE", f"В проекте больше {limits.max_files} файлов")
+            raise AccountsError(
+                413,
+                "PROJECT_TOO_LARGE",
+                f"В проекте больше {limits.max_files} файлов",
+                reason="tooManyFiles",
+                limit=limits.max_files,
+            )
         if largest > limits.max_file_bytes:
             path = conn.execute(
                 "SELECT path FROM files WHERE project = ? AND length(CAST(content AS BLOB)) > ? ORDER BY path LIMIT 1",
                 (project_id, limits.max_file_bytes),
             ).fetchone()[0]
-            raise AccountsError(413, "PROJECT_TOO_LARGE", f"Файл {path} больше {limits.max_file_bytes // 1024} КБ")
+            raise AccountsError(
+                413,
+                "PROJECT_TOO_LARGE",
+                f"Файл {path} больше {limits.max_file_bytes // 1024} КБ",
+                reason="fileTooLarge",
+                path=path,
+                kilobytes=limits.max_file_bytes // 1024,
+            )
         if total > limits.max_project_bytes:
             raise AccountsError(
-                413, "PROJECT_TOO_LARGE", f"Проект больше {limits.max_project_bytes // (1024 * 1024)} МБ"
+                413,
+                "PROJECT_TOO_LARGE",
+                f"Проект больше {limits.max_project_bytes // (1024 * 1024)} МБ",
+                reason="projectTooLarge",
+                megabytes=limits.max_project_bytes // (1024 * 1024),
             )
 
     def delete(self, login: str, project_id: str) -> None:
@@ -253,7 +286,7 @@ class ProjectStore:
         with self.accounts.db() as conn, transaction(conn):
             row = conn.execute("SELECT login FROM projects WHERE id = ?", (project_id,)).fetchone()
             if row is None or row["login"] != login:
-                raise AccountsError(404, "NOT_FOUND", "Проекта нет")
+                raise AccountsError(404, "NOT_FOUND", "Проекта нет", reason="projectMissing")
             conn.execute(
                 "UPDATE projects SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL", (self.now(), project_id)
             )
@@ -274,7 +307,7 @@ class ProjectStore:
         with self.accounts.db() as conn:
             row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
             if row is None:
-                raise AccountsError(404, "NOT_FOUND", "Проекта нет")
+                raise AccountsError(404, "NOT_FOUND", "Проекта нет", reason="projectMissing")
             files = [
                 {"path": f["path"], "content": f["content"]}
                 for f in conn.execute(
@@ -298,7 +331,7 @@ class ProjectStore:
         with self.accounts.db() as conn, transaction(conn):
             row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
             if row is None or row["purged"]:
-                raise AccountsError(404, "NOT_FOUND", "Проекта нет или срок корзины вышел")
+                raise AccountsError(404, "NOT_FOUND", "Проекта нет или срок корзины вышел", reason="projectExpired")
             if row["deleted_at"] is None:
                 return
             self._check_project_count(conn, row["login"], adding=1)

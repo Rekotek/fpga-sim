@@ -19,9 +19,11 @@ export type TextArgs = Record<string, unknown>;
 
 const dictionaries: Record<string, Record<string, string | undefined>> = { ru, en };
 
-function lookup(key: string): string | undefined {
+// The string of the current language; if that dictionary has no key, from ru.json; undefined if neither has it.
+export function lookupText(key: string): string | undefined {
   return dictionaries[currentLanguage()]?.[key] ?? (ru as Record<string, string | undefined>)[key];
 }
+const lookup = lookupText;
 
 function show(value: unknown): string {
   if (typeof value === "string") return value;

@@ -196,7 +196,7 @@ response is 403 `FORBIDDEN`. Keys stay for scripts.
 ## 3. Server operations
 
 The general rules of section 8.3 of `tz-v1.md` stay in force: JSON, the error form
-`{ "error": { "code": "…", "text": "…" } }`. New codes: 401 `BAD_CREDENTIALS`, 403 `FORBIDDEN`,
+`{ "error": { "code": "…", "text": "…", "args": { "reason": "…" } } }` (`args` is optional, decision 183). New codes: 401 `BAD_CREDENTIALS`, 403 `FORBIDDEN`,
 409 `EXISTS`, 429 `LOGIN_LOCKED`. CORS: `PUT`, `PATCH`, `DELETE` are added to the methods.
 
 The form of an account in responses:

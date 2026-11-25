@@ -8,6 +8,7 @@ import type { BuildResponse, Diagnostic, ProjectFile, Resolved } from "../build/
 import { EditorHost, type EditorMark } from "../editor/host";
 import { ProjectSync } from "../project/sync";
 import { onBeforeLanguageChange, t, tOr } from "../i18n";
+import { failureText, refusalArgs, refusalText } from "../i18n/refusal";
 import { DEFAULT_BOARD, boardById, listExamples, partDescription, type Board } from "../project/assets";
 import {
   CONFIG_FILE,
@@ -846,7 +847,7 @@ export async function signIn(name: string, password: string): Promise<boolean> {
     if (e instanceof ServerError && e.status === 401) set({ authProblem: "badCredentials" });
     else if (e instanceof ServerError && e.code === "LOGIN_LOCKED") set({ authProblem: "locked" });
     else if (e instanceof ServerError && e.status !== 0 && e.status < 500) {
-      set({ authProblem: "failed", authText: e.message });
+      set({ authProblem: "failed", authText: failureText(e) });
     } else set({ authProblem: "unreachable", serverOk: false });
     set({ authStatus: "missing" });
     return false;
@@ -959,7 +960,7 @@ export function currentAccount(): {
 // A server refusal for display in a dialog: the server text, or a general text on a network failure.
 function failure(e: unknown): string {
   if (e instanceof ServerError && e.status === 401) credentialRejected();
-  if (e instanceof ServerError && e.status > 0 && e.status < 500) return e.message;
+  if (e instanceof ServerError && e.status > 0 && e.status < 500) return failureText(e);
   return t("account.unreachable");
 }
 
@@ -1628,8 +1629,7 @@ export async function build(saveDrafts = true, thenRun = false): Promise<void> {
     if (seq !== buildSeq) return;
     if (e instanceof ServerError && e.status === 401) credentialRejected();
     const code = e instanceof ServerError || e instanceof CoreError ? e.code : "UNKNOWN";
-    const text = e instanceof Error ? e.message : String(e);
-    set({ build: { ...NO_BUILD, status: "error", errorCode: code, errorText: text } });
+    set({ build: { ...NO_BUILD, status: "error", errorCode: code, errorText: failureText(e) } });
   }
 }
 
@@ -1676,10 +1676,11 @@ function onCoreMessage(message: CoreMessage): void {
     onPartEvent(message as unknown as PartEvent);
   } else if (message.t === "error") {
     // A core failure without a command number (spec section 4.3) shows next to the simulator notices.
+    const code = typeof message.code === "string" ? message.code : "ERROR";
     const failure: NoticeMessage = {
       t: "notice",
-      code: typeof message.code === "string" ? message.code : "ERROR",
-      text: typeof message.text === "string" ? message.text : "",
+      code,
+      text: refusalText(code, refusalArgs(message.args), typeof message.text === "string" ? message.text : ""),
       time: (simulation?.live.timePs ?? 0n).toString(),
     };
     set({ notices: [...get().notices, failure].slice(-MAX_NOTICES) });
@@ -1760,7 +1761,7 @@ async function startSimulation(
     onFailure: (error) => {
       if (simulation !== next) return;
       stopSimulation();
-      set({ build: { ...NO_BUILD, status: "error", errorCode: error.code, errorText: error.message } });
+      set({ build: { ...NO_BUILD, status: "error", errorCode: error.code, errorText: failureText(error) } });
     },
   });
   simulation = next;
@@ -1928,7 +1929,7 @@ function coreNotice(e: unknown): void {
   const failure: NoticeMessage = {
     t: "notice",
     code: e instanceof CoreError ? e.code : "ERROR",
-    text: e instanceof Error ? e.message : String(e),
+    text: failureText(e),
     time: (simulation?.live.timePs ?? 0n).toString(),
   };
   set({ notices: [...get().notices, failure].slice(-MAX_NOTICES), bottomTab: "messages" });
@@ -2364,7 +2365,7 @@ export async function startRecord(): Promise<void> {
     fetchedRecord = null;
     set({ recordError: null, vcdWave: null });
   } catch (e) {
-    if (simulation === target) set({ recordError: e instanceof Error ? e.message : String(e) });
+    if (simulation === target) set({ recordError: failureText(e) });
   }
 }
 
@@ -2541,9 +2542,7 @@ export async function runTestbench(): Promise<void> {
   } catch (e) {
     if (seq !== testbenchSeq) return;
     if (e instanceof ServerError && e.status === 401) credentialRejected();
-    const code = e instanceof ServerError ? e.code : "UNKNOWN";
-    const text = tOr(`error.${code}`, "error.UNKNOWN", { code, text: e instanceof Error ? e.message : String(e) });
-    set({ testbench: { ...NO_TESTBENCH, file, ran: file, status: "error", errorText: text } });
+    set({ testbench: { ...NO_TESTBENCH, file, ran: file, status: "error", errorText: failureText(e) } });
   }
 }
 
@@ -2564,8 +2563,7 @@ export async function showTestbenchWave(): Promise<void> {
     if (e instanceof ServerError && e.status === 401) credentialRejected();
     // The file is kept on the server for an hour (spec section 8.3): after that a new run is needed.
     const gone = e instanceof ServerError && e.status === 404;
-    const code = e instanceof ServerError ? e.code : "UNKNOWN";
-    const text = tOr(`error.${code}`, "error.UNKNOWN", { code, text: e instanceof Error ? e.message : String(e) });
+    const text = failureText(e);
     set({ testbench: { ...get().testbench, errorText: gone ? t("testbench.wave.gone") : text } });
     return;
   }

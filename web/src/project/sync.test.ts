@@ -535,12 +535,23 @@ test("401: правка остаётся, рабочее место узнаёт
   expect((await a.file(id, "top.v"))?.dirty).toBe(true);
 });
 
-test("413: состояние error с текстом сервера", async () => {
+test("413: состояние error с текстом отказа на языке интерфейса (решение 183)", async () => {
+  const { a, id } = await shared();
+  await a.store.saveFile(id, "top.v", "v1");
+  server.failBefore = new ServerError(413, "PROJECT_TOO_LARGE", "Проект больше 2 МБ", {
+    reason: "projectTooLarge",
+    megabytes: 2,
+  });
+  await a.sync.syncProject(id);
+  expect(a.sync.status(id)).toEqual({ state: "error", error: "Проект больше 2 МБ" });
+});
+
+test("413 без args (сервер до решения 183): текст по коду", async () => {
   const { a, id } = await shared();
   await a.store.saveFile(id, "top.v", "v1");
   server.failBefore = new ServerError(413, "PROJECT_TOO_LARGE", "Проект больше 2 МБ");
   await a.sync.syncProject(id);
-  expect(a.sync.status(id)).toEqual({ state: "error", error: "Проект больше 2 МБ" });
+  expect(a.sync.status(id)).toEqual({ state: "error", error: "Проект больше, чем принимает сервер" });
 });
 
 test("404: сервер проекта не знает, проект отправляется заново целиком", async () => {

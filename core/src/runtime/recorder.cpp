@@ -8,7 +8,7 @@
 
 namespace fpgasim {
 
-std::string Recorder::start(Options options, Time now, Reader reader) {
+Refusal Recorder::start(Options options, Time now, Reader reader) {
     if (options.items.empty()) return "список записи пуст";
     if (options.depth == 0) return "глубина записи равна нулю";
     if (options.hasTrigger && options.trigger.width > 1 && options.edge != Edge::Change)
@@ -36,7 +36,9 @@ std::string Recorder::start(Options options, Time now, Reader reader) {
         }
     }
     const size_t bytes = static_cast<size_t>(options.depth) * (sizeof(Change) + 4 * static_cast<size_t>(stride));
-    if (bytes > kMemoryLimit) return "записи нужно больше 64 МБ памяти: уменьшите глубину или число сигналов";
+    if (bytes > kMemoryLimit)
+        return {"записи нужно больше 64 МБ памяти: уменьшите глубину или число сигналов",
+                Json{{"reason", "recordMemory"}, {"megabytes", kMemoryLimit >> 20}}};
 
     slots_ = std::move(slots);
     stride_ = stride;

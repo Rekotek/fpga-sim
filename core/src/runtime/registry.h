@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "fpgasim/part.h"
+#include "refusal.h"
 
 namespace fpgasim {
 
@@ -30,10 +31,10 @@ void registerPartDescription(std::string_view type, std::string_view jsonText);
 const PartType* findPartType(std::string_view type);
 std::vector<std::string> partTypeNames();
 
-// Fills settings with the defaults from the description and checks them. Returns the error text or an empty string.
-std::string resolveSettings(const PartType& type, const Json& given, Json& merged);
+// Fills settings with the defaults from the description and checks them. Returns the refusal or an empty one.
+Refusal resolveSettings(const PartType& type, const Json& given, Json& merged);
 
-// Checks a command and its arguments against the description. Returns the error text or an empty string.
-std::string checkCommand(const PartType& type, std::string_view cmd, const Json& args);
+// Checks a command and its arguments against the description. Returns the refusal or an empty one.
+Refusal checkCommand(const PartType& type, std::string_view cmd, const Json& args);
 
 }  // namespace fpgasim

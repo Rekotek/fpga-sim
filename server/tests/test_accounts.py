@@ -241,6 +241,7 @@ def test_admin_operations_forbidden_for_user_and_key(acc: Env, method: str, url:
     for headers in (user_headers, acc.auth):
         response = call(acc, method, url, body, headers)
         assert (response.status_code, response.json()["error"]["code"]) == (403, "FORBIDDEN"), headers
+        assert response.json()["error"]["args"]["reason"] in ("adminOnly", "passwordSignIn")
     assert acc.service.accounts.users() == before
 
 
@@ -257,10 +258,16 @@ def test_admin_operations_work(acc: Env) -> None:
     assert login_response(acc, "newbie", new_password).status_code == 200
     taken = acc.client.post("/v1/admin/users", json={"login": "newbie", "name": "x", "role": "user"}, headers=headers)
     assert (taken.status_code, taken.json()["error"]["code"]) == (409, "EXISTS")
+    assert taken.json()["error"]["args"] == {"reason": "loginTaken", "login": "newbie"}
+    reasons = {"loginInvalid", "nameInvalid", "roleInvalid", "requestNotParsed"}
     for bad in ({"login": "Misha!", "name": "x", "role": "user"}, {"login": "a" * 33, "name": "x", "role": "user"},
                 {"login": "ok", "name": "", "role": "user"}, {"login": "ok", "name": "x" * 65, "role": "user"},
                 {"login": "ok", "name": "x", "role": "root"}, {"login": "ok", "name": "x"}):  # fmt: skip
-        assert acc.client.post("/v1/admin/users", json=bad, headers=headers).status_code == 400, bad
+        refused = acc.client.post("/v1/admin/users", json=bad, headers=headers)
+        assert refused.status_code == 400, bad
+        assert refused.json()["error"]["args"]["reason"] in reasons, bad
+    name_refused = acc.client.post("/v1/admin/users", json={"login": "ok", "name": "", "role": "user"}, headers=headers)
+    assert name_refused.json()["error"]["args"] == {"reason": "nameInvalid", "max": 64}
 
     users = acc.client.get("/v1/admin/users", headers=headers).json()["users"]
     assert [u["login"] for u in users] == ["boss", "misha", "newbie"]
@@ -268,7 +275,8 @@ def test_admin_operations_work(acc: Env) -> None:
 
     patched = acc.client.patch("/v1/admin/users/misha", json={"name": "Михаил", "role": "admin"}, headers=headers)
     assert (patched.json()["user"]["name"], patched.json()["user"]["role"]) == ("Михаил", "admin")
-    assert acc.client.patch("/v1/admin/users/nosuch", json={"name": "x"}, headers=headers).status_code == 404
+    missing = acc.client.patch("/v1/admin/users/nosuch", json={"name": "x"}, headers=headers)
+    assert (missing.status_code, missing.json()["error"]["args"]) == (404, {"reason": "userMissing", "login": "nosuch"})
     assert acc.client.patch("/v1/admin/users/BAD!", json={"name": "x"}, headers=headers).status_code == 400
 
     reset = acc.client.post("/v1/admin/users/misha/password", headers=headers)
@@ -298,6 +306,7 @@ def test_admin_restrictions_give_400(acc: Env) -> None:
         response = call(acc, method, "/v1/admin/users/boss", body, headers)
         assert (response.status_code, response.json()["error"]["code"]) == (400, "BAD_REQUEST"), (method, body)
         assert "свою" in response.json()["error"]["text"]
+        assert response.json()["error"]["args"]["reason"] in ("selfDisable", "selfDemote", "selfDelete")
     assert store.user("boss") == before
     assert acc.client.get("/v1/info", headers=headers).status_code == 200
 
