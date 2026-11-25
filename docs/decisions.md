@@ -3279,5 +3279,9 @@ and the `fpgasim-admin` command (Russian, only the author reads them).
   spec section 4.3.
 - The build status and the testbench status now store the text already in the interface language; the
   status bar no longer looks it up by the code.
+- A refusal text starts with a capital letter: the `error.<code>` strings start in lower case for
+  "Build failed: …", but a refusal also shows on its own (the assistant panel, the sync status, dialogs).
+  The assistant failure now shows the interface string of `ASSISTANT_FAILED` without the server detail
+  ("тестовый сбой", "сервис модели ответил 500"): the detail stays in the server log.
 - The item "Icarus summary arrives as text" of `docs/progress.md` was wrong: the summary comes from the
   Verilator parser with the code `DIAGNOSTICS_TRUNCATED`, and the table already translated it.

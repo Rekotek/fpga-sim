@@ -15,8 +15,13 @@ export function refusalArgs(value: unknown): RefusalArgs | null {
 
 export function refusalText(code: string, args: RefusalArgs | null, original: string): string {
   const template = args ? lookupText(`refusal.${args.reason}`) : undefined;
-  if (template !== undefined) return fill(template, args ?? {});
-  return tOr(`error.${code}`, "error.UNKNOWN", { code, text: original });
+  const text =
+    template !== undefined
+      ? fill(template, args ?? {})
+      : tOr(`error.${code}`, "error.UNKNOWN", { code, text: original });
+  // The error.<code> strings start in lower case for "Build failed: …"; a refusal also shows on its own
+  // (the assistant panel, the sync status, dialogs), so it starts as a sentence.
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 // A core notice by its code (notice.<code>); a code unknown to the dictionary shows the core text.

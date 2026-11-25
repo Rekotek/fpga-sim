@@ -89,9 +89,9 @@ describe("текст отказа", () => {
 
   it("без args или с незнакомой причиной — по коду; незнакомый код — код и исходный текст", () => {
     setLanguageForTests("en");
-    expect(refusalText("BAD_STATE", null, "шаг допустим только на паузе")).toBe("the command is not available now");
+    expect(refusalText("BAD_STATE", null, "шаг допустим только на паузе")).toBe("The command is not available now");
     expect(refusalText("BAD_STATE", refusalArgs({ reason: "fromTheFuture" }), "…")).toBe(
-      "the command is not available now",
+      "The command is not available now",
     );
     expect(refusalText("TEAPOT", null, "чайник")).toBe("TEAPOT: чайник");
   });
@@ -110,7 +110,7 @@ describe("текст отказа", () => {
       kilobytes: 512,
     });
     expect(failureText(server)).toBe("File a.v is larger than 512 KB");
-    expect(failureText(new ServerError(503, "BUSY", "Сервер занят"))).toBe("the server is busy, try again later");
+    expect(failureText(new ServerError(503, "BUSY", "Сервер занят"))).toBe("The server is busy, try again later");
     const core = new CoreError("RECORD_INVALID", "записи нужно больше 64 МБ", {
       reason: "recordMemory",
       megabytes: 64,

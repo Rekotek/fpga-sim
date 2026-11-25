@@ -54,8 +54,10 @@ test("помощник отвечает по инструментам, пока�
   await expect(page.getByTestId("assistant-reset")).toBeEnabled();
 
   await askAssistant(page, "проверка #сбой");
-  await expect.poll(() => sim(page, (api) => api.assistant().at(-1)?.error)).toBe("Помощник не ответил: тестовый сбой");
-  await expect(page.getByTestId("assistant-error")).toHaveText("Помощник не ответил: тестовый сбой");
+  await expect
+    .poll(() => sim(page, (api) => api.assistant().at(-1)?.error))
+    .toBe("Помощник не ответил, повторите позже");
+  await expect(page.getByTestId("assistant-error")).toHaveText("Помощник не ответил, повторите позже");
 
   // After a failed question the conversation goes on.
   await askAssistant(page, "И ещё?");
