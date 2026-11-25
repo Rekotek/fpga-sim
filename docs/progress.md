@@ -90,6 +90,8 @@ the older detailed stage entries: `git show c1740f0:docs/progress.md` (version 1
   longer replaces the image under a `make check` in another. Nothing to deploy.
 - **2026-11-23.** The tab icon: a white chip on the primary blue, `web/public/favicon.svg` (decision 182).
   Reaches the production URL after `make deploy-web`.
+- **2026-11-25.** The explanation of `BOARD_UNKNOWN` in `spec/diagnostics.json` names both boards,
+  `tang-nano-20k` and `tang-nano-9k`, in both languages. Reaches the production URL after `make deploy-web`.
 
 ## Deployments
 
@@ -164,8 +166,6 @@ English language (decision 168):
   interface).
 - `clocks[].label` and `shared[].users[]` in board files are strings: on first display, convert
   them to text per language.
-- The explanation of `BOARD_UNKNOWN` in `spec/diagnostics.json` says "this version has one board" —
-  there are already two boards (in both languages).
 
 The 9K board:
 
