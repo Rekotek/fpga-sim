@@ -585,8 +585,8 @@
         "en": "There is no board `{board}`"
       },
       "explain": {
-        "ru": "В поле `board` файла `fpgasim.json` стоит плата, которой симулятор не знает. В этой версии плата одна: `\"board\": \"tang-nano-20k\"`.",
-        "en": "The `board` field of the `fpgasim.json` file names a board that the simulator does not know. This version has one board: `\"board\": \"tang-nano-20k\"`."
+        "ru": "В поле `board` файла `fpgasim.json` стоит плата, которой симулятор не знает. Симулятор знает платы `\"board\": \"tang-nano-20k\"` и `\"board\": \"tang-nano-9k\"`.",
+        "en": "The `board` field of the `fpgasim.json` file names a board that the simulator does not know. The simulator knows the boards `\"board\": \"tang-nano-20k\"` and `\"board\": \"tang-nano-9k\"`."
       }
     },
     "FILE_NOT_FOUND": {
