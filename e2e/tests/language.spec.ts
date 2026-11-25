@@ -52,6 +52,16 @@ test.describe("браузер на английском", () => {
     for (const m of messages) expect(`${m.text} ${m.explain ?? ""}`).not.toMatch(CYRILLIC);
     expect(await visibleText(page)).not.toMatch(CYRILLIC);
   });
+
+  test("замечание ядра на вкладке сообщений по-английски (решение 183)", async ({ page }) => {
+    await openWithKey(page);
+    // Without PULL_MODE a released button leaves the input floating: the core sends INPUT_FLOATING in Russian.
+    await createFromExample(page, "buttons_nopull");
+    expect(await build(page)).toBe("ok");
+    const notice = page.getByTestId("notice").filter({ hasText: "INPUT_FLOATING" }).first();
+    await expect(notice).toContainText("the FPGA input is not connected and not pulled");
+    expect(await notice.innerText()).not.toMatch(CYRILLIC);
+  });
 });
 
 test("переключатель: правка не теряется, язык сменяется после перезагрузки", async ({ page }) => {

@@ -91,15 +91,22 @@ the older detailed stage entries: `git show c1740f0:docs/progress.md` (version 1
 - **2026-11-23.** The tab icon: a white chip on the primary blue, `web/public/favicon.svg` (decision 182).
   Reaches the production URL after `make deploy-web`.
 - **2026-11-25.** The explanation of `BOARD_UNKNOWN` in `spec/diagnostics.json` names both boards,
-  `tang-nano-20k` and `tang-nano-9k`, in both languages. Reaches the production URL after `make deploy-web`.
+  `tang-nano-20k` and `tang-nano-9k`, in both languages. Deployed: static files `20261125-2019-85df444`.
+- **2026-11-25.** Server and core refusals and core notices in the interface language (decision 183): the
+  core and the server add the optional field `args` (`reason` and values) to a refusal, the interface takes
+  its own string by the reason, core notices by the code. The Russian `text` stays for the log and
+  `fpgasim-admin`; the output of Verilator and Icarus stays as it is. Core 0.2.2. Reaches the production URL
+  after `make deploy-server` and `make deploy-web`.
 
 ## Deployments
 
-Now (2026-11-23): build server `20261123-1604-5fc1666` and static files `20261123-1605-5fc1666` (the
-assistant fixes, decisions 178–180). The assistant is enabled: `/etc/fpgasim/config.toml` holds only
+Now (2026-11-25): build server `20261123-1604-5fc1666` (the assistant fixes, decisions 178–180) and
+static files `20261125-2019-85df444` (the tab icon and the `BOARD_UNKNOWN` explanation); after it
+`make e2e-prod` gave 38 of 38 with `FPGASIM_USER_LOGIN` and `FPGASIM_USER_PASSWORD` set. The assistant is enabled: `/etc/fpgasim/config.toml` holds only
 `[assistant] enabled = true`, the key is `/etc/fpgasim/anthropic.key`; `/v1/info` answers
-`{"enabled": true, "model": "claude-sonnet-5-5"}`. `make e2e-prod`: 36 passed, 2 skipped (the two
-`accounts.spec.ts` tests skip without `FPGASIM_USER_LOGIN` and `FPGASIM_USER_PASSWORD` in the environment).
+`{"enabled": true, "model": "claude-sonnet-5-5"}`. Without `FPGASIM_USER_LOGIN` and
+`FPGASIM_USER_PASSWORD` in the environment the two `accounts.spec.ts` tests skip; the login is `e2e`, the
+password is the keychain service `fpgasim-e2e-prod-user`.
 The previous server is `20261123-0703-7df404f` (the assistant, decisions 175–177).
 
 The database copy in R2 (decision 160) runs daily from cron at 03:50 UTC; on 2026-11-23 the log
@@ -157,11 +164,6 @@ A summary list. Version 1 items beyond spec section 15.2; some are repeated in s
 
 English language (decision 168):
 
-- The text of server and core errors is in Russian. The interface shows its own text by code; the
-  Russian text is visible for codes without a string in the dictionary (mostly `BAD_REQUEST` of the
-  users form) and in the part settings checks of the core (`core/src/runtime/registry.cpp`; changing
-  the core requires changing `core/VERSION`). The Icarus summary "Ещё N предупреждений не
-  показано" ("N more warnings not shown") arrives as text.
 - The code and comments of examples and lessons are in Russian (the author's choice: only the
   interface).
 - `clocks[].label` and `shared[].users[]` in board files are strings: on first display, convert
