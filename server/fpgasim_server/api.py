@@ -331,7 +331,7 @@ class Service:
                 "BAD_REQUEST",
                 f"Запрос не разобран: {where}: {first['type']}",
                 reason="requestNotParsed",
-                field=where,
+                field=where if where not in ("", "тело") else "body",
             ) from None
 
     async def read_assistant(self, request: Request) -> tuple[list[dict[str, Any]], str]:
@@ -345,10 +345,10 @@ class Service:
             data = json.loads(bytes(body))
         except ValueError:
             raise ApiError(
-                400, "BAD_REQUEST", "Запрос не разобран: тело не JSON", reason="requestNotParsed", field=""
+                400, "BAD_REQUEST", "Запрос не разобран: тело не JSON", reason="requestNotParsed", field="body"
             ) from None
         if not isinstance(data, dict):
-            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело", reason="requestNotParsed", field="")
+            raise ApiError(400, "BAD_REQUEST", "Запрос не разобран: тело", reason="requestNotParsed", field="body")
         language = data.get("language")
         try:
             messages = check_messages(data.get("messages"))
@@ -395,7 +395,7 @@ class Service:
                 "BAD_REQUEST",
                 f"Запрос не разобран: {where}: {first['type']}",
                 reason="requestNotParsed",
-                field=where,
+                field=where if where not in ("", "тело") else "body",
             ) from None
         seen: set[str] = set()
         total = 0
@@ -470,7 +470,7 @@ class Service:
                 "BAD_REQUEST",
                 f"Запрос не разобран: {where}: {first['msg']}",
                 reason="requestNotParsed",
-                field=where,
+                field=where if where not in ("", "тело") else "body",
             ) from None
         if len(req.files) > limits.max_files:
             raise ApiError(
